@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IMDAI — Sistema de Manuales</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose-50:#fff1f2; --rose-100:#ffe4e6; --rose-200:#fecdd3;
+    --rose-300:#fda4af; --rose-400:#fb7185; --rose-500:#f43f5e;
+    --rose-600:#e11d48; --rose-700:#be123c;
+    --cream:#fdf6f7; --dark:#1a0a0f; --dark-2:#2d1520;
+    --mid:#7a3a4a; --light-mid:#b06070;
+    --bg-dash:#f0ebec;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Poppins',sans-serif;background:var(--cream);color:var(--dark);overflow-x:hidden;}
+  .screen{display:none;min-height:100vh;}
+  .screen.active{display:flex;}
+
+  /* ═══ LOGIN ═══ */
+  #login{flex-direction:row;}
+
+  .login-left{
+    flex:0 0 55%;position:relative;
+    display:flex;flex-direction:column;
+    justify-content:center;align-items:center;
+    padding:60px;overflow:hidden;
+  }
+  .login-left-bg{
+    position:absolute;inset:0;
+    background:linear-gradient(150deg,#1a0810 0%,#3a0f1e 45%,#6b1a30 80%,#8b1a35 100%);
+  }
+  .login-left-pattern{
+    position:absolute;inset:0;opacity:.04;
+    background-image:
+      repeating-linear-gradient(45deg,rgba(255,255,255,.6) 0,rgba(255,255,255,.6) 1px,transparent 0,transparent 50%),
+      repeating-linear-gradient(-45deg,rgba(255,255,255,.6) 0,rgba(255,255,255,.6) 1px,transparent 0,transparent 50%);
+    background-size:28px 28px;
+  }
+  .orb{position:absolute;border-radius:50%;filter:blur(65px);animation:pulse 5s ease-in-out infinite;}
+  .orb-1{width:420px;height:420px;background:rgba(225,29,72,.22);top:-100px;right:-100px;}
+  .orb-2{width:280px;height:280px;background:rgba(190,18,60,.18);bottom:-50px;left:-50px;animation-delay:2s;}
+  .orb-3{width:180px;height:180px;background:rgba(244,63,94,.12);bottom:25%;right:8%;animation-delay:1s;}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.12);opacity:1}}
+
+  .login-left-content{position:relative;z-index:2;text-align:center;width:100%;}
+
+  .escudo-hero{
+    margin:0 auto 28px;
+    animation:floatBadge 3.5s ease-in-out infinite;
+    filter:drop-shadow(0 14px 36px rgba(0,0,0,.55));
+  }
+  @keyframes floatBadge{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+  .login-left h1{
+    font-family:'Poppins',sans-serif;font-size:1.75rem;font-weight:700;
+    color:white;line-height:1.3;margin-bottom:8px;
+    text-shadow:0 2px 14px rgba(0,0,0,.4);letter-spacing:-.3px;
+  }
+  .login-left .inst{
+    color:rgba(255,255,255,.8);font-size:.9rem;font-weight:500;margin-bottom:5px;
+  }
+  .login-left .sub{
+    color:rgba(255,255,255,.45);font-size:.76rem;font-weight:300;letter-spacing:.8px;
+    line-height:1.6;
+  }
+  .deco{margin-top:36px;display:flex;flex-direction:column;gap:7px;align-items:center;}
+  .deco span{display:block;height:1.5px;background:rgba(255,255,255,.18);border-radius:2px;}
+  .deco span:nth-child(1){width:0;animation:dl1 2s .3s ease-out forwards;}
+  .deco span:nth-child(2){width:0;animation:dl2 2s .5s ease-out forwards;}
+  .deco span:nth-child(3){width:0;animation:dl3 2s .7s ease-out forwards;}
+  @keyframes dl1{to{width:50px}}@keyframes dl2{to{width:110px}}@keyframes dl3{to{width:70px}}
+
+  .login-footer{
+    position:absolute;bottom:24px;left:0;right:0;
+    display:flex;justify-content:center;z-index:2;
+  }
+  .login-footer span{font-size:.67rem;color:rgba(255,255,255,.28);letter-spacing:2px;text-transform:uppercase;}
+
+  /* Panel derecho */
+  .login-right{
+    flex:0 0 45%;display:flex;
+    align-items:center;justify-content:center;
+    padding:60px 48px;background:white;
+  }
+  .login-form-wrap{width:100%;}
+  .login-greeting{font-family:'Poppins',sans-serif;font-size:1.85rem;font-weight:700;color:var(--dark);margin-bottom:6px;letter-spacing:-.5px;}
+  .login-sub{color:var(--light-mid);font-size:.83rem;font-weight:400;margin-bottom:34px;}
+
+  .form-group{margin-bottom:16px;}
+  .form-group label{
+    display:block;font-size:.7rem;font-weight:600;letter-spacing:1.2px;
+    text-transform:uppercase;color:var(--mid);margin-bottom:7px;
+  }
+  .input-wrap{position:relative;}
+  .input-wrap input{
+    width:100%;padding:13px 16px 13px 44px;
+    border:1.5px solid var(--rose-100);border-radius:10px;
+    font-family:'Poppins',sans-serif;font-size:.88rem;color:var(--dark);
+    background:#fdfafa;transition:all .25s;outline:none;
+  }
+  .input-wrap input:focus{
+    border-color:var(--rose-400);background:white;
+    box-shadow:0 0 0 4px rgba(244,63,94,.08);
+  }
+  .input-icon{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    color:var(--rose-300);pointer-events:none;
+  }
+  .btn-login{
+    width:100%;padding:13px;
+    background:linear-gradient(135deg,var(--rose-600),var(--rose-700));
+    color:white;border:none;border-radius:10px;
+    font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;
+    cursor:pointer;margin-top:24px;transition:all .3s;
+    letter-spacing:.3px;box-shadow:0 6px 20px rgba(225,29,72,.3);
+  }
+  .btn-login:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(225,29,72,.4);}
+  .btn-login:active{transform:translateY(0);}
+
+  /* ═══ DASHBOARD ═══ */
+  #dashboard{flex-direction:column;background:var(--bg-dash);}
+
+  .topnav{
+    height:60px;background:white;
+    border-bottom:1px solid rgba(225,29,72,.09);
+    display:flex;align-items:center;padding:0 32px;gap:16px;
+    position:sticky;top:0;z-index:100;
+    box-shadow:0 2px 14px rgba(190,18,60,.06);
+  }
+  .nav-brand{
+    display:flex;align-items:center;gap:10px;
+    font-family:'Poppins',sans-serif;font-size:.95rem;font-weight:600;
+    color:var(--dark);flex:1;letter-spacing:-.2px;
+  }
+  .nav-escudo-sm{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:white;border:1.5px solid var(--rose-100);
+    box-shadow:0 2px 8px rgba(225,29,72,.1);overflow:hidden;
+  }
+  .nav-right{display:flex;align-items:center;gap:12px;}
+  .nav-user{
+    display:flex;align-items:center;gap:9px;
+    padding:5px 13px 5px 5px;border-radius:50px;background:var(--rose-50);
+  }
+  .user-avatar{
+    width:30px;height:30px;border-radius:50%;
+    background:linear-gradient(135deg,var(--rose-400),var(--rose-600));
+    display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;font-size:.72rem;
+  }
+  .user-name{font-size:.8rem;font-weight:600;color:var(--dark);}
+  .user-role{font-size:.67rem;color:var(--light-mid);font-weight:400;}
+  .btn-logout{
+    padding:7px 14px;border:1.5px solid var(--rose-200);border-radius:8px;
+    background:transparent;color:var(--mid);
+    font-family:'Poppins',sans-serif;font-size:.76rem;font-weight:500;cursor:pointer;transition:all .2s;
+  }
+  .btn-logout:hover{background:var(--rose-50);border-color:var(--rose-400);color:var(--rose-600);}
+
+  .main-content{flex:1;padding:30px 38px;max-width:1280px;margin:0 auto;width:100%;}
+
+  .welcome-bar{margin-bottom:24px;animation:slideUp .4s ease-out;}
+  .welcome-bar h2{
+    font-family:'Poppins',sans-serif;font-size:1.45rem;font-weight:700;
+    color:var(--dark-2);margin-bottom:3px;letter-spacing:-.4px;
+  }
+  .welcome-bar p{font-size:.78rem;color:var(--mid);font-weight:400;}
+
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:26px;}
+  .stat-card{
+    background:white;border-radius:13px;padding:20px;
+    border:1px solid rgba(225,29,72,.07);
+    position:relative;overflow:hidden;
+    transition:transform .2s,box-shadow .2s;
+    animation:slideUp .5s ease-out forwards;opacity:0;
+  }
+  .stat-card:nth-child(1){animation-delay:.1s}
+  .stat-card:nth-child(2){animation-delay:.2s}
+  .stat-card:nth-child(3){animation-delay:.3s}
+  .stat-card:nth-child(4){animation-delay:.4s}
+  @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .stat-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(225,29,72,.1);}
+  .stat-card::after{
+    content:'';position:absolute;top:-16px;right:-16px;
+    width:72px;height:72px;border-radius:50%;opacity:.08;
+  }
+  .stat-card.total::after{background:var(--rose-500);}
+  .stat-card.borrador::after{background:#f59e0b;}
+  .stat-card.revision::after{background:#3b82f6;}
+  .stat-card.validado::after{background:#10b981;}
+
+  .stat-icon{
+    width:34px;height:34px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;margin-bottom:12px;
+  }
+  .stat-card.total .stat-icon{background:#fdf2f3;}
+  .stat-card.borrador .stat-icon{background:#fffbeb;}
+  .stat-card.revision .stat-icon{background:#eff6ff;}
+  .stat-card.validado .stat-icon{background:#f0fdf4;}
+
+  .stat-label{font-size:.67rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--mid);margin-bottom:5px;}
+  .stat-number{font-family:'Poppins',sans-serif;font-size:2rem;font-weight:700;line-height:1;margin-bottom:3px;}
+  .stat-card.total .stat-number{color:var(--rose-600);}
+  .stat-card.borrador .stat-number{color:#d97706;}
+  .stat-card.revision .stat-number{color:#2563eb;}
+  .stat-card.validado .stat-number{color:#059669;}
+  .stat-sub{font-size:.7rem;color:#a78a8f;font-weight:400;}
+
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .section-title{font-family:'Poppins',sans-serif;font-size:1.2rem;font-weight:700;color:var(--dark-2);letter-spacing:-.3px;}
+  .btn-new{
+    display:flex;align-items:center;gap:7px;padding:9px 17px;
+    background:linear-gradient(135deg,var(--rose-500),var(--rose-700));
+    color:white;border:none;border-radius:9px;
+    font-family:'Poppins',sans-serif;font-size:.8rem;font-weight:600;
+    cursor:pointer;transition:all .3s;
+    box-shadow:0 4px 14px rgba(225,29,72,.28);
+  }
+  .btn-new:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(225,29,72,.38);}
+
+  .table-wrap{
+    background:white;border-radius:13px;
+    border:1px solid rgba(225,29,72,.06);overflow:hidden;
+    box-shadow:0 2px 14px rgba(190,18,60,.05);
+    animation:slideUp .5s .3s ease-out forwards;opacity:0;
+  }
+  .table-filters{
+    padding:13px 20px;border-bottom:1px solid #f7edef;
+    display:flex;gap:8px;align-items:center;
+  }
+  .filter-label{font-size:.67rem;font-weight:600;color:#c9a0aa;margin-right:4px;letter-spacing:.5px;}
+  .filter-pill{
+    padding:5px 12px;border-radius:50px;font-size:.72rem;font-weight:500;
+    cursor:pointer;border:1.5px solid transparent;transition:all .2s;
+  }
+  .filter-pill.active{background:var(--rose-50);border-color:var(--rose-300);color:var(--rose-700);}
+  .filter-pill:not(.active){color:#a78a8f;border-color:#ede0e2;}
+  .filter-pill:hover:not(.active){border-color:var(--rose-200);color:var(--mid);}
+
+  table{width:100%;border-collapse:collapse;}
+  thead tr{background:#fdf5f6;}
+  thead th{
+    padding:11px 18px;text-align:left;
+    font-size:.67rem;font-weight:600;letter-spacing:1px;
+    text-transform:uppercase;color:var(--light-mid);
+  }
+  tbody tr{
+    border-bottom:1px solid #faf0f2;transition:background .15s;
+    animation:fadeRow .4s ease-out forwards;opacity:0;
+  }
+  tbody tr:nth-child(1){animation-delay:.35s}
+  tbody tr:nth-child(2){animation-delay:.45s}
+  tbody tr:nth-child(3){animation-delay:.55s}
+  tbody tr:nth-child(4){animation-delay:.65s}
+  tbody tr:nth-child(5){animation-delay:.75s}
+  @keyframes fadeRow{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+  tbody tr:hover{background:#fdf5f6;}
+  tbody tr:last-child{border-bottom:none;}
+  td{padding:13px 18px;font-size:.82rem;color:#2d1520;font-weight:400;}
+
+  .manual-name{font-weight:600;color:#1a0a0f;font-size:.84rem;}
+  .manual-dep{font-size:.72rem;color:#a78a8f;margin-top:2px;}
+
+  .type-badge{
+    display:inline-flex;align-items:center;
+    padding:3px 10px;border-radius:5px;font-size:.7rem;font-weight:600;
+  }
+  .type-badge.org{background:#fdf0f2;color:var(--rose-700);}
+  .type-badge.proc{background:#eef3ff;color:#1d4ed8;}
+
+  .status-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 11px;border-radius:50px;font-size:.7rem;font-weight:600;
+  }
+  .status-dot{width:6px;height:6px;border-radius:50%;}
+  .status-badge.borrador{background:#fffbeb;color:#92400e;}
+  .status-badge.borrador .status-dot{background:#f59e0b;}
+  .status-badge.revision{background:#eff6ff;color:#1e40af;}
+  .status-badge.revision .status-dot{background:#3b82f6;animation:blink 1.5s infinite;}
+  .status-badge.observaciones{background:#fff7ed;color:#9a3412;}
+  .status-badge.observaciones .status-dot{background:#f97316;}
+  .status-badge.validado{background:#f0fdf4;color:#14532d;}
+  .status-badge.validado .status-dot{background:#22c55e;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .td-user{display:flex;align-items:center;gap:8px;font-size:.8rem;}
+  .mini-av{
+    width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.65rem;font-weight:700;color:white;flex-shrink:0;
+  }
+  .td-actions{display:flex;gap:5px;}
+  .action-btn{
+    width:28px;height:28px;border-radius:7px;
+    border:1px solid #f2e0e3;background:white;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:var(--light-mid);transition:all .2s;
+  }
+  .action-btn:hover{background:var(--rose-50);border-color:var(--rose-300);color:var(--rose-600);transform:scale(1.1);}
+
+  /* MODAL */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;
+    background:rgba(26,10,15,.55);backdrop-filter:blur(6px);
+    z-index:200;align-items:center;justify-content:center;
+  }
+  .modal-overlay.open{display:flex;animation:fadeIn .2s ease-out;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{
+    background:white;border-radius:18px;padding:36px;width:450px;
+    box-shadow:0 40px 80px rgba(26,10,15,.25);
+    animation:modalIn .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes modalIn{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .modal h2{font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:6px;color:var(--dark-2);letter-spacing:-.3px;}
+  .modal p{color:var(--light-mid);font-size:.8rem;margin-bottom:22px;}
+  .modal-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-option{
+    padding:22px 16px;border:2px solid var(--rose-100);border-radius:12px;
+    cursor:pointer;text-align:center;transition:all .25s;background:#fdfafa;
+  }
+  .modal-option:hover{border-color:var(--rose-400);background:var(--rose-50);transform:translateY(-3px);box-shadow:0 8px 20px rgba(225,29,72,.12);}
+  .modal-option-icon{
+    width:44px;height:44px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;margin:0 auto 10px;
+  }
+  .modal-option:nth-child(1) .modal-option-icon{background:#fdf2f3;}
+  .modal-option:nth-child(2) .modal-option-icon{background:#eff6ff;}
+  .modal-option h3{font-size:.85rem;font-weight:700;color:var(--dark-2);margin-bottom:3px;}
+  .modal-option span{font-size:.7rem;color:#a78a8f;}
+  .modal-cancel{
+    width:100%;margin-top:12px;padding:9px;
+    background:none;border:none;color:#b0919a;
+    font-family:'Poppins',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;transition:color .2s;
+  }
+  .modal-cancel:hover{color:var(--mid);}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login" class="screen active">
+  <div class="login-left">
+    <div class="login-left-bg"></div>
+    <div class="login-left-pattern"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="login-left-content">
+      <!-- Escudo fiel al logo oficial -->
+      <svg class="escudo-hero" width="148" height="148" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="c1"><circle cx="100" cy="100" r="96"/></clipPath>
+          <clipPath id="top"><rect x="0" y="0" width="200" height="105"/></clipPath>
+          <clipPath id="bot"><rect x="0" y="105" width="200" height="95"/></clipPath>
+          <clipPath id="mid-strip"><rect x="0" y="96" width="200" height="18"/></clipPath>
+        </defs>
+
+        <!-- Base roja (parte superior sol) -->
+        <circle cx="100" cy="100" r="96" fill="#d42b2b"/>
+
+        <!-- Rayos del sol — forma de pétalo desde el centro hacia afuera -->
+        <g clip-path="url(#top)">
+          <!-- 8 rayos en forma de pétalo/sector -->
+          <path d="M100 100 L72 4  A96 96 0 0 1 128 4  Z" fill="#1a1a1a"/>
+          <path d="M100 100 L128 4  A96 96 0 0 1 178 40 Z" fill="#d42b2b"/>
+          <path d="M100 100 L178 40 A96 96 0 0 1 196 90 Z" fill="#1a1a1a"/>
+          <path d="M100 100 L196 90 A96 96 0 0 1 196 105 Z" fill="#d42b2b"/>
+          <path d="M100 100 L4  90 A96 96 0 0 0 4  105 Z" fill="#d42b2b"/>
+          <path d="M100 100 L22 40 A96 96 0 0 1 72 4  Z" fill="#d42b2b"/>
+          <path d="M100 100 L4  90 A96 96 0 0 1 22 40 Z" fill="#1a1a1a"/>
+        </g>
+
+        <!-- Franja amarilla central -->
+        <rect x="4" y="96" width="192" height="16" fill="#f0c030" clip-path="url(#c1)"/>
+
+        <!-- Parte inferior — azul cielo -->
+        <rect x="4" y="112" width="192" height="84" fill="#1976d2" clip-path="url(#c1)"/>
+
+        <!-- Ondas del mar — 3 franjas onduladas -->
+        <g clip-path="url(#c1)">
+          <!-- onda 1 blanca/azul claro -->
+          <path d="M4 128 Q34 118 64 128 Q94 138 124 128 Q154 118 196 128 L196 144 Q154 134 124 144 Q94 154 64 144 Q34 134 4 144 Z" fill="#1565c0"/>
+          <!-- onda 2 más oscura -->
+          <path d="M4 148 Q34 138 64 148 Q94 158 124 148 Q154 138 196 148 L196 164 Q154 154 124 164 Q94 174 64 164 Q34 154 4 164 Z" fill="#0d47a1"/>
+          <!-- fondo inferior -->
+          <rect x="4" y="162" width="192" height="34" fill="#1976d2"/>
+        </g>
+
+        <!-- Círculo negro central (sol) -->
+        <circle cx="100" cy="100" r="18" fill="#111111"/>
+
+        <!-- Borde blanco exterior -->
+        <circle cx="100" cy="100" r="96" fill="none" stroke="white" stroke-width="5"/>
+        <circle cx="100" cy="100" r="91" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+      </svg>
+
+      <h1>Manuales Digitales</h1>
+      <p class="inst">Municipio de Benito Juárez</p>
+      <p class="sub">Instituto Municipal de Desarrollo<br/>Administrativo e Innovación</p>
+
+      <div class="deco">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="login-footer">
+      <span>Cancún · Quintana Roo · México</span>
+    </div>
+  </div>
+
+  <!-- Panel derecho -->
+  <div class="login-right">
+    <div class="login-form-wrap">
+      <h2 class="login-greeting">Bienvenido</h2>
+      <p class="login-sub">Ingresa tus credenciales para acceder al sistema</p>
+
+      <div class="form-group">
+        <label>Usuario</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+          <input type="text" placeholder="nombre.apellido"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </span>
+          <input type="password" placeholder="••••••••••"/>
+        </div>
+      </div>
+
+      <button class="btn-login" onclick="goToDashboard()">Iniciar Sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="dashboard" class="screen">
+  <nav class="topnav">
+    <div class="nav-brand">
+      <div class="nav-escudo-sm">
+        <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <clipPath id="c2"><circle cx="100" cy="100" r="96"/></clipPath>
+            <clipPath id="t2"><rect x="0" y="0" width="200" height="105"/></clipPath>
+          </defs>
+          <circle cx="100" cy="100" r="96" fill="#d42b2b"/>
+          <g clip-path="url(#t2)">
+            <path d="M100 100 L72 4  A96 96 0 0 1 128 4  Z" fill="#1a1a1a"/>
+            <path d="M100 100 L178 40 A96 96 0 0 1 196 90 Z" fill="#1a1a1a"/>
+            <path d="M100 100 L4  90 A96 96 0 0 1 22 40 Z" fill="#1a1a1a"/>
+          </g>
+          <rect x="4" y="96" width="192" height="16" fill="#f0c030" clip-path="url(#c2)"/>
+          <rect x="4" y="112" width="192" height="84" fill="#1976d2" clip-path="url(#c2)"/>
+          <g clip-path="url(#c2)">
+            <path d="M4 128 Q34 118 64 128 Q94 138 124 128 Q154 118 196 128 L196 144 Q154 134 124 144 Q94 154 64 144 Q34 134 4 144 Z" fill="#1565c0"/>
+            <path d="M4 148 Q34 138 64 148 Q94 158 124 148 Q154 138 196 148 L196 164 Q154 154 124 164 Q94 174 64 164 Q34 154 4 164 Z" fill="#0d47a1"/>
+          </g>
+          <circle cx="100" cy="100" r="18" fill="#111111"/>
+          <circle cx="100" cy="100" r="96" fill="none" stroke="white" stroke-width="5"/>
+        </svg>
+      </div>
+      IMDAI — Manuales Digitales
+    </div>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="user-avatar">LG</div>
+        <div>
+          <div class="user-name">Luis García</div>
+          <div class="user-role">Sujeto Obligado</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="goToLogin()">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="welcome-bar">
+      <h2>Buen día, Luis 👋</h2>
+      <p>Municipio de Benito Juárez — Quintana Roo &nbsp;·&nbsp; Dirección de Administración</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card total">
+        <div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="stat-label">Total Manuales</div>
+        <div class="stat-number">5</div>
+        <div class="stat-sub">En este período</div>
+      </div>
+      <div class="stat-card borrador">
+        <div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+        <div class="stat-label">En Borrador</div>
+        <div class="stat-number">2</div>
+        <div class="stat-sub">Sin enviar</div>
+      </div>
+      <div class="stat-card revision">
+        <div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <div class="stat-label">En Revisión</div>
+        <div class="stat-number">1</div>
+        <div class="stat-sub">Pendiente</div>
+      </div>
+      <div class="stat-card validado">
+        <div class="stat-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="stat-label">Validados</div>
+        <div class="stat-number">2</div>
+        <div class="stat-sub">Aprobados</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <h2 class="section-title">Mis Manuales</h2>
+      <button class="btn-new" onclick="openModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo Manual
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-filters">
+        <span class="filter-label">FILTRAR</span>
+        <div class="filter-pill active">Todos</div>
+        <div class="filter-pill">Organización</div>
+        <div class="filter-pill">Procedimientos</div>
+        <div class="filter-pill">Validados</div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Manual</th><th>Tipo</th><th>Estado</th><th>Creado por</th><th>Fecha</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="manual-name">Manual General de Organización</div><div class="manual-dep">Dirección de Administración</div></td>
+            <td><span class="type-badge org">Organización</span></td>
+            <td><span class="status-badge validado"><span class="status-dot"></span>Validado</span></td>
+            <td><div class="td-user"><div class="mini-av" style="background:linear-gradient(135deg,#f43f5e,#be123c)">LG</div>Luis García</div></td>
+            <td>15 Ene 2026</td>
+            <td><div class="td-actions">
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div></td>
+          </tr>
+          <tr>
+            <td><div class="manual-name">Procedimientos de Tesorería</div><div class="manual-dep">Tesorería Municipal</div></td>
+            <td><span class="type-badge proc">Procedimientos</span></td>
+            <td><span class="status-badge revision"><span class="status-dot"></span>En Revisión</span></td>
+            <td><div class="td-user"><div class="mini-av" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">MR</div>María Ruiz</div></td>
+            <td>28 Ene 2026</td>
+            <td><div class="td-actions">
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div></td>
+          </tr>
+          <tr>
+            <td><div class="manual-name">Manual de Obras Públicas</div><div class="manual-dep">Dirección de Obras Públicas</div></td>
+            <td><span class="type-badge org">Organización</span></td>
+            <td><span class="status-badge observaciones"><span class="status-dot"></span>Observaciones</span></td>
+            <td><div class="td-user"><div class="mini-av" style="background:linear-gradient(135deg,#f97316,#c2410c)">JP</div>Juan Pérez</div></td>
+            <td>02 Feb 2026</td>
+            <td><div class="td-actions">
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div></td>
+          </tr>
+          <tr>
+            <td><div class="manual-name">Procedimientos IMPLAN</div><div class="manual-dep">IMPLAN Benito Juárez</div></td>
+            <td><span class="type-badge proc">Procedimientos</span></td>
+            <td><span class="status-badge borrador"><span class="status-dot"></span>Borrador</span></td>
+            <td><div class="td-user"><div class="mini-av" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">AL</div>Ana López</div></td>
+            <td>20 Feb 2026</td>
+            <td><div class="td-actions">
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div></td>
+          </tr>
+          <tr>
+            <td><div class="manual-name">Manual Servicios Públicos</div><div class="manual-dep">Dirección de Servicios Públicos</div></td>
+            <td><span class="type-badge org">Organización</span></td>
+            <td><span class="status-badge validado"><span class="status-dot"></span>Validado</span></td>
+            <td><div class="td-user"><div class="mini-av" style="background:linear-gradient(135deg,#10b981,#065f46)">CM</div>Carlos Méndez</div></td>
+            <td>25 Feb 2026</td>
+            <td><div class="td-actions">
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="action-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>Nuevo Manual</h2>
+    <p>Selecciona el tipo de manual que deseas crear</p>
+    <div class="modal-options">
+      <div class="modal-option">
+        <div class="modal-option-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <h3>Organización</h3>
+        <span>Estructura y puestos</span>
+      </div>
+      <div class="modal-option">
+        <div class="modal-option-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
+            <polyline points="9 11 12 14 22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <h3>Procedimientos</h3>
+        <span>Procesos y actividades</span>
+      </div>
+    </div>
+    <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+  function goToDashboard(){
+    document.getElementById('login').classList.remove('active');
+    document.getElementById('dashboard').classList.add('active');
+  }
+  function goToLogin(){
+    document.getElementById('dashboard').classList.remove('active');
+    document.getElementById('login').classList.add('active');
+  }
+  function openModal(){ document.getElementById('modal').classList.add('open'); }
+  function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+  document.getElementById('modal').addEventListener('click',function(e){ if(e.target===this)closeModal(); });
+  document.querySelectorAll('.filter-pill').forEach(p=>{
+    p.addEventListener('click',()=>{
+      document.querySelectorAll('.filter-pill').forEach(x=>x.classList.remove('active'));
+      p.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
