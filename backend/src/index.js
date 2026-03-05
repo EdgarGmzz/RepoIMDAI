@@ -5,11 +5,15 @@ require('dotenv').config()
 
 const authRoutes = require('./routes/auth.routes')
 
+const manualesRoutes = require('./routes/manuales.routes')
+
 const app = express()
 app.use(cors())
 app.use(express.json())
 
 app.use('/auth', authRoutes)
+
+app.use('/manuales', manualesRoutes)
 
 const { verificarToken } = require('./middlewares/auth.middleware')
 
