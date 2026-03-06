@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import WizardManual from '../components/WizardManual'
 
 export default function Dashboard() {
   const [manuales, setManuales] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
   const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem('usuario'))
   const token = localStorage.getItem('token')
@@ -34,7 +36,7 @@ export default function Dashboard() {
   const estadoBadge = (estado) => {
     const map = {
       borrador: { label: 'Borrador', clase: 'borrador' },
-      en_revision: { label: 'En Revisión', clase: 'revision' },
+      en_revision: { label: 'En Revision', clase: 'revision' },
       observaciones: { label: 'Observaciones', clase: 'observaciones' },
       validado: { label: 'Validado', clase: 'validado' },
       autorizado: { label: 'Autorizado', clase: 'validado' }
@@ -87,15 +89,15 @@ export default function Dashboard() {
               <div className="user-role">{usuario?.rol}</div>
             </div>
           </div>
-          <button className="btn-logout" onClick={handleLogout}>Cerrar sesión</button>
+          <button className="btn-logout" onClick={handleLogout}>Cerrar sesion</button>
         </div>
       </nav>
 
       {/* Contenido */}
       <div className="main-content">
         <div className="welcome-bar">
-          <h2>Buen día, {usuario?.nombre?.split(' ')[0]} 👋</h2>
-          <p>Municipio de Benito Juárez — Quintana Roo · {usuario?.dependencia}</p>
+          <h2>Buen dia, {usuario?.nombre?.split(' ')[0]}</h2>
+          <p>Municipio de Benito Juarez — Quintana Roo · {usuario?.dependencia}</p>
         </div>
 
         {/* Stats */}
@@ -106,7 +108,7 @@ export default function Dashboard() {
             </div>
             <div className="stat-label">Total Manuales</div>
             <div className="stat-number">{totalManuales}</div>
-            <div className="stat-sub">En este período</div>
+            <div className="stat-sub">En este periodo</div>
           </div>
           <div className="stat-card borrador">
             <div className="stat-icon">
@@ -120,7 +122,7 @@ export default function Dashboard() {
             <div className="stat-icon">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
-            <div className="stat-label">En Revisión</div>
+            <div className="stat-label">En Revision</div>
             <div className="stat-number">{enRevision}</div>
             <div className="stat-sub">Pendiente</div>
           </div>
@@ -158,7 +160,7 @@ export default function Dashboard() {
               {manuales.length === 0 ? (
                 <tr>
                   <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#a78a8f' }}>
-                    No hay manuales aún. ¡Crea el primero!
+                    No hay manuales aun. Crea el primero.
                   </td>
                 </tr>
               ) : (
@@ -172,7 +174,7 @@ export default function Dashboard() {
                       </td>
                       <td>
                         <span className={`type-badge ${m.tipo_manual === 'organizacion' ? 'org' : 'proc'}`}>
-                          {m.tipo_manual === 'organizacion' ? 'Organización' : 'Procedimientos'}
+                          {m.tipo_manual === 'organizacion' ? 'Organizacion' : 'Procedimientos'}
                         </span>
                       </td>
                       <td>
@@ -192,7 +194,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal seleccion de tipo */}
       {modalOpen && (
         <div className="modal-overlay open" onClick={() => setModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -208,10 +210,10 @@ export default function Dashboard() {
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                   </svg>
                 </div>
-                <h3>Organización</h3>
+                <h3>Organizacion</h3>
                 <span>Estructura y puestos</span>
               </div>
-              <div className="modal-option">
+              <div className="modal-option" onClick={() => { setModalOpen(false); setWizardOpen(true) }}>
                 <div className="modal-option-icon">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2">
                     <polyline points="9 11 12 14 22 4"/>
@@ -226,6 +228,15 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Wizard */}
+      {wizardOpen && (
+  <WizardManual
+    onCancelar={() => setWizardOpen(false)}
+    onGuardado={() => { setWizardOpen(false); fetchManuales() }}
+  />
+)}
+
     </div>
   )
 }
