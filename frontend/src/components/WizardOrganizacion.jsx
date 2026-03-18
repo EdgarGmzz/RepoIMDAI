@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import OrgPaso1DatosGenerales from './org-pasos/OrgPaso1DatosGenerales'
 import OrgPaso2CapituloI from './org-pasos/OrgPaso2CapituloI'
@@ -14,72 +14,184 @@ const pasos = [
   { numero: 5, titulo: 'Revisión' },
 ]
 
-export default function WizardOrganizacion({ onCancelar, onGuardado }) {
+const datosVacios = {
+  dependencia: '',
+  codigo: '',
+  fecha_elaboracion: '',
+  version: '01',
+  elaboro_nombre: '',
+  elaboro_cargo: '',
+  reviso_nombre: '',
+  reviso_cargo: '',
+  autorizo_nombre: '',
+  autorizo_cargo: '',
+  valido_nombre: '',
+  valido_cargo: '',
+  introduccion: '',
+  superior_nombre: '',
+  superior_cargo: '',
+  antecedentes: '',
+  marco_normativo: [],
+  atribuciones: '',
+  objetivo_general: '',
+  mision: '',
+  vision: '',
+  principios: [],
+  valores: [],
+  politicas_operacion: [],
+  marco_conceptual: [],
+  organigrama_general: null,
+  organigramas_especificos: [],
+  inventario_puestos: [],
+  puestos: [],
+  cambios: [],
+}
+
+// Convierte cualquier valor de fecha a string YYYY-MM-DD para inputs type="date"
+const toDateStr = (val) => {
+  if (!val) return ''
+  if (typeof val === 'string') return val.split('T')[0]
+  if (val instanceof Date) return val.toISOString().split('T')[0]
+  return ''
+}
+
+export default function WizardOrganizacion({ onCancelar, onGuardado, manualEditar = null }) {
   const [pasoActual, setPasoActual] = useState(1)
   const [guardando, setGuardando] = useState(false)
+  const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
   const token = localStorage.getItem('token')
 
-  const [datos, setDatos] = useState({
-    // Paso 1 — Datos Generales
-    dependencia: '',
-    codigo: '',
-    fecha_elaboracion: '',
-    version: '01',
-    elaboro_nombre: '',
-    elaboro_cargo: '',
-    reviso_nombre: '',
-    reviso_cargo: '',
-    autorizo_nombre: '',
-    autorizo_cargo: '',
-    valido_nombre: '',
-    valido_cargo: '',
+  const modoEdicion = !!manualEditar
+  const [datos, setDatos] = useState(datosVacios)
 
-    // Paso 2 — Capítulo I Generales
-    introduccion: '',
-    superior_nombre: '',
-    superior_cargo: '',
-    antecedentes: '',
-    marco_normativo: [],          // [{ nombre, fecha, medio }]
-    atribuciones: '',
-    objetivo_general: '',
-    mision: '',
-    vision: '',
-    principios: [],               // ['...']
-    valores: [],                  // ['...']
-    politicas_operacion: [],      // [{ area, descripcion }]
-    marco_conceptual: [],         // [{ termino, definicion }]
+  useEffect(() => {
+    if (!manualEditar) return
+    const fetchDetalle = async () => {
+      setCargando(true)
+      try {
+        const res = await axios.get(`http://localhost:3000/manuales/${manualEditar.id_manual}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const d = res.data
 
-    // Paso 3 — Capítulo II Organización
-    organigrama_general: null,    // File
-    organigramas_especificos: [], // [{ nombre, archivo: File }]
-    inventario_puestos: [],       // [{ nombre_puesto, num_personas }]
-
-    // Paso 4 — Descripción de Puestos
-    puestos: [],                  // ver estructura en OrgPaso4Puestos
-
-    // Paso 5 — Sección de Cambios
-    cambios: [],                  // [{ revision_anterior, revision_actual, razon, fecha }]
-  })
+        setDatos({
+          dependencia:         d.dependencia        || '',
+          codigo:              d.codigo             || '',
+          // ── Fechas ─────────────────────────────────────────────────────
+          fecha_elaboracion:   toDateStr(d.fecha_elaboracion),
+          // ── Versión: número a string con padding ────────────────────────
+          version:             d.version != null
+                                 ? String(d.version).padStart(2, '0')
+                                 : '01',
+          elaboro_nombre:      d.elaboro_nombre     || '',
+          elaboro_cargo:       d.elaboro_cargo      || '',
+          reviso_nombre:       d.reviso_nombre      || '',
+          reviso_cargo:        d.reviso_cargo       || '',
+          autorizo_nombre:     d.autorizo_nombre    || '',
+          autorizo_cargo:      d.autorizo_cargo     || '',
+          valido_nombre:       d.valido_nombre      || '',
+          valido_cargo:        d.valido_cargo       || '',
+          introduccion:        d.introduccion       || '',
+          superior_nombre:     d.superior_nombre    || '',
+          superior_cargo:      d.superior_cargo     || '',
+          antecedentes:        d.antecedentes       || '',
+          atribuciones:        d.atribuciones       || '',
+          objetivo_general:    d.objetivo_general   || '',
+          mision:              d.mision             || '',
+          vision:              d.vision             || '',
+          principios:          d.principios         || [],
+          valores:             d.valores            || [],
+          politicas_operacion: (d.politicas_operacion || []).map(p => ({
+            area:        p.area        || '',
+            descripcion: p.descripcion || '',
+          })),
+          marco_conceptual: (d.marco_conceptual || []).map(c => ({
+            termino:    c.termino    || '',
+            definicion: c.definicion || '',
+          })),
+          // ── Marco normativo: normalizar fechas ──────────────────────────
+          marco_normativo: (d.marco_normativo || []).map(n => ({
+            nombre: n.nombre || '',
+            fecha:  toDateStr(n.fecha),
+            medio:  n.medio  || '',
+          })),
+          // Archivos no se precargan (no se pueden serializar)
+          organigrama_general:      null,
+          organigramas_especificos: [],
+          // ── Inventario y puestos ─────────────────────────────────────────
+          inventario_puestos: (d.inventario_puestos || []).map(p => ({
+            nombre_puesto: p.nombre_puesto || '',
+            num_personas:  p.num_personas  || '',
+          })),
+          puestos: (d.puestos || []).map(p => ({
+            nombre_puesto:             p.nombre_puesto             || '',
+            jefe_inmediato:            p.jefe_inmediato            || '',
+            objetivo_puesto:           p.objetivo_puesto           || '',
+            subordinados_directos:     p.subordinados_directos     || [],
+            subordinados_indirectos:   p.subordinados_indirectos   || [],
+            funciones_institucionales: p.funciones_institucionales || [],
+            funciones_propias:         p.funciones_propias         || [],
+            escolaridad:               p.escolaridad               || '',
+            carreras_afines:           p.carreras_afines           || '',
+            especialidad:              p.especialidad              || '',
+            idiomas:                   p.idiomas                   || [],
+            programas_informaticos:    p.programas_informaticos    || [],
+            equipo_herramientas:       p.equipo_herramientas       || [],
+            experiencia:               p.experiencia               || '',
+            habilidades_directivas:    p.habilidades_directivas    || [],
+            habilidades_tecnicas:      p.habilidades_tecnicas      || [],
+            habilidades_generales:     p.habilidades_generales     || [],
+            actitudes:                 p.actitudes                 || [],
+            horario_laboral:           p.horario_laboral           || '',
+            manejo_informacion:        p.manejo_informacion        || '',
+            nivel_informacion:         p.nivel_informacion         || '',
+            manejo_presupuesto:        p.manejo_presupuesto        || '',
+            nivel_presupuesto:         p.nivel_presupuesto         || '',
+            autoridad:                 p.autoridad                 || [],
+            indicador_desempeno:       p.indicador_desempeno       || [],
+            ocupante_nombre:           p.ocupante_nombre           || '',
+            ocupante_fecha:            toDateStr(p.ocupante_fecha),
+          })),
+          // ── Sección de cambios ───────────────────────────────────────────
+          cambios: (d.cambios || []).map(c => ({
+            revision_anterior: c.revision_anterior || '',
+            revision_actual:   c.revision_actual   || '',
+            razon:             c.razon             || '',
+            fecha:             toDateStr(c.fecha),
+          })),
+        })
+      } catch {
+        setError('No se pudo cargar el manual. Intenta de nuevo.')
+      } finally {
+        setCargando(false)
+      }
+    }
+    fetchDetalle()
+  }, [manualEditar])
 
   const actualizar = (nuevos) => setDatos(prev => ({ ...prev, ...nuevos }))
-
-  const siguiente = () => setPasoActual(p => Math.min(p + 1, pasos.length))
-  const anterior  = () => setPasoActual(p => Math.max(p - 1, 1))
+  const siguiente  = () => setPasoActual(p => Math.min(p + 1, pasos.length))
+  const anterior   = () => setPasoActual(p => Math.max(p - 1, 1))
 
   const guardar = async () => {
     setGuardando(true)
     setError('')
     try {
-      await axios.post('http://localhost:3000/manuales', {
-        tipo_manual: 'organizacion',
-        codigo: datos.codigo,
-        dependencia: datos.dependencia,
-        fecha_emision: datos.fecha_elaboracion,
-        version: parseInt(datos.version) || 1,
-      }, { headers: { Authorization: `Bearer ${token}` } })
+      const payload = { ...datos, tipo_manual: 'organizacion' }
+      if (modoEdicion) {
+        await axios.put(
+          `http://localhost:3000/manuales/${manualEditar.id_manual}`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      } else {
+        await axios.post('http://localhost:3000/manuales', payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      }
       onGuardado()
-    } catch (err) {
+    } catch {
       setError('Ocurrió un error al guardar. Intenta de nuevo.')
     } finally {
       setGuardando(false)
@@ -101,22 +213,23 @@ export default function WizardOrganizacion({ onCancelar, onGuardado }) {
     <div className="wizard-overlay">
       <div className="wizard-container" style={{ maxWidth: '920px' }}>
 
-        {/* Header */}
         <div className="wizard-header">
           <div>
-            <h2 className="wizard-title">Nuevo Manual de Organización</h2>
-            <p className="wizard-sub">Municipio de Benito Juárez — IMDAI</p>
+            <h2 className="wizard-title">
+              {modoEdicion ? 'Editar Manual de Organización' : 'Nuevo Manual de Organización'}
+            </h2>
+            <p className="wizard-sub">
+              {modoEdicion
+                ? `Editando: ${manualEditar.codigo || 'Sin código'} — ${manualEditar.dependencia}`
+                : 'Municipio de Benito Juárez — IMDAI'}
+            </p>
           </div>
           <button className="wizard-close" onClick={onCancelar}>✕</button>
         </div>
 
-        {/* Barra de pasos */}
         <div className="wizard-steps">
           {pasos.map((p) => (
-            <div
-              key={p.numero}
-              className={`wizard-step ${pasoActual === p.numero ? 'active' : ''} ${pasoActual > p.numero ? 'done' : ''}`}
-            >
+            <div key={p.numero} className={`wizard-step ${pasoActual === p.numero ? 'active' : ''} ${pasoActual > p.numero ? 'done' : ''}`}>
               <div className="step-circle">
                 {pasoActual > p.numero ? '✓' : p.numero}
               </div>
@@ -125,18 +238,25 @@ export default function WizardOrganizacion({ onCancelar, onGuardado }) {
           ))}
         </div>
 
-        {/* Cuerpo */}
         <div className="wizard-body">
-          {renderPaso()}
+          {cargando ? (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', padding: '60px', gap: '14px'
+            }}>
+              <div style={{
+                width: '36px', height: '36px', border: '3px solid #fecdd3',
+                borderTopColor: '#e11d48', borderRadius: '50%',
+                animation: 'spin .8s linear infinite'
+              }} />
+              <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+              <p style={{ color: '#b06070', fontSize: '.82rem' }}>Cargando datos del manual...</p>
+            </div>
+          ) : renderPaso()}
         </div>
 
-        {/* Footer */}
         <div className="wizard-footer">
-          <button
-            className="wizard-btn-secondary"
-            onClick={anterior}
-            disabled={pasoActual === 1}
-          >
+          <button className="wizard-btn-secondary" onClick={anterior} disabled={pasoActual === 1}>
             Anterior
           </button>
           <span className="wizard-step-count">Paso {pasoActual} de {pasos.length}</span>
@@ -148,7 +268,7 @@ export default function WizardOrganizacion({ onCancelar, onGuardado }) {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
               {error && <span style={{ fontSize: '.75rem', color: '#e11d48' }}>{error}</span>}
               <button className="wizard-btn-success" onClick={guardar} disabled={guardando}>
-                {guardando ? 'Guardando...' : 'Guardar Manual'}
+                {guardando ? 'Guardando...' : modoEdicion ? 'Guardar Cambios' : 'Guardar Manual'}
               </button>
             </div>
           )}

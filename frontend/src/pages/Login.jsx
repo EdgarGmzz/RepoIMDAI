@@ -6,9 +6,16 @@ export default function Login() {
   const [usuario, setUsuario] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [error, setError] = useState('')
+  const [cargando, setCargando] = useState(false)
   const navigate = useNavigate()
 
   const handleLogin = async () => {
+    if (!usuario || !contrasena) {
+      setError('Ingresa tu usuario y contraseña')
+      return
+    }
+    setCargando(true)
+    setError('')
     try {
       const res = await axios.post('http://localhost:3000/auth/login', {
         usuario,
@@ -16,10 +23,24 @@ export default function Login() {
       })
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('usuario', JSON.stringify(res.data.usuario))
-      navigate('/dashboard')
+
+      // ── Redirigir según rol ──────────────────────────────────────────────
+      const rol = res.data.usuario.rol
+      if (rol === 'administrador') {
+        navigate('/dashboard')
+      } else {
+        navigate('/mis-manuales')
+      }
+
     } catch (err) {
       setError('Usuario o contraseña incorrectos')
+    } finally {
+      setCargando(false)
     }
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleLogin()
   }
 
   return (
@@ -75,22 +96,22 @@ export default function Login() {
       <div className="login-right">
         <div className="login-form-wrap">
           <h2 className="login-greeting">Bienvenido</h2>
-          <p className="login-sub">Ingresa tus credenciales para acceder al sistema</p>
+          <p className="login-sub">Ingresa tus credenciales para continuar</p>
 
           <div className="form-group">
             <label>Usuario</label>
             <div className="input-wrap">
-              <span className="input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-              </span>
+              <svg className="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
               <input
                 type="text"
-                placeholder="nombre.apellido"
+                placeholder="Nombre de usuario"
                 value={usuario}
                 onChange={e => setUsuario(e.target.value)}
+                onKeyDown={handleKeyDown}
+                autoFocus
               />
             </div>
           </div>
@@ -98,29 +119,42 @@ export default function Login() {
           <div className="form-group">
             <label>Contraseña</label>
             <div className="input-wrap">
-              <span className="input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-              </span>
+              <svg className="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
               <input
                 type="password"
-                placeholder="••••••••••"
+                placeholder="••••••••"
                 value={contrasena}
                 onChange={e => setContrasena(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                onKeyDown={handleKeyDown}
               />
             </div>
           </div>
 
-          {error && <p style={{ color: '#e11d48', fontSize: '0.8rem', marginTop: '8px' }}>{error}</p>}
+          {error && (
+            <div style={{
+              padding: '10px 14px', borderRadius: '8px',
+              background: '#fff1f2', border: '1px solid #fecdd3',
+              color: '#be123c', fontSize: '.8rem', fontWeight: '500',
+              marginTop: '4px'
+            }}>
+              {error}
+            </div>
+          )}
 
-          <button className="btn-login" onClick={handleLogin}>
-            Iniciar Sesión
+          <button
+            className="btn-login"
+            onClick={handleLogin}
+            disabled={cargando}
+            style={{ opacity: cargando ? .7 : 1 }}
+          >
+            {cargando ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
         </div>
       </div>
+
     </div>
   )
 }

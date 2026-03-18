@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import WizardManual from '../components/WizardManual'
+import VisorManual from '../components/VisorManual'
 import WizardOrganizacion from '../components/WizardOrganizacion'
 
 export default function Dashboard() {
   const [manuales, setManuales] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
   const [wizardOpen, setWizardOpen] = useState(false)
+  const [manualVisor, setManualVisor] = useState(null)
   const [wizardOrgOpen, setWizardOrgOpen] = useState(false)
   const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem('usuario'))
@@ -37,24 +39,24 @@ export default function Dashboard() {
 
   const estadoBadge = (estado) => {
     const map = {
-      borrador: { label: 'Borrador', clase: 'borrador' },
-      en_revision: { label: 'En Revision', clase: 'revision' },
+      borrador:      { label: 'Borrador',      clase: 'borrador' },
+      en_revision:   { label: 'En Revision',   clase: 'revision' },
       observaciones: { label: 'Observaciones', clase: 'observaciones' },
-      validado: { label: 'Validado', clase: 'validado' },
-      autorizado: { label: 'Autorizado', clase: 'validado' }
+      validado:      { label: 'Validado',      clase: 'validado' },
+      autorizado:    { label: 'Autorizado',    clase: 'validado' }
     }
     return map[estado] || { label: estado, clase: 'borrador' }
   }
 
   const totalManuales = manuales.length
-  const enBorrador = manuales.filter(m => m.estado === 'borrador').length
-  const enRevision = manuales.filter(m => m.estado === 'en_revision').length
-  const validados = manuales.filter(m => m.estado === 'validado').length
+  const enBorrador    = manuales.filter(m => m.estado === 'borrador').length
+  const enRevision    = manuales.filter(m => m.estado === 'en_revision').length
+  const validados     = manuales.filter(m => m.estado === 'validado').length
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#faf4f5' }}>
 
-      {/* Navbar */}
+      {/* ── Navbar ─────────────────────────────────────────────────────────── */}
       <nav className="topnav">
         <div className="nav-brand">
           <div className="nav-escudo-sm">
@@ -95,8 +97,9 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      {/* Contenido */}
+      {/* ── Contenido ──────────────────────────────────────────────────────── */}
       <div className="main-content">
+
         <div className="welcome-bar">
           <h2>Buen dia, {usuario?.nombre?.split(' ')[0]}</h2>
           <p>Municipio de Benito Juarez — Quintana Roo · {usuario?.dependencia}</p>
@@ -106,31 +109,45 @@ export default function Dashboard() {
         <div className="stats-row">
           <div className="stat-card total">
             <div className="stat-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
             </div>
             <div className="stat-label">Total Manuales</div>
             <div className="stat-number">{totalManuales}</div>
             <div className="stat-sub">En este periodo</div>
           </div>
+
           <div className="stat-card borrador">
             <div className="stat-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
             </div>
             <div className="stat-label">En Borrador</div>
             <div className="stat-number">{enBorrador}</div>
             <div className="stat-sub">Sin enviar</div>
           </div>
+
           <div className="stat-card revision">
             <div className="stat-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
             </div>
             <div className="stat-label">En Revision</div>
             <div className="stat-number">{enRevision}</div>
             <div className="stat-sub">Pendiente</div>
           </div>
+
           <div className="stat-card validado">
             <div className="stat-icon">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
             </div>
             <div className="stat-label">Validados</div>
             <div className="stat-number">{validados}</div>
@@ -140,9 +157,14 @@ export default function Dashboard() {
 
         {/* Tabla */}
         <div className="section-header">
-          <h2 className="section-title">Mis Manuales</h2>
+          <h2 className="section-title">
+            {usuario?.rol === 'administrador' ? 'Todos los Manuales' : 'Mis Manuales'}
+          </h2>
           <button className="btn-new" onClick={() => setModalOpen(true)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
             Nuevo Manual
           </button>
         </div>
@@ -156,12 +178,13 @@ export default function Dashboard() {
                 <th>Estado</th>
                 <th>Creado por</th>
                 <th>Fecha</th>
+                <th style={{ width: '80px', textAlign: 'center' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {manuales.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#a78a8f' }}>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#a78a8f' }}>
                     No hay manuales aun. Crea el primero.
                   </td>
                 </tr>
@@ -170,23 +193,68 @@ export default function Dashboard() {
                   const badge = estadoBadge(m.estado)
                   return (
                     <tr key={m.id_manual}>
+
+                      {/* Nombre + dependencia */}
                       <td>
                         <div className="manual-name">{m.codigo}</div>
                         <div className="manual-dep">{m.dependencia}</div>
                       </td>
+
+                      {/* Tipo */}
                       <td>
                         <span className={`type-badge ${m.tipo_manual === 'organizacion' ? 'org' : 'proc'}`}>
                           {m.tipo_manual === 'organizacion' ? 'Organizacion' : 'Procedimientos'}
                         </span>
                       </td>
+
+                      {/* Estado */}
                       <td>
                         <span className={`status-badge ${badge.clase}`}>
                           <span className="status-dot"></span>
                           {badge.label}
                         </span>
                       </td>
+
+                      {/* Creado por */}
                       <td>{m.creado_por_nombre}</td>
-                      <td>{new Date(m.fecha_creacion).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+
+                      {/* Fecha */}
+                      <td>
+                        {new Date(m.fecha_creacion).toLocaleDateString('es-MX', {
+                          day: '2-digit', month: 'short', year: 'numeric'
+                        })}
+                      </td>
+
+                      {/* Acciones */}
+                      <td style={{ textAlign: 'center' }}>
+                        <button
+                          onClick={() => setManualVisor(m)}
+                          title="Ver avances del manual"
+                          style={{
+                            width: '32px', height: '32px', borderRadius: '7px',
+                            border: '1.5px solid #fecdd3', background: 'white',
+                            color: '#b06070', cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all .2s'
+                          }}
+                          onMouseOver={e => {
+                            e.currentTarget.style.background = '#fff1f2'
+                            e.currentTarget.style.borderColor = '#e11d48'
+                            e.currentTarget.style.color = '#e11d48'
+                          }}
+                          onMouseOut={e => {
+                            e.currentTarget.style.background = 'white'
+                            e.currentTarget.style.borderColor = '#fecdd3'
+                            e.currentTarget.style.color = '#b06070'
+                          }}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
+                        </button>
+                      </td>
+
                     </tr>
                   )
                 })
@@ -194,9 +262,10 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+
       </div>
 
-      {/* ── Modal seleccion de tipo ─────────────────────────────────────────── */}
+      {/* ── Modal selección de tipo ─────────────────────────────────────────── */}
       {modalOpen && (
         <div className="modal-overlay open" onClick={() => setModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -204,7 +273,6 @@ export default function Dashboard() {
             <p>Selecciona el tipo de manual que deseas crear</p>
             <div className="modal-options">
 
-              {/* Organización → abre WizardOrganizacion */}
               <div className="modal-option" onClick={() => { setModalOpen(false); setWizardOrgOpen(true) }}>
                 <div className="modal-option-icon">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth="2">
@@ -218,7 +286,6 @@ export default function Dashboard() {
                 <span>Estructura y puestos</span>
               </div>
 
-              {/* Procedimientos → abre WizardManual */}
               <div className="modal-option" onClick={() => { setModalOpen(false); setWizardOpen(true) }}>
                 <div className="modal-option-icon">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2">
@@ -249,6 +316,14 @@ export default function Dashboard() {
         <WizardOrganizacion
           onCancelar={() => setWizardOrgOpen(false)}
           onGuardado={() => { setWizardOrgOpen(false); fetchManuales() }}
+        />
+      )}
+
+      {/* ── Visor de manual (solo lectura) ──────────────────────────────────── */}
+      {manualVisor && (
+        <VisorManual
+          manual={manualVisor}
+          onCerrar={() => setManualVisor(null)}
         />
       )}
 
