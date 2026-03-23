@@ -708,4 +708,36 @@ const cambiarEstado = async (req, res) => {
   }
 }
 
-module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado }
+const eliminarManuales = async (req, res) => {
+  const client = await pool.connect()
+  try {
+    const { ids } = req.body
+    const { id_usuario, rol } = req.usuario
+
+    if (!ids || ids.length === 0)
+      return res.status(400).json({ error: 'No se enviaron IDs' })
+
+    if (rol === 'administrador') {
+      await client.query(
+        `DELETE FROM manuales WHERE id_manual = ANY($1)`,
+        [ids]
+      )
+    } else {
+      await client.query(
+        `DELETE FROM manuales 
+         WHERE id_manual = ANY($1) 
+         AND creado_por = $2 
+         AND estado = 'borrador'`,
+        [ids, id_usuario]
+      )
+    }
+
+    res.json({ mensaje: 'Manuales eliminados correctamente' })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  } finally {
+    client.release()
+  }
+}
+
+module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado, eliminarManuales }
