@@ -204,6 +204,18 @@ const getManualById = async (req, res) => {
       vision:                   secciones.vision           || '',
       superior_nombre:          secciones.superior_nombre  || '',
       superior_cargo:           secciones.superior_cargo   || '',
+      // ── Procedimientos ──────────────────────────────
+      titular:                  secciones.titular          || '',
+      cargo_titular:            secciones.cargo_titular    || '',
+      // ── Carátula de autorizaciones ──────────────────
+      elaboro_nombre:           secciones.elaboro_nombre   || '',
+      elaboro_cargo:            secciones.elaboro_cargo    || '',
+      reviso_nombre:            secciones.reviso_nombre    || '',
+      reviso_cargo:             secciones.reviso_cargo     || '',
+      autorizo_nombre:          secciones.autorizo_nombre  || '',
+      autorizo_cargo:           secciones.autorizo_cargo   || '',
+      valido_nombre:            secciones.valido_nombre    || '',
+      valido_cargo:             secciones.valido_cargo     || '',
       principios,
       valores,
       marco_normativo:          normativoRes.rows,
@@ -247,6 +259,8 @@ const crearManual = async (req, res) => {
   console.log('  inventario_puestos:', req.body.inventario_puestos?.length || 0, 'items')
   console.log('  puestos:           ', req.body.puestos?.length            || 0, 'items')
   console.log('  procedimientos:    ', req.body.procedimientos?.length     || 0, 'items')
+  console.log('  titular:           ', req.body.titular)
+  console.log('  cargo_titular:     ', req.body.cargo_titular)
   console.log('─────────────────────────────────────────────\n')
   // ── FIN LOG ───────────────────────────────────────────────────────────────
 
@@ -254,14 +268,21 @@ const crearManual = async (req, res) => {
     await client.query('BEGIN')
     const { id_usuario } = req.usuario
     const {
-      tipo_manual, codigo, dependencia, version, fecha_elaboracion,
-      introduccion, antecedentes, atribuciones, objetivo_general, mision, vision,
-      marco_normativo, marco_conceptual,
-      superior_nombre, superior_cargo,
-      principios, valores, politicas_operacion,
-      inventario_puestos, puestos,
-      procedimientos,
-    } = req.body
+  tipo_manual, codigo, dependencia, version, fecha_elaboracion,
+  introduccion, antecedentes, atribuciones, objetivo_general, mision, vision,
+  marco_normativo, marco_conceptual,
+  superior_nombre, superior_cargo,
+  principios, valores, politicas_operacion,
+  inventario_puestos, puestos,
+  procedimientos,
+  // Procedimientos
+  titular, cargo_titular,
+  // Carátula de autorizaciones (organización)
+  elaboro_nombre, elaboro_cargo,
+  reviso_nombre, reviso_cargo,
+  autorizo_nombre, autorizo_cargo,
+  valido_nombre, valido_cargo,
+} = req.body
 
     // 1. Manual base
     const manualResult = await client.query(
@@ -274,17 +295,29 @@ const crearManual = async (req, res) => {
 
     // 2. Secciones de texto
     const secciones = [
-      { tipo: 'introduccion',     contenido: introduccion },
-      { tipo: 'antecedentes',     contenido: antecedentes },
-      { tipo: 'atribuciones',     contenido: atribuciones },
-      { tipo: 'objetivo_general', contenido: objetivo_general },
-      { tipo: 'mision',           contenido: mision },
-      { tipo: 'vision',           contenido: vision },
-      { tipo: 'superior_nombre',  contenido: superior_nombre },
-      { tipo: 'superior_cargo',   contenido: superior_cargo },
-      { tipo: 'principios',       contenido: principios?.length ? JSON.stringify(principios) : null },
-      { tipo: 'valores',          contenido: valores?.length    ? JSON.stringify(valores)    : null },
-    ]
+  { tipo: 'introduccion',     contenido: introduccion },
+  { tipo: 'antecedentes',     contenido: antecedentes },
+  { tipo: 'atribuciones',     contenido: atribuciones },
+  { tipo: 'objetivo_general', contenido: objetivo_general },
+  { tipo: 'mision',           contenido: mision },
+  { tipo: 'vision',           contenido: vision },
+  { tipo: 'superior_nombre',  contenido: superior_nombre },
+  { tipo: 'superior_cargo',   contenido: superior_cargo },
+  { tipo: 'principios',       contenido: principios?.length ? JSON.stringify(principios) : null },
+  { tipo: 'valores',          contenido: valores?.length    ? JSON.stringify(valores)    : null },
+  // ── Procedimientos ────────────────────────────────
+  { tipo: 'titular',          contenido: titular },
+  { tipo: 'cargo_titular',    contenido: cargo_titular },
+  // ── Carátula de autorizaciones (organización) ─────
+  { tipo: 'elaboro_nombre',   contenido: elaboro_nombre },
+  { tipo: 'elaboro_cargo',    contenido: elaboro_cargo },
+  { tipo: 'reviso_nombre',    contenido: reviso_nombre },
+  { tipo: 'reviso_cargo',     contenido: reviso_cargo },
+  { tipo: 'autorizo_nombre',  contenido: autorizo_nombre },
+  { tipo: 'autorizo_cargo',   contenido: autorizo_cargo },
+  { tipo: 'valido_nombre',    contenido: valido_nombre },
+  { tipo: 'valido_cargo',     contenido: valido_cargo },
+]
     for (let i = 0; i < secciones.length; i++) {
       const s = secciones[i]
       if (s.contenido) {
@@ -468,17 +501,29 @@ const actualizarManual = async (req, res) => {
     // 2. Secciones
     await client.query('DELETE FROM secciones_manual WHERE id_manual = $1', [id])
     const secciones = [
-      { tipo: 'introduccion',     contenido: introduccion },
-      { tipo: 'antecedentes',     contenido: antecedentes },
-      { tipo: 'atribuciones',     contenido: atribuciones },
-      { tipo: 'objetivo_general', contenido: objetivo_general },
-      { tipo: 'mision',           contenido: mision },
-      { tipo: 'vision',           contenido: vision },
-      { tipo: 'superior_nombre',  contenido: superior_nombre },
-      { tipo: 'superior_cargo',   contenido: superior_cargo },
-      { tipo: 'principios',       contenido: principios?.length ? JSON.stringify(principios) : null },
-      { tipo: 'valores',          contenido: valores?.length    ? JSON.stringify(valores)    : null },
-    ]
+  { tipo: 'introduccion',     contenido: introduccion },
+  { tipo: 'antecedentes',     contenido: antecedentes },
+  { tipo: 'atribuciones',     contenido: atribuciones },
+  { tipo: 'objetivo_general', contenido: objetivo_general },
+  { tipo: 'mision',           contenido: mision },
+  { tipo: 'vision',           contenido: vision },
+  { tipo: 'superior_nombre',  contenido: superior_nombre },
+  { tipo: 'superior_cargo',   contenido: superior_cargo },
+  { tipo: 'principios',       contenido: principios?.length ? JSON.stringify(principios) : null },
+  { tipo: 'valores',          contenido: valores?.length    ? JSON.stringify(valores)    : null },
+  // ── Procedimientos ────────────────────────────────
+  { tipo: 'titular',          contenido: titular },
+  { tipo: 'cargo_titular',    contenido: cargo_titular },
+  // ── Carátula de autorizaciones (organización) ─────
+  { tipo: 'elaboro_nombre',   contenido: elaboro_nombre },
+  { tipo: 'elaboro_cargo',    contenido: elaboro_cargo },
+  { tipo: 'reviso_nombre',    contenido: reviso_nombre },
+  { tipo: 'reviso_cargo',     contenido: reviso_cargo },
+  { tipo: 'autorizo_nombre',  contenido: autorizo_nombre },
+  { tipo: 'autorizo_cargo',   contenido: autorizo_cargo },
+  { tipo: 'valido_nombre',    contenido: valido_nombre },
+  { tipo: 'valido_cargo',     contenido: valido_cargo },
+]
     for (let i = 0; i < secciones.length; i++) {
       const s = secciones[i]
       if (s.contenido) {

@@ -122,11 +122,14 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
     fetchDetalle()
   }, [manualEditar])
 
-  const actualizar = (nuevos) => setDatos(prev => ({ ...prev, ...nuevos }))
+  const actualizar = (nuevos) => {
+  console.log('actualizando:', nuevos)
+  setDatos(prev => ({ ...prev, ...nuevos }))
+}
   const siguiente  = () => setPasoActual(p => Math.min(p + 1, 5))
   const anterior   = () => setPasoActual(p => Math.max(p - 1, 1))
 
-  const guardar = async () => {
+ const guardar = async () => {
     setGuardando(true)
     setError('')
     try {
@@ -137,6 +140,7 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
           { headers: { Authorization: `Bearer ${token}` } }
         )
       } else {
+        console.log('mandando al backend:', datos.titular, datos.cargo_titular) // ← aquí
         await axios.post('http://localhost:3000/manuales', datos, {
           headers: { Authorization: `Bearer ${token}` }
         })
