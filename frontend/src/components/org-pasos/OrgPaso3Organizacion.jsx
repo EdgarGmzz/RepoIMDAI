@@ -48,9 +48,14 @@ export default function OrgPaso3Organizacion({ datos, actualizar }) {
             <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
           </svg>
           {datos.organigrama_general ? (
-            <p style={{ color: '#059669', fontWeight: '600', marginTop: '8px' }}>
-              ✓ {datos.organigrama_general.name}
-            </p>
+            <>
+              <p style={{ color: '#059669', fontWeight: '600', marginTop: '8px' }}>
+                ✓ {datos.organigrama_general instanceof File
+                  ? datos.organigrama_general.name
+                  : 'Organigrama guardado'}
+              </p>
+              <p style={{ color: '#a78a8f', fontSize: '.72rem', marginTop: '2px' }}>Clic para reemplazar</p>
+            </>
           ) : (
             <>
               <p style={{ color: '#7a3a4a', fontWeight: '600', marginTop: '8px' }}>Haz clic para cargar el organigrama general</p>
@@ -105,7 +110,14 @@ export default function OrgPaso3Organizacion({ datos, actualizar }) {
               onMouseOut={e => { e.currentTarget.style.borderColor = '#fecdd3'; e.currentTarget.style.background = '#fdf8f9' }}
             >
               {org.archivo ? (
-                <p style={{ color: '#059669', fontWeight: '600', fontSize: '.8rem' }}>✓ {org.archivo.name}</p>
+                <p style={{ color: '#059669', fontWeight: '600', fontSize: '.8rem' }}>
+                  ✓ {org.archivo instanceof File ? org.archivo.name : 'Organigrama guardado'}
+                </p>
+              ) : org.ruta_archivo ? (
+                <>
+                  <p style={{ color: '#059669', fontWeight: '600', fontSize: '.8rem' }}>✓ Organigrama guardado</p>
+                  <p style={{ color: '#a78a8f', fontSize: '.72rem', marginTop: '2px' }}>Clic para reemplazar</p>
+                </>
               ) : (
                 <p style={{ color: '#a78a8f', fontSize: '.75rem' }}>Clic para cargar archivo (PNG, JPG, PDF)</p>
               )}

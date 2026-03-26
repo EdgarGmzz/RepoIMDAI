@@ -67,7 +67,7 @@ export default function OrgPaso1DatosGenerales({ datos, actualizar }) {
           <label>Elaboró — Nombre</label>
           <input
             type="text"
-            placeholder="Nombre del enlace responsable"
+            placeholder="Titular de la dependencia o unidad administrativa"
             value={datos.elaboro_nombre}
             onChange={e => actualizar({ elaboro_nombre: e.target.value })}
           />
@@ -76,7 +76,7 @@ export default function OrgPaso1DatosGenerales({ datos, actualizar }) {
           <label>Elaboró — Cargo</label>
           <input
             type="text"
-            placeholder="Cargo del servidor público"
+            placeholder="Cargo de la dependencia o unidad administrativa"
             value={datos.elaboro_cargo}
             onChange={e => actualizar({ elaboro_cargo: e.target.value })}
           />

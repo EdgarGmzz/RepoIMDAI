@@ -47,6 +47,22 @@ const datosVacios = {
   cambios: [],
 }
 
+const puestoVacio = () => ({
+  nombre_puesto: '', jefe_inmediato: '', objetivo_puesto: '',
+  subordinados_directos: [], subordinados_indirectos: [],
+  funciones_institucionales: [], funciones_propias: [],
+  escolaridad: '', carreras_afines: '', especialidad: '',
+  idiomas: [], programas_informaticos: [], equipo_herramientas: [],
+  experiencia: '',
+  habilidades_directivas: [], habilidades_tecnicas: [], habilidades_generales: [],
+  actitudes: [], horario_laboral: '',
+  manejo_informacion: '', nivel_informacion: '',
+  manejo_presupuesto: '', nivel_presupuesto: '',
+  autoridad: [], indicador_desempeno: [],
+  ocupante_nombre: '', ocupante_cargo: '', ocupante_fecha: '',
+  jefe_firma_nombre: '', jefe_firma_cargo: '', jefe_firma_fecha: '',
+})
+
 // Convierte cualquier valor de fecha a string YYYY-MM-DD para inputs type="date"
 const toDateStr = (val) => {
   if (!val) return ''
@@ -116,15 +132,21 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
             fecha:  toDateStr(n.fecha),
             medio:  n.medio  || '',
           })),
-          // Archivos no se precargan (no se pueden serializar)
-          organigrama_general:      null,
-          organigramas_especificos: [],
+          organigrama_general: d.organigrama_general
+            ? { ruta_archivo: d.organigrama_general.ruta_archivo, name: 'Organigrama guardado' }
+            : null,
+          organigramas_especificos: (d.organigramas_especificos || []).map(o => ({
+            nombre:       o.tipo         || '',
+            archivo:      null,
+            ruta_archivo: o.ruta_archivo || '',
+          })),
           // ── Inventario y puestos ─────────────────────────────────────────
           inventario_puestos: (d.inventario_puestos || []).map(p => ({
             nombre_puesto: p.nombre_puesto || '',
             num_personas:  p.num_personas  || '',
           })),
           puestos: (d.puestos || []).map(p => ({
+            ...puestoVacio(),
             nombre_puesto:             p.nombre_puesto             || '',
             jefe_inmediato:            p.jefe_inmediato            || '',
             objetivo_puesto:           p.objetivo_puesto           || '',
@@ -151,7 +173,11 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
             autoridad:                 p.autoridad                 || [],
             indicador_desempeno:       p.indicador_desempeno       || [],
             ocupante_nombre:           p.ocupante_nombre           || '',
+            ocupante_cargo:            p.ocupante_cargo            || '',
             ocupante_fecha:            toDateStr(p.ocupante_fecha),
+            jefe_firma_nombre:         p.jefe_firma_nombre         || '',
+            jefe_firma_cargo:          p.jefe_firma_cargo          || '',
+            jefe_firma_fecha:          toDateStr(p.jefe_firma_fecha),
           })),
           // ── Sección de cambios ───────────────────────────────────────────
           cambios: (d.cambios || []).map(c => ({
@@ -174,22 +200,48 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
   const siguiente  = () => setPasoActual(p => Math.min(p + 1, pasos.length))
   const anterior   = () => setPasoActual(p => Math.max(p - 1, 1))
 
+  const subirOrganigramas = async (id_manual) => {
+    const headers = { Authorization: `Bearer ${token}` }
+
+    if (datos.organigrama_general instanceof File) {
+      const fd = new FormData()
+      fd.append('archivo', datos.organigrama_general)
+      fd.append('tipo', 'general')
+      await axios.post(`http://localhost:3000/manuales/${id_manual}/organigrama`, fd, { headers })
+    }
+
+    for (const org of datos.organigramas_especificos) {
+      if (org.archivo instanceof File) {
+        const fd = new FormData()
+        fd.append('archivo', org.archivo)
+        fd.append('tipo', org.nombre || 'especifico')
+        await axios.post(`http://localhost:3000/manuales/${id_manual}/organigrama`, fd, { headers })
+      }
+    }
+  }
+
   const guardar = async () => {
     setGuardando(true)
     setError('')
     try {
       const payload = { ...datos, tipo_manual: 'organizacion' }
+      let id_manual
+
       if (modoEdicion) {
         await axios.put(
           `http://localhost:3000/manuales/${manualEditar.id_manual}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         )
+        id_manual = manualEditar.id_manual
       } else {
-        await axios.post('http://localhost:3000/manuales', payload, {
+        const res = await axios.post('http://localhost:3000/manuales', payload, {
           headers: { Authorization: `Bearer ${token}` }
         })
+        id_manual = res.data.manual.id_manual
       }
+
+      await subirOrganigramas(id_manual)
       onGuardado()
     } catch {
       setError('Ocurrió un error al guardar. Intenta de nuevo.')

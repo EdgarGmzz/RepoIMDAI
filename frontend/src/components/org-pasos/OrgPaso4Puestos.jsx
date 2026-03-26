@@ -12,9 +12,9 @@ const nuevoPuesto = (nombre = '') => ({
   funciones_institucionales: [],  // ['...']
   funciones_propias: [],          // ['...']
   // Perfil
-  escolaridad: '',               // código '1'-'8'
-  carreras_afines: '',
-  especialidad: '',
+  escolaridad: '',               // código '1'-'6'
+  carreras_afines: '',           // 7. Licenciatura o carreras afines
+  especialidad: '',              // 8. Área de especialidad requerida
   idiomas: [],                   // ['...']
   programas_informaticos: [],    // ['...']
   equipo_herramientas: [],       // ['...']
@@ -35,7 +35,11 @@ const nuevoPuesto = (nombre = '') => ({
   indicador_desempeno: [],       // ['...']
   // Firma
   ocupante_nombre: '',
+  ocupante_cargo: '',
   ocupante_fecha: '',
+  jefe_firma_nombre: '',
+  jefe_firma_cargo: '',
+  jefe_firma_fecha: '',
 })
 
 const ESCOLARIDAD_OPTS = [
@@ -45,8 +49,6 @@ const ESCOLARIDAD_OPTS = [
   { val: '4', label: '4. Carrera Profesional no terminada (2 años)' },
   { val: '5', label: '5. Carrera profesional terminada' },
   { val: '6', label: '6. Postgrado' },
-  { val: '7', label: '7. Licenciatura o carreras afines' },
-  { val: '8', label: '8. Área de especialidad requerida' },
 ]
 
 // ── Helper: lista dinámica simple ──────────────────────────────────────────
@@ -123,6 +125,7 @@ function TarjetaPuesto({ puesto, index, onChange, puestosDisponibles }) {
 
   const secciones = [
     { id: 'info',          label: 'Info General' },
+    { id: 'organigrama',   label: 'Organigrama' },
     { id: 'funciones',     label: 'Funciones' },
     { id: 'perfil',        label: 'Perfil' },
     { id: 'competencias',  label: 'Competencias' },
@@ -170,20 +173,22 @@ function TarjetaPuesto({ puesto, index, onChange, puestosDisponibles }) {
             </div>
             <div className="campo-grupo">
               <label>Jefe Inmediato</label>
-              <select
+              <input
+                list={`jefes-${index}`}
+                placeholder="Nombre del jefe inmediato..."
                 value={puesto.jefe_inmediato}
                 onChange={e => upd('jefe_inmediato', e.target.value)}
                 style={{
                   width: '100%', padding: '8px 12px', border: '1.5px solid #ffe4e6',
                   borderRadius: '7px', fontFamily: 'Poppins, sans-serif',
-                  fontSize: '.82rem', outline: 'none', background: 'white', cursor: 'pointer'
+                  fontSize: '.82rem', outline: 'none', background: 'white'
                 }}
-              >
-                <option value="">— Sin jefe inmediato —</option>
+              />
+              <datalist id={`jefes-${index}`}>
                 {puestosDisponibles.filter((_, i) => i !== index).map((p, i) => (
-                  <option key={i} value={p.nombre_puesto}>{p.nombre_puesto || `Puesto ${i + 1}`}</option>
+                  <option key={i} value={p.nombre_puesto} />
                 ))}
-              </select>
+              </datalist>
             </div>
           </div>
 
@@ -202,6 +207,60 @@ function TarjetaPuesto({ puesto, index, onChange, puestosDisponibles }) {
               <ListaPares items={puesto.subordinados_indirectos} onChange={v => upd('subordinados_indirectos', v)} />
             </div>
           </div>
+        </div>
+      )
+
+      case 'organigrama': return (
+        <div>
+          <p style={{ fontSize: '.75rem', color: '#7a3a4a', marginBottom: '16px' }}>
+            Representación de la ubicación jerárquica del puesto dentro de la estructura organizacional.
+          </p>
+          {/* Jefe Inmediato */}
+          {puesto.jefe_inmediato && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+              <div style={{
+                padding: '10px 24px', background: '#f5e8ea', border: '1.5px solid #f0c0c8',
+                borderRadius: '8px', fontSize: '.78rem', fontWeight: '600', color: '#5a2030', textAlign: 'center'
+              }}>
+                {puesto.jefe_inmediato}
+              </div>
+              <div style={{ width: '2px', height: '20px', background: '#f0c0c8' }} />
+            </div>
+          )}
+          {/* Puesto actual */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+            <div style={{
+              padding: '12px 28px', background: 'linear-gradient(135deg, #e11d48, #be123c)',
+              borderRadius: '8px', fontSize: '.82rem', fontWeight: '700', color: 'white',
+              textAlign: 'center', boxShadow: '0 2px 8px rgba(225,29,72,.25)'
+            }}>
+              {puesto.nombre_puesto || 'Este puesto'}
+            </div>
+            {puesto.subordinados_directos.length > 0 && (
+              <div style={{ width: '2px', height: '20px', background: '#f0c0c8' }} />
+            )}
+          </div>
+          {/* Subordinados directos */}
+          {puesto.subordinados_directos.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              {puesto.subordinados_directos.map((sub, i) => (
+                <div key={i} style={{
+                  padding: '8px 18px', background: 'white', border: '1.5px solid #f0c0c8',
+                  borderRadius: '8px', fontSize: '.75rem', color: '#5a2030', textAlign: 'center'
+                }}>
+                  {sub.nombre_puesto || `Subordinado ${i + 1}`}
+                  {sub.num_personas && (
+                    <div style={{ fontSize: '.68rem', color: '#a78a8f' }}>({sub.num_personas} persona{sub.num_personas > 1 ? 's' : ''})</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {!puesto.jefe_inmediato && puesto.subordinados_directos.length === 0 && (
+            <p style={{ textAlign: 'center', color: '#a78a8f', fontSize: '.78rem', marginTop: '12px' }}>
+              Agrega el jefe inmediato y subordinados en "Info General" para visualizar el organigrama.
+            </p>
+          )}
         </div>
       )
 
@@ -254,12 +313,16 @@ function TarjetaPuesto({ puesto, index, onChange, puestosDisponibles }) {
             </div>
           </div>
 
-          {(puesto.escolaridad === '7' || puesto.escolaridad === '8') && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
             <div className="campo-grupo">
-              <label>Carreras / Especialidades Afines</label>
+              <label>7. Licenciatura o carreras afines</label>
               {inlineInput('Ej. Administración Pública, Derecho, Contabilidad...', puesto.carreras_afines, v => upd('carreras_afines', v))}
             </div>
-          )}
+            <div className="campo-grupo">
+              <label>8. Área de especialidad requerida (Conocimiento Técnico)</label>
+              {inlineInput('Ej. Gestión de proyectos, Normatividad municipal...', puesto.especialidad, v => upd('especialidad', v))}
+            </div>
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '12px' }}>
             <div className="campo-grupo">
@@ -378,19 +441,49 @@ function TarjetaPuesto({ puesto, index, onChange, puestosDisponibles }) {
           </div>
           <div style={{
             marginTop: '16px', padding: '14px 16px', background: '#fdf8f9',
-            borderRadius: '10px', border: '1px solid #f5e8ea', fontSize: '.78rem', color: '#5a2030', lineHeight: '1.6'
+            borderRadius: '10px', border: '1px solid #f5e8ea', fontSize: '.78rem', color: '#5a2030', lineHeight: '1.7'
           }}>
-            <strong>Compromiso del Servidor Público:</strong> Me comprometo a desempeñar con ética, profesionalismo y responsabilidad las funciones del cargo público que represento, incorporando la perspectiva de género y un enfoque basado en los Derechos Humanos en beneficio de la ciudadanía benitojuarense.
+            <strong>Compromiso Ético del Servidor Público:</strong>
+            <p style={{ marginTop: '8px', marginBottom: '8px' }}>
+              Me comprometo a desempeñar con ética, profesionalismo y responsabilidad las funciones del cargo público que represento, incorporando la perspectiva de género y un enfoque basado en los Derechos Humanos en beneficio de la ciudadanía benitojuarense.
+            </p>
+            <p style={{ margin: '0' }}>
+              Con mis compañeras, compañeros y el personal a mi cargo, promuevo el trabajo en equipo a partir del respeto y el buen trato. Asimismo, me comprometo a cuidar y hacer un uso responsable de los bienes patrimoniales, conforme a lo establecido por las leyes y reglamentos vigentes.
+            </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginTop: '16px' }}>
             <div className="campo-grupo">
               <label>Nombre del Ocupante del Puesto</label>
               {inlineInput('Nombre completo del servidor público', puesto.ocupante_nombre, v => upd('ocupante_nombre', v))}
             </div>
             <div className="campo-grupo">
+              <label>Cargo del Ocupante del Puesto</label>
+              {inlineInput('Cargo que desempeña...', puesto.ocupante_cargo, v => upd('ocupante_cargo', v))}
+            </div>
+            <div className="campo-grupo">
               <label>Fecha</label>
               <input type="date" value={puesto.ocupante_fecha}
                 onChange={e => upd('ocupante_fecha', e.target.value)}
+                style={{
+                  width: '100%', padding: '8px 12px', border: '1.5px solid #ffe4e6',
+                  borderRadius: '7px', fontFamily: 'Poppins, sans-serif',
+                  fontSize: '.82rem', outline: 'none', background: 'white'
+                }} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginTop: '12px' }}>
+            <div className="campo-grupo">
+              <label>Nombre del Jefe Inmediato</label>
+              {inlineInput('Nombre completo del jefe inmediato', puesto.jefe_firma_nombre, v => upd('jefe_firma_nombre', v))}
+            </div>
+            <div className="campo-grupo">
+              <label>Cargo del Jefe Inmediato</label>
+              {inlineInput('Cargo que desempeña...', puesto.jefe_firma_cargo, v => upd('jefe_firma_cargo', v))}
+            </div>
+            <div className="campo-grupo">
+              <label>Fecha</label>
+              <input type="date" value={puesto.jefe_firma_fecha}
+                onChange={e => upd('jefe_firma_fecha', e.target.value)}
                 style={{
                   width: '100%', padding: '8px 12px', border: '1.5px solid #ffe4e6',
                   borderRadius: '7px', fontFamily: 'Poppins, sans-serif',

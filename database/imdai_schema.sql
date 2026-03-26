@@ -134,6 +134,7 @@ CREATE TABLE perfil_puesto (
     id_perfil       SERIAL PRIMARY KEY,
     id_puesto       INT NOT NULL REFERENCES puestos(id_puesto) ON DELETE CASCADE,
     escolaridad     VARCHAR(100),
+    carreras_afines TEXT,
     especialidad    TEXT,
     experiencia     TEXT
 );
@@ -152,13 +153,30 @@ CREATE TABLE competencias_puesto (
     descripcion     TEXT
 );
 
+CREATE TABLE subordinados_puesto (
+    id_subordinado  SERIAL PRIMARY KEY,
+    id_puesto       INT NOT NULL REFERENCES puestos(id_puesto) ON DELETE CASCADE,
+    tipo            VARCHAR(10) NOT NULL CHECK (tipo IN ('directo', 'indirecto')),
+    num_personas    INTEGER DEFAULT 1,
+    nombre_puesto   VARCHAR(200) NOT NULL
+);
+
 CREATE TABLE descripcion_puesto (
     id_descripcion      SERIAL PRIMARY KEY,
     id_puesto           INT NOT NULL REFERENCES puestos(id_puesto) ON DELETE CASCADE,
     objetivo            TEXT,
     autoridad           TEXT,
     indicador_desempeno TEXT,
-    horario             VARCHAR(100)
+    horario             VARCHAR(100),
+    manejo_informacion  TEXT,
+    nivel_informacion   VARCHAR(10),
+    manejo_presupuesto  TEXT,
+    nivel_presupuesto   VARCHAR(10),
+    ocupante_cargo      VARCHAR(200),
+    ocupante_fecha      DATE,
+    jefe_firma_nombre   VARCHAR(200),
+    jefe_firma_cargo    VARCHAR(200),
+    jefe_firma_fecha    DATE
 );
 
 CREATE TABLE procedimientos (
