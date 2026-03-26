@@ -33,7 +33,10 @@ const getManualById = async (req, res) => {
     const { id_usuario, rol } = req.usuario
 
     const manualRes = await pool.query(
-      `SELECT m.*, u.nombre AS creado_por_nombre
+      `SELECT m.id_manual, m.tipo_manual, m.codigo, m.dependencia, m.version, m.estado,
+              m.creado_por, m.fecha_creacion,
+              TO_CHAR(m.fecha_emision, 'YYYY-MM-DD') AS fecha_emision,
+              u.nombre AS creado_por_nombre
        FROM manuales m JOIN usuarios u ON m.creado_por = u.id_usuario
        WHERE m.id_manual = $1`,
       [id]
@@ -98,7 +101,13 @@ const getManualById = async (req, res) => {
       `SELECT p.id_puesto, p.nombre_puesto, p.titular, p.numero_personas,
               p2.nombre_puesto AS jefe_inmediato,
               dp.objetivo, dp.autoridad, dp.indicador_desempeno, dp.horario,
-              pp.escolaridad, pp.especialidad, pp.experiencia
+              dp.manejo_informacion, dp.nivel_informacion,
+              dp.manejo_presupuesto, dp.nivel_presupuesto,
+              dp.ocupante_cargo,
+              TO_CHAR(dp.ocupante_fecha, 'YYYY-MM-DD') AS ocupante_fecha,
+              dp.jefe_firma_nombre, dp.jefe_firma_cargo,
+              TO_CHAR(dp.jefe_firma_fecha, 'YYYY-MM-DD') AS jefe_firma_fecha,
+              pp.escolaridad, pp.carreras_afines, pp.especialidad, pp.experiencia
        FROM puestos p
        LEFT JOIN puestos p2            ON p.jefe_inmediato_id = p2.id_puesto
        LEFT JOIN descripcion_puesto dp ON dp.id_puesto = p.id_puesto
@@ -116,6 +125,10 @@ const getManualById = async (req, res) => {
           `SELECT tipo, descripcion FROM competencias_puesto
            WHERE id_puesto = $1 ORDER BY id_competencia`, [p.id_puesto]
         )
+        const subordinadosRes = await pool.query(
+          `SELECT tipo, num_personas, nombre_puesto FROM subordinados_puesto
+           WHERE id_puesto = $1 ORDER BY id_subordinado`, [p.id_puesto]
+        )
         return {
           nombre_puesto:             p.nombre_puesto,
           jefe_inmediato:            p.jefe_inmediato            || '',
@@ -124,15 +137,30 @@ const getManualById = async (req, res) => {
           indicador_desempeno:       p.indicador_desempeno ? [p.indicador_desempeno] : [],
           horario_laboral:           p.horario                   || '',
           escolaridad:               p.escolaridad               || '',
+          carreras_afines:           p.carreras_afines           || '',
           especialidad:              p.especialidad              || '',
           experiencia:               p.experiencia               || '',
+          manejo_informacion:        p.manejo_informacion        || '',
+          nivel_informacion:         p.nivel_informacion         || '',
+          manejo_presupuesto:        p.manejo_presupuesto        || '',
+          nivel_presupuesto:         p.nivel_presupuesto         || '',
           ocupante_nombre:           p.titular                   || '',
+          ocupante_cargo:            p.ocupante_cargo            || '',
+          ocupante_fecha:            p.ocupante_fecha            || '',
+          jefe_firma_nombre:         p.jefe_firma_nombre         || '',
+          jefe_firma_cargo:          p.jefe_firma_cargo          || '',
+          jefe_firma_fecha:          p.jefe_firma_fecha          || '',
           funciones_institucionales: funcionesRes.rows.filter(f => f.tipo_funcion === 'institucional').map(f => f.descripcion),
           funciones_propias:         funcionesRes.rows.filter(f => f.tipo_funcion === 'propia').map(f => f.descripcion),
           habilidades_directivas:    competenciasRes.rows.filter(c => c.tipo === 'directiva').map(c => c.descripcion),
           habilidades_tecnicas:      competenciasRes.rows.filter(c => c.tipo === 'tecnica').map(c => c.descripcion),
           habilidades_generales:     competenciasRes.rows.filter(c => c.tipo === 'general').map(c => c.descripcion),
           actitudes:                 competenciasRes.rows.filter(c => c.tipo === 'actitud').map(c => c.descripcion),
+          idiomas:                   competenciasRes.rows.filter(c => c.tipo === 'idioma').map(c => c.descripcion),
+          programas_informaticos:    competenciasRes.rows.filter(c => c.tipo === 'programa').map(c => c.descripcion),
+          equipo_herramientas:       competenciasRes.rows.filter(c => c.tipo === 'equipo').map(c => c.descripcion),
+          subordinados_directos:     subordinadosRes.rows.filter(s => s.tipo === 'directo').map(s => ({ num_personas: String(s.num_personas), nombre_puesto: s.nombre_puesto })),
+          subordinados_indirectos:   subordinadosRes.rows.filter(s => s.tipo === 'indirecto').map(s => ({ num_personas: String(s.num_personas), nombre_puesto: s.nombre_puesto })),
         }
       })
     )
@@ -372,15 +400,33 @@ const crearManual = async (req, res) => {
       const id_puesto = puestoRes.rows[0].id_puesto
 
       await client.query(
-        `INSERT INTO descripcion_puesto (id_puesto, objetivo, autoridad, indicador_desempeno, horario)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [id_puesto, p.objetivo_puesto || null, p.autoridad?.[0] || null, p.indicador_desempeno?.[0] || null, p.horario_laboral || null]
+        `INSERT INTO descripcion_puesto
+           (id_puesto, objetivo, autoridad, indicador_desempeno, horario,
+            manejo_informacion, nivel_informacion, manejo_presupuesto, nivel_presupuesto,
+            ocupante_cargo, ocupante_fecha, jefe_firma_nombre, jefe_firma_cargo, jefe_firma_fecha)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        [
+          id_puesto,
+          p.objetivo_puesto        || null,
+          p.autoridad?.[0]         || null,
+          p.indicador_desempeno?.[0] || null,
+          p.horario_laboral        || null,
+          p.manejo_informacion     || null,
+          p.nivel_informacion      || null,
+          p.manejo_presupuesto     || null,
+          p.nivel_presupuesto      || null,
+          p.ocupante_cargo         || null,
+          p.ocupante_fecha         || null,
+          p.jefe_firma_nombre      || null,
+          p.jefe_firma_cargo       || null,
+          p.jefe_firma_fecha       || null,
+        ]
       )
 
       await client.query(
-        `INSERT INTO perfil_puesto (id_puesto, escolaridad, especialidad, experiencia)
-         VALUES ($1, $2, $3, $4)`,
-        [id_puesto, p.escolaridad || null, p.especialidad || null, p.experiencia || null]
+        `INSERT INTO perfil_puesto (id_puesto, escolaridad, carreras_afines, especialidad, experiencia)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [id_puesto, p.escolaridad || null, p.carreras_afines || null, p.especialidad || null, p.experiencia || null]
       )
 
       for (const f of (p.funciones_institucionales || [])) {
@@ -401,11 +447,27 @@ const crearManual = async (req, res) => {
         ...(p.habilidades_tecnicas   || []).map(d => ({ tipo: 'tecnica',   descripcion: d })),
         ...(p.habilidades_generales  || []).map(d => ({ tipo: 'general',   descripcion: d })),
         ...(p.actitudes              || []).map(d => ({ tipo: 'actitud',   descripcion: d })),
+        ...(p.idiomas                || []).map(d => ({ tipo: 'idioma',    descripcion: d })),
+        ...(p.programas_informaticos || []).map(d => ({ tipo: 'programa',  descripcion: d })),
+        ...(p.equipo_herramientas    || []).map(d => ({ tipo: 'equipo',    descripcion: d })),
       ]
       for (const c of competencias) {
         if (c.descripcion) await client.query(
           `INSERT INTO competencias_puesto (id_puesto, tipo, descripcion) VALUES ($1, $2, $3)`,
           [id_puesto, c.tipo, c.descripcion]
+        )
+      }
+
+      for (const s of (p.subordinados_directos || [])) {
+        if (s.nombre_puesto) await client.query(
+          `INSERT INTO subordinados_puesto (id_puesto, tipo, num_personas, nombre_puesto) VALUES ($1, 'directo', $2, $3)`,
+          [id_puesto, parseInt(s.num_personas) || 1, s.nombre_puesto]
+        )
+      }
+      for (const s of (p.subordinados_indirectos || [])) {
+        if (s.nombre_puesto) await client.query(
+          `INSERT INTO subordinados_puesto (id_puesto, tipo, num_personas, nombre_puesto) VALUES ($1, 'indirecto', $2, $3)`,
+          [id_puesto, parseInt(s.num_personas) || 1, s.nombre_puesto]
         )
       }
     }
@@ -490,6 +552,11 @@ const actualizarManual = async (req, res) => {
       marco_normativo, marco_conceptual,
       politicas_operacion, inventario_puestos, puestos,
       procedimientos,
+      titular, cargo_titular,
+      elaboro_nombre, elaboro_cargo,
+      reviso_nombre,  reviso_cargo,
+      autorizo_nombre, autorizo_cargo,
+      valido_nombre,  valido_cargo,
     } = req.body
 
     // 1. Datos base
@@ -581,15 +648,33 @@ const actualizarManual = async (req, res) => {
       const id_puesto = puestoRes.rows[0].id_puesto
 
       await client.query(
-        `INSERT INTO descripcion_puesto (id_puesto, objetivo, autoridad, indicador_desempeno, horario)
-         VALUES ($1,$2,$3,$4,$5)`,
-        [id_puesto, p.objetivo_puesto || null, p.autoridad?.[0] || null, p.indicador_desempeno?.[0] || null, p.horario_laboral || null]
+        `INSERT INTO descripcion_puesto
+           (id_puesto, objetivo, autoridad, indicador_desempeno, horario,
+            manejo_informacion, nivel_informacion, manejo_presupuesto, nivel_presupuesto,
+            ocupante_cargo, ocupante_fecha, jefe_firma_nombre, jefe_firma_cargo, jefe_firma_fecha)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        [
+          id_puesto,
+          p.objetivo_puesto          || null,
+          p.autoridad?.[0]           || null,
+          p.indicador_desempeno?.[0] || null,
+          p.horario_laboral          || null,
+          p.manejo_informacion       || null,
+          p.nivel_informacion        || null,
+          p.manejo_presupuesto       || null,
+          p.nivel_presupuesto        || null,
+          p.ocupante_cargo           || null,
+          p.ocupante_fecha           || null,
+          p.jefe_firma_nombre        || null,
+          p.jefe_firma_cargo         || null,
+          p.jefe_firma_fecha         || null,
+        ]
       )
 
       await client.query(
-        `INSERT INTO perfil_puesto (id_puesto, escolaridad, especialidad, experiencia)
-         VALUES ($1,$2,$3,$4)`,
-        [id_puesto, p.escolaridad || null, p.especialidad || null, p.experiencia || null]
+        `INSERT INTO perfil_puesto (id_puesto, escolaridad, carreras_afines, especialidad, experiencia)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [id_puesto, p.escolaridad || null, p.carreras_afines || null, p.especialidad || null, p.experiencia || null]
       )
 
       for (const f of (p.funciones_institucionales || [])) {
@@ -610,11 +695,27 @@ const actualizarManual = async (req, res) => {
         ...(p.habilidades_tecnicas   || []).map(d => ({ tipo: 'tecnica',   descripcion: d })),
         ...(p.habilidades_generales  || []).map(d => ({ tipo: 'general',   descripcion: d })),
         ...(p.actitudes              || []).map(d => ({ tipo: 'actitud',   descripcion: d })),
+        ...(p.idiomas                || []).map(d => ({ tipo: 'idioma',    descripcion: d })),
+        ...(p.programas_informaticos || []).map(d => ({ tipo: 'programa',  descripcion: d })),
+        ...(p.equipo_herramientas    || []).map(d => ({ tipo: 'equipo',    descripcion: d })),
       ]
       for (const c of competencias) {
         if (c.descripcion) await client.query(
           `INSERT INTO competencias_puesto (id_puesto, tipo, descripcion) VALUES ($1,$2,$3)`,
           [id_puesto, c.tipo, c.descripcion]
+        )
+      }
+
+      for (const s of (p.subordinados_directos || [])) {
+        if (s.nombre_puesto) await client.query(
+          `INSERT INTO subordinados_puesto (id_puesto, tipo, num_personas, nombre_puesto) VALUES ($1, 'directo', $2, $3)`,
+          [id_puesto, parseInt(s.num_personas) || 1, s.nombre_puesto]
+        )
+      }
+      for (const s of (p.subordinados_indirectos || [])) {
+        if (s.nombre_puesto) await client.query(
+          `INSERT INTO subordinados_puesto (id_puesto, tipo, num_personas, nombre_puesto) VALUES ($1, 'indirecto', $2, $3)`,
+          [id_puesto, parseInt(s.num_personas) || 1, s.nombre_puesto]
         )
       }
     }
@@ -740,4 +841,32 @@ const eliminarManuales = async (req, res) => {
   }
 }
 
-module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado, eliminarManuales }
+// ── POST /manuales/:id/organigrama ────────────────────────────────────────────
+const subirOrganigrama = async (req, res) => {
+  try {
+    const { id }   = req.params
+    const { tipo } = req.body
+
+    if (!req.file) return res.status(400).json({ error: 'No se recibió archivo' })
+    if (!tipo)     return res.status(400).json({ error: 'El campo tipo es requerido' })
+
+    const ruta_archivo = `/uploads/${req.file.filename}`
+
+    // Reemplaza si ya existe uno del mismo tipo en este manual
+    await pool.query(
+      'DELETE FROM organigramas WHERE id_manual = $1 AND tipo = $2',
+      [id, tipo]
+    )
+    await pool.query(
+      'INSERT INTO organigramas (id_manual, tipo, ruta_archivo) VALUES ($1, $2, $3)',
+      [id, tipo, ruta_archivo]
+    )
+
+    res.json({ ruta_archivo })
+  } catch (error) {
+    console.error('❌ Error en subirOrganigrama:', error.message)
+    res.status(500).json({ error: error.message })
+  }
+}
+
+module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado, eliminarManuales, subirOrganigrama }
