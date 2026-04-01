@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import GeneradorPDFManual from './GeneradorPDFManual'
 
 // ── Helpers de UI ────────────────────────────────────────────────────────────
 
@@ -382,6 +383,7 @@ function VisorProcedimientos({ datos }) {
 export default function VisorManual({ manual, onCerrar }) {
   const [datosExtra, setDatosExtra] = useState(null)
   const [cargando, setCargando] = useState(true)
+  const [verPDF, setVerPDF] = useState(false)
   const token = localStorage.getItem('token')
 
   useEffect(() => {
@@ -406,6 +408,7 @@ export default function VisorManual({ manual, onCerrar }) {
   const esOrg = manual.tipo_manual === 'organizacion'
 
   return (
+    <>
     <div style={{
       position: 'fixed', inset: 0,
       background: 'rgba(26,10,15,.6)',
@@ -507,23 +510,57 @@ export default function VisorManual({ manual, onCerrar }) {
           <span style={{ fontSize: '.73rem', color: '#c9a0a8' }}>
             Vista de solo lectura — Administrador IMDAI
           </span>
-          <button
-            onClick={onCerrar}
-            style={{
-              padding: '8px 20px', borderRadius: '8px',
-              border: '1.5px solid #fecdd3', background: 'white',
-              color: '#7a3a4a', fontFamily: 'Poppins, sans-serif',
-              fontSize: '.78rem', fontWeight: '600', cursor: 'pointer',
-              transition: 'all .2s'
-            }}
-            onMouseOver={e => e.currentTarget.style.background = '#fff1f2'}
-            onMouseOut={e => e.currentTarget.style.background = 'white'}
-          >
-            Cerrar
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {esOrg && !cargando && (
+              <button
+                onClick={() => setVerPDF(true)}
+                style={{
+                  padding: '8px 20px', borderRadius: '8px',
+                  border: '1.5px solid #e11d48', background: '#e11d48',
+                  color: 'white', fontFamily: 'Poppins, sans-serif',
+                  fontSize: '.78rem', fontWeight: '600', cursor: 'pointer',
+                  transition: 'all .2s', display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = '#be123c'}
+                onMouseOut={e => e.currentTarget.style.background = '#e11d48'}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                Generar PDF
+              </button>
+            )}
+            <button
+              onClick={onCerrar}
+              style={{
+                padding: '8px 20px', borderRadius: '8px',
+                border: '1.5px solid #fecdd3', background: 'white',
+                color: '#7a3a4a', fontFamily: 'Poppins, sans-serif',
+                fontSize: '.78rem', fontWeight: '600', cursor: 'pointer',
+                transition: 'all .2s'
+              }}
+              onMouseOver={e => e.currentTarget.style.background = '#fff1f2'}
+              onMouseOut={e => e.currentTarget.style.background = 'white'}
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
 
       </div>
     </div>
+
+    {/* Generador de PDF */}
+    {verPDF && (
+      <GeneradorPDFManual
+        datos={datos}
+        onCerrar={() => setVerPDF(false)}
+      />
+    )}
+  </>
   )
 }

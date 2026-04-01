@@ -11,31 +11,9 @@ export default function Dashboard() {
   const [wizardOpen, setWizardOpen] = useState(false)
   const [manualVisor, setManualVisor] = useState(null)
   const [wizardOrgOpen, setWizardOrgOpen] = useState(false)
-  const [seleccionados, setSeleccionados] = useState([])
-  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem('usuario'))
   const token = localStorage.getItem('token')
-
-  const toggleSeleccion = (id) => {
-  setSeleccionados(prev =>
-    prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-  )
-}
-
-const eliminarSeleccionados = async () => {
-  try {
-    await axios.delete('http://localhost:3000/manuales', {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { ids: seleccionados }
-    })
-    setSeleccionados([])
-    setConfirmandoEliminar(false)
-    fetchManuales()
-  } catch {
-    alert('Error al eliminar los manuales')
-  }
-}
 
   useEffect(() => {
     if (!token) { navigate('/login'); return }
@@ -182,31 +160,19 @@ const eliminarSeleccionados = async () => {
           <h2 className="section-title">
             {usuario?.rol === 'administrador' ? 'Todos los Manuales' : 'Mis Manuales'}
           </h2>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            {seleccionados.length > 0 && (
-              <button
-                className="btn-new"
-                style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}
-                onClick={() => setConfirmandoEliminar(true)}
-              >
-                Eliminar seleccionados ({seleccionados.length})
-              </button>
-            )}
-            <button className="btn-new" onClick={() => setModalOpen(true)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Nuevo Manual
-            </button>
-          </div>
+          <button className="btn-new" onClick={() => setModalOpen(true)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nuevo Manual
+          </button>
         </div>
 
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th style={{ width: '40px' }}></th>
                 <th>Manual</th>
                 <th>Tipo</th>
                 <th>Estado</th>
@@ -218,7 +184,7 @@ const eliminarSeleccionados = async () => {
             <tbody>
               {manuales.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#a78a8f' }}>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#a78a8f' }}>
                     No hay manuales aun. Crea el primero.
                   </td>
                 </tr>
@@ -227,14 +193,6 @@ const eliminarSeleccionados = async () => {
                   const badge = estadoBadge(m.estado)
                   return (
                     <tr key={m.id_manual}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={seleccionados.includes(m.id_manual)}
-                          onChange={() => toggleSeleccion(m.id_manual)}
-                          style={{ cursor: 'pointer', accentColor: '#e11d48' }}
-                        />
-                      </td>
 
                       {/* Nombre + dependencia */}
                       <td>
@@ -341,32 +299,6 @@ const eliminarSeleccionados = async () => {
 
             </div>
             <button className="modal-cancel" onClick={() => setModalOpen(false)}>Cancelar</button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal eliminar */}
-      {confirmandoEliminar && (
-        <div className="modal-overlay open" onClick={() => setConfirmandoEliminar(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>Eliminar manuales</h2>
-            <p>Estas a punto de eliminar {seleccionados.length} manual(es). Esta accion no se puede deshacer.</p>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-              <button
-                className="wizard-btn-secondary"
-                style={{ flex: 1 }}
-                onClick={() => setConfirmandoEliminar(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                className="wizard-btn-primary"
-                style={{ flex: 1, background: 'linear-gradient(135deg, #dc2626, #991b1b)', boxShadow: 'none' }}
-                onClick={eliminarSeleccionados}
-              >
-                Eliminar
-              </button>
-            </div>
           </div>
         </div>
       )}
