@@ -960,35 +960,26 @@ function PaginaCaratula({ datos, total }) {
 }
 
 // ── PÁGINA 3: Índice ──────────────────────────────────────────────────────────
-function PaginaIndice({ datos, total, paginasAntecedentes = 1 }) {
-  const paginaAntecedentes = 8
-  const paginaMarcoNormativo = paginaAntecedentes + paginasAntecedentes
-  const paginaAtribuciones = paginaMarcoNormativo + 1
-  const paginaPrincipiosValores = paginaAtribuciones + 1
-  const paginaPoliticas = paginaPrincipiosValores + 1
-  const paginaInventario = paginaPoliticas + 1
-  const paginaPrimerPuesto = paginaInventario + 1
-  const paginaCambios = paginaPrimerPuesto + (datos.puestos || []).length
-
+function PaginaIndice({ datos, total, mapaPaginas }) {
   const items = [
-    { num: '01', label: 'Carátula de Autorización', pag: 2, nivel: 1, linea: true },
-    { num: '02', label: 'Índice', pag: 3, nivel: 1 },
-    { num: '03', label: 'Capítulo I de Generales', pag: 4, nivel: 1 },
-    { num: '3.1',  label: 'Introducción', pag: 4, nivel: 2 },
-    { num: '3.2',  label: 'Antecedentes', pag: paginaAntecedentes, nivel: 2 },
-    { num: '3.3',  label: 'Marco Normativo', pag: paginaMarcoNormativo, nivel: 2 },
-    { num: '3.4',  label: 'Atribuciones Institucionales', pag: paginaAtribuciones, nivel: 2 },
-    { num: '3.5',  label: 'Objetivo General', pag: 4, nivel: 2 },
-    { num: '3.6',  label: 'Misión', pag: 4, nivel: 2 },
-    { num: '3.7',  label: 'Visión', pag: 4, nivel: 2 },
-    { num: '3.8',  label: 'Principios y Valores Institucionales', pag: paginaPrincipiosValores, nivel: 2 },
-    { num: '3.9',  label: 'Políticas de Operación', pag: paginaPoliticas, nivel: 2 },
-    { num: '3.10', label: 'Marco Conceptual', pag: 4, nivel: 2 },
-    { num: '04', label: 'Capítulo II de Organización', pag: 5, nivel: 1 },
-    { num: '4.1',  label: 'Organigrama General', pag: 5, nivel: 2 },
-    { num: '4.2',  label: 'Organigramas Específicos', pag: 5, nivel: 2 },
-    { num: '4.3',  label: 'Inventario de Puestos', pag: paginaInventario, nivel: 2 },
-    { num: '4.4',  label: 'Descripción de Puestos', pag: paginaPrimerPuesto, nivel: 2 },
+    { num: '01', label: 'Carátula de Autorización', pag: mapaPaginas.caratula, nivel: 1, linea: true },
+    { num: '02', label: 'Índice', pag: mapaPaginas.indice, nivel: 1 },
+    { num: '03', label: 'Capítulo I de Generales', pag: mapaPaginas.portadaCapituloI, nivel: 1 },
+    { num: '3.1',  label: 'Introducción', pag: mapaPaginas.introduccion, nivel: 2 },
+    { num: '3.2',  label: 'Antecedentes', pag: mapaPaginas.antecedentes, nivel: 2 },
+    { num: '3.3',  label: 'Marco Normativo', pag: mapaPaginas.marcoNormativo, nivel: 2 },
+    { num: '3.4',  label: 'Atribuciones Institucionales', pag: mapaPaginas.atribuciones, nivel: 2 },
+    { num: '3.5',  label: 'Objetivo General', pag: mapaPaginas.objetivoMisionVision, nivel: 2 },
+    { num: '3.6',  label: 'Misión', pag: mapaPaginas.objetivoMisionVision, nivel: 2 },
+    { num: '3.7',  label: 'Visión', pag: mapaPaginas.objetivoMisionVision, nivel: 2 },
+    { num: '3.8',  label: 'Principios y Valores Institucionales', pag: mapaPaginas.principiosValores, nivel: 2 },
+    { num: '3.9',  label: 'Políticas de Operación', pag: mapaPaginas.politicas, nivel: 2 },
+    { num: '3.10', label: 'Marco Conceptual', pag: mapaPaginas.marcoConceptual, nivel: 2 },
+    { num: '04', label: 'Capítulo II de Organización', pag: mapaPaginas.portadaCapituloII, nivel: 1 },
+    { num: '4.1',  label: 'Organigrama General', pag: mapaPaginas.organigramaGeneral, nivel: 2 },
+    { num: '4.2',  label: 'Organigramas Específicos', pag: mapaPaginas.organigramasEspecificos, nivel: 2 },
+    { num: '4.3',  label: 'Inventario de Puestos', pag: mapaPaginas.inventario, nivel: 2 },
+    { num: '4.4',  label: 'Descripción de Puestos', pag: mapaPaginas.primerPuesto, nivel: 2 },
     ...(datos.puestos || []).map((p, i) => ({
       num: `4.4.${i + 1}`, label: `Descripción de puesto ${p.nombre_puesto || ''}`, pag: mapaPaginas.primerPuesto + i, nivel: 2
     })),
@@ -1289,31 +1280,7 @@ function PaginaAntecedentes({ datos, total, paginaInicio, parrafos = [], esConti
   )
 }
 
-// ── PÁGINA: 3.5 / 3.6 / 3.7 Objetivo, Misión y Visión ───────────────────────
-function PaginaObjetivoMisionVision({ datos, total, paginaInicio }) {
-  const secciones = [
-    { num: '3.5', titulo: 'OBJETIVO GENERAL', valor: datos.objetivo_general },
-    { num: '3.6', titulo: 'MISIÓN',            valor: datos.mision },
-    { num: '3.7', titulo: 'VISIÓN',            valor: datos.vision },
-  ]
 
-  return (
-    <div className="pdf-pagina">
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
-
-      {secciones.map((sec, i) => (
-        <div key={i} style={{ marginBottom: 20 }}>
-          <div className="pdf-seccion-titulo" style={{ marginBottom: 6 }}>
-            {sec.num} {sec.titulo}
-          </div>
-          <div className="pdf-intro-texto">
-            {sec.valor || '—'}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 // ── PÁGINA: 3.10 Marco Conceptual ─────────────────────────────────────────────
 function PaginaMarcoConceptual({ datos, total, paginaInicio }) {
@@ -1717,155 +1684,6 @@ function PaginaOrganigramaEspecifico({ datos, total, paginaInicio, organigrama =
           </div>
         )}
       </div>
-    </div>
-  )
-}
-
-function PaginaMarcoConceptual({ datos, total, paginaInicio }) {
-  return (
-    <div className="pdf-pagina">
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
-
-      <div className="pdf-cap-titulo">3.10 MARCO CONCEPTUAL</div>
-
-      {datos.marco_conceptual?.length > 0 ? (
-        <div style={{ paddingLeft: '0.3cm', paddingRight: '0.5cm', marginTop: 18 }}>
-          {datos.marco_conceptual.map((concepto, i) => (
-            <div
-              key={i}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '160px 1fr',
-                columnGap: '26px',
-                alignItems: 'start',
-                marginBottom: 14,
-                color: '#262626',
-                fontFamily: 'Montserrat, Arial, sans-serif',
-              }}
-            >
-              <div style={{
-                fontWeight: 800,
-                fontSize: '11pt',
-                lineHeight: 1.08,
-                wordBreak: 'break-word',
-              }}>
-                {concepto.termino}
-              </div>
-              <div style={{
-                fontWeight: 500,
-                fontSize: '11pt',
-                lineHeight: 1.08,
-              }}>
-                {concepto.definicion}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="pdf-intro-texto" style={{ color: '#262626' }}>
-          No hay informacion de marco conceptual registrada.
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── PÁGINA: Portada Capítulo II ───────────────────────────────────────────────
-function PaginaPortadaCapituloII({ datos, total, paginaInicio }) {
-  return (
-    <div className="pdf-pagina" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
-      <div style={{ textAlign: 'center', marginTop: 80 }}>
-        <div style={{
-          fontFamily: 'Montserrat, Arial, sans-serif',
-          fontWeight: 400, fontSize: '42pt',
-          letterSpacing: 2, lineHeight: 1.1
-        }}>CAPÍTULO 2</div>
-        <div style={{
-          fontFamily: 'Montserrat, Arial, sans-serif',
-          fontWeight: 800, fontSize: '42pt',
-          letterSpacing: 2, lineHeight: 1.1
-        }}>DE ORGANIZACIÓN</div>
-      </div>
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        display: 'flex', justifyContent: 'center'
-      }}>
-        <img
-          src="/LogoPortada.png"
-          alt="Logo Portada"
-          style={{ width: 'auto', maxWidth: '85%', height: 'auto', display: 'block' }}
-          crossOrigin="anonymous"
-        />
-      </div>
-    </div>
-  )
-}
-
-// ── PÁGINA: 4.1 Organigrama General ──────────────────────────────────────────
-function PaginaOrganigramaGeneral({ datos, total, paginaInicio }) {
-  const ruta = datos.organigrama_general?.ruta_archivo
-  const imgSrc = ruta ? `http://localhost:3000${ruta}` : null
-  return (
-    <div className="pdf-pagina">
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
-      <div className="pdf-seccion-titulo" style={{ marginBottom: 16, fontSize: '13pt' }}>
-        4.1 ORGANIGRAMA GENERAL
-      </div>
-      <div className="pdf-intro-texto" style={{ marginBottom: 16 }}>
-        Representa gráfica de la estructura orgánica general de la <em>{datos.dependencia}</em>, debidamente validada por la ley o reglamento que la defina.
-      </div>
-      {imgSrc ? (
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <img
-            src={imgSrc}
-            alt="Organigrama General"
-            style={{ maxWidth: '100%', height: 'auto', border: '1px solid #ddd' }}
-            crossOrigin="anonymous"
-          />
-        </div>
-      ) : (
-        <div style={{
-          border: '2px dashed #ccc', padding: 40, textAlign: 'center',
-          color: '#aaa', marginTop: 20, fontSize: '11pt', fontStyle: 'italic'
-        }}>
-          Organigrama General — Pendiente de carga
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── PÁGINA: 4.2 Organigrama Específico ───────────────────────────────────────
-function PaginaOrganigramaEspecifico({ datos, organigrama, index, total, paginaInicio }) {
-  const ruta = organigrama?.ruta_archivo
-  const imgSrc = ruta ? `http://localhost:3000${ruta}` : null
-  return (
-    <div className="pdf-pagina">
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
-      <div className="pdf-seccion-titulo" style={{ marginBottom: 16, fontSize: '13pt' }}>
-        4.2 ORGANIGRAMA ESPECÍFICO — {organigrama.tipo?.toUpperCase() || `${index + 1}`}
-      </div>
-      <div className="pdf-intro-texto" style={{ marginBottom: 16 }}>
-        Representación gráfica de la estructura orgánica del área <em>{organigrama.tipo || ''}</em>, que permite observar las líneas de autoridad y responsabilidad e identifica los canales de comunicación.
-      </div>
-      {imgSrc ? (
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <img
-            src={imgSrc}
-            alt={`Organigrama ${organigrama.tipo}`}
-            style={{ maxWidth: '100%', height: 'auto', border: '1px solid #ddd' }}
-            crossOrigin="anonymous"
-          />
-        </div>
-      ) : (
-        <div style={{
-          border: '2px dashed #ccc', padding: 40, textAlign: 'center',
-          color: '#aaa', marginTop: 20, fontSize: '11pt', fontStyle: 'italic'
-        }}>
-          Organigrama Específico — Pendiente de carga
-        </div>
-      )}
     </div>
   )
 }
@@ -2327,18 +2145,19 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
   const segmentosAntecedentes = dividirTextoEnSegmentos(datos.antecedentes, 2400)
   const paginasAntecedentes = paginarSegmentos(segmentosAntecedentes, 2800)
   const paginasPoliticas = paginarPoliticas(datos.politicas_operacion || [])
+  const organigramasEspecificos = datos.organigramas_especificos?.length > 0
+    ? datos.organigramas_especificos
+    : [null]
   const totalPaginasAntecedentes = paginasAntecedentes.length || 1
-  const paginaMarcoNormativo = 8 + totalPaginasAntecedentes
-  const paginaAtribuciones = paginaMarcoNormativo + 1
-  const paginaPrincipiosValores = paginaAtribuciones + 1
-  const paginaPoliticas = paginaPrincipiosValores + 1
-  const paginaInventario = paginaPoliticas + 1
-  const paginaPrimerPuesto = paginaInventario + 1
-  const paginaCambios = paginaPrimerPuesto + puestos.length
-  // Total de paginas: portada, caratula, indice, portada capitulo I, capitulo I parte 1,
-  // capitulo I parte 2, introduccion, antecedentes, marco normativo, atribuciones,
-  // principios y valores, politicas, inventario, puestos y cambios.
-  const totalPaginas = paginaCambios
+  const totalPaginasPoliticas = paginasPoliticas.length || 1
+  const mapaPaginas = crearMapaPaginas({
+    puestos,
+    paginasAntecedentes: totalPaginasAntecedentes,
+    paginaValoresSeparada: false,
+    paginasPoliticas: totalPaginasPoliticas,
+    paginasOrganigramasEspecificos: organigramasEspecificos.length,
+  })
+  const totalPaginas = mapaPaginas.total
 
   const generarPDF = async () => {
     setGenerando(true)
@@ -2446,11 +2265,33 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
             esContinuacion={i > 0}
           />
         ))}
-        <PaginaMarcoNormativo datos={datos} total={totalPaginas} paginaInicio={paginaMarcoNormativo} />
-        <PaginaAtribuciones datos={datos} total={totalPaginas} paginaInicio={paginaAtribuciones} />
-        <PaginaPrincipiosValores datos={datos} total={totalPaginas} paginaInicio={paginaPrincipiosValores} />
-        <PaginaPoliticasOperacion datos={datos} total={totalPaginas} paginaInicio={paginaPoliticas} />
-        <PaginaInventario datos={datos} total={totalPaginas} paginaInicio={paginaInventario} />
+        <PaginaMarcoNormativo datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.marcoNormativo} />
+        <PaginaAtribuciones datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.atribuciones} />
+        <PaginaObjetivoMisionVision datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.objetivoMisionVision} />
+        <PaginaPrincipiosValores datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.principiosValores} />
+        {paginasPoliticas.map((politicasPagina, i) => (
+          <PaginaPoliticasOperacion
+            key={`politicas-${i}`}
+            datos={datos}
+            total={totalPaginas}
+            paginaInicio={mapaPaginas.politicas + i}
+            politicas={politicasPagina}
+          />
+        ))}
+        <PaginaMarcoConceptual datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.marcoConceptual} />
+        <PaginaPortadaCapituloII datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.portadaCapituloII} />
+        <PaginaOrganigramaGeneral datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.organigramaGeneral} />
+        {organigramasEspecificos.map((organigrama, i) => (
+          <PaginaOrganigramaEspecifico
+            key={`organigrama-especifico-${i}`}
+            datos={datos}
+            organigrama={organigrama}
+            index={i}
+            total={totalPaginas}
+            paginaInicio={mapaPaginas.organigramasEspecificos + i}
+          />
+        ))}
+        <PaginaInventario datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.inventario} />
         {puestos.map((puesto, i) => (
           <PaginaPuesto
             key={i}
