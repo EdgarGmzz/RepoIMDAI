@@ -190,7 +190,7 @@ const estilos = `
     margin-bottom: 14px;
   }
 
-  /* ── Marco Normativo ── */
+  /* ── Marco Normativo / Marco Conceptual ── */
   .pdf-norma-tabla {
     width: 100%;
     border-collapse: collapse;
@@ -198,18 +198,18 @@ const estilos = `
     font-size: 9.5pt;
   }
   .pdf-norma-tabla th {
-    background: #4a1020;
-    color: white;
+    background: #ffffff;
+    color: #808080;
     padding: 6px 8px;
     text-align: left;
     border: 1px solid #000;
+    font-weight: bold;
   }
   .pdf-norma-tabla td {
     border: 1px solid #000;
     padding: 5px 8px;
     vertical-align: top;
   }
-  .pdf-norma-tabla tr:nth-child(even) td { background: #fafafa; }
 
   /* ── Lista simple ── */
   .pdf-lista { margin: 6px 0 6px 16px; }
@@ -223,12 +223,13 @@ const estilos = `
     font-size: 9.5pt;
   }
   .pdf-inv-tabla th {
-    background: #4a1020;
-    color: white;
+    background: #ffffff;
+    color: #808080;
     padding: 7px 10px;
     text-align: center;
     border: 1px solid #000;
     font-size: 9pt;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: .5px;
   }
@@ -237,9 +238,8 @@ const estilos = `
     padding: 5px 10px;
     vertical-align: middle;
   }
-  .pdf-inv-tabla tr:nth-child(even) td { background: #fafafa; }
   .pdf-inv-tabla .total-row td {
-    background: #4a1020;
+    background: #7F7F7F;
     color: white;
     font-weight: bold;
     text-align: center;
@@ -260,7 +260,7 @@ const estilos = `
     font-size: 9.5pt;
   }
   .pdf-info-puesto-tabla .header-gris {
-    background: #4a1020;
+    background: #7F7F7F;
     color: white;
     text-align: center;
     font-weight: bold;
@@ -290,7 +290,7 @@ const estilos = `
     line-height: 1.6;
   }
   .pdf-objetivo-titulo {
-    background: #4a1020;
+    background: #7F7F7F;
     color: white;
     text-align: center;
     font-weight: bold;
@@ -314,7 +314,7 @@ const estilos = `
     font-size: 9.5pt;
   }
   .pdf-funciones-tabla .header-gris {
-    background: #4a1020;
+    background: #7F7F7F;
     color: white;
     text-align: center;
     font-weight: bold;
@@ -349,7 +349,7 @@ const estilos = `
     font-size: 9.5pt;
   }
   .pdf-perfil-tabla .header-gris {
-    background: #4a1020;
+    background: #7F7F7F;
     color: white;
     text-align: center;
     font-weight: bold;
@@ -398,7 +398,7 @@ const estilos = `
     font-size: 9.5pt;
   }
   .pdf-firma-tabla .header-gris {
-    background: #4a1020;
+    background: #7F7F7F;
     color: white;
     text-align: center;
     font-weight: bold;
@@ -434,12 +434,13 @@ const estilos = `
     font-size: 9.5pt;
   }
   .pdf-cambios-tabla th {
-    background: #4a1020;
-    color: white;
+    background: #D9D9D9;
+    color: #000000;
     padding: 7px 8px;
     text-align: center;
     border: 1px solid #000;
     font-size: 9pt;
+    font-weight: bold;
     text-transform: uppercase;
   }
   .pdf-cambios-tabla td {
@@ -748,12 +749,18 @@ function PaginaCaratula({ datos, total }) {
 
 // ── PÁGINA 3: Índice ──────────────────────────────────────────────────────────
 function PaginaIndice({ datos, total, paginasAntecedentes = 1 }) {
+  const orgsEspecificos = datos.organigramas_especificos || []
   const paginaAntecedentes = 8
   const paginaMarcoNormativo = paginaAntecedentes + paginasAntecedentes
   const paginaAtribuciones = paginaMarcoNormativo + 1
-  const paginaPrincipiosValores = paginaAtribuciones + 1
+  const paginaObjetivoMisionVision = paginaAtribuciones + 1
+  const paginaPrincipiosValores = paginaObjetivoMisionVision + 1
   const paginaPoliticas = paginaPrincipiosValores + 1
-  const paginaInventario = paginaPoliticas + 1
+  const paginaMarcoConceptual = paginaPoliticas + 1
+  const paginaPortadaCapII = paginaMarcoConceptual + 1
+  const paginaOrgGeneral = paginaPortadaCapII + 1
+  const paginaPrimerOrgEspecifico = paginaOrgGeneral + 1
+  const paginaInventario = paginaPrimerOrgEspecifico + orgsEspecificos.length
   const paginaPrimerPuesto = paginaInventario + 1
   const paginaCambios = paginaPrimerPuesto + (datos.puestos || []).length
 
@@ -761,19 +768,26 @@ function PaginaIndice({ datos, total, paginasAntecedentes = 1 }) {
     { num: '01', label: 'Carátula de Autorización', pag: 2, nivel: 1, linea: true },
     { num: '02', label: 'Índice', pag: 3, nivel: 1 },
     { num: '03', label: 'Capítulo I de Generales', pag: 4, nivel: 1 },
-    { num: '3.1',  label: 'Introducción', pag: 4, nivel: 2 },
+    { num: '3.1',  label: 'Introducción', pag: 7, nivel: 2 },
     { num: '3.2',  label: 'Antecedentes', pag: paginaAntecedentes, nivel: 2 },
     { num: '3.3',  label: 'Marco Normativo', pag: paginaMarcoNormativo, nivel: 2 },
     { num: '3.4',  label: 'Atribuciones Institucionales', pag: paginaAtribuciones, nivel: 2 },
-    { num: '3.5',  label: 'Objetivo General', pag: 4, nivel: 2 },
-    { num: '3.6',  label: 'Misión', pag: 4, nivel: 2 },
-    { num: '3.7',  label: 'Visión', pag: 4, nivel: 2 },
+    { num: '3.5',  label: 'Objetivo General', pag: paginaObjetivoMisionVision, nivel: 2 },
+    { num: '3.6',  label: 'Misión', pag: paginaObjetivoMisionVision, nivel: 2 },
+    { num: '3.7',  label: 'Visión', pag: paginaObjetivoMisionVision, nivel: 2 },
     { num: '3.8',  label: 'Principios y Valores Institucionales', pag: paginaPrincipiosValores, nivel: 2 },
     { num: '3.9',  label: 'Políticas de Operación', pag: paginaPoliticas, nivel: 2 },
-    { num: '3.10', label: 'Marco Conceptual', pag: 4, nivel: 2 },
-    { num: '04', label: 'Capítulo II de Organización', pag: 5, nivel: 1 },
-    { num: '4.1',  label: 'Organigrama General', pag: 5, nivel: 2 },
-    { num: '4.2',  label: 'Organigramas Específicos', pag: 5, nivel: 2 },
+    { num: '3.10', label: 'Marco Conceptual', pag: paginaMarcoConceptual, nivel: 2 },
+    { num: '04', label: 'Capítulo II de Organización', pag: paginaPortadaCapII, nivel: 1 },
+    { num: '4.1',  label: 'Organigrama General', pag: paginaOrgGeneral, nivel: 2 },
+    ...(orgsEspecificos.length > 0
+      ? orgsEspecificos.map((org, i) => ({
+          num: `4.2${orgsEspecificos.length > 1 ? `.${i + 1}` : ''}`,
+          label: `Organigrama Específico${org.tipo ? ` — ${org.tipo}` : ''}`,
+          pag: paginaPrimerOrgEspecifico + i, nivel: 2
+        }))
+      : [{ num: '4.2', label: 'Organigramas Específicos', pag: paginaPrimerOrgEspecifico, nivel: 2 }]
+    ),
     { num: '4.3',  label: 'Inventario de Puestos', pag: paginaInventario, nivel: 2 },
     { num: '4.4',  label: 'Descripción de Puestos', pag: paginaPrimerPuesto, nivel: 2 },
     ...(datos.puestos || []).map((p, i) => ({
@@ -923,25 +937,22 @@ function PaginaCapituloI({ datos, total, paginaInicio }) {
 
       <div className="pdf-seccion">
         <div className="pdf-seccion-titulo">OBJETIVO</div>
-        <div className="pdf-seccion-texto">Es el propósito global que desea alcanzar o que persigue la <em>{datos.dependencia}</em> para el cumplimiento de las actividades que por su atribución le corresponde.</div>
-        {datos.objetivo_general && <div className="pdf-seccion-texto" style={{ marginTop: 4 }}>{datos.objetivo_general}</div>}
+        <div className="pdf-seccion-texto">Es el propósito global que desea alcanzar o que persigue la dependencia, Unidad Administrativa y/o entidad para el cumplimiento de las actividades que por su atribución le corresponde.</div>
       </div>
 
       <div className="pdf-seccion">
         <div className="pdf-seccion-titulo">MISIÓN</div>
-        <div className="pdf-seccion-texto">Es la razón de ser de la <em>{datos.dependencia}</em>, con la cual todos los servidores públicos que laboran para la Institución deberán identificarse para su cumplimiento. Esta descripción debe ser clara, concreta y específica.</div>
-        {datos.mision && <div className="pdf-seccion-texto" style={{ marginTop: 4 }}>{datos.mision}</div>}
+        <div className="pdf-seccion-texto">Es la razón de ser de la Dependencia, Unidad Administrativa y/o entidad Municipal, con la cual todos los servidores públicos que laboran para la Institución deberán identificarse para su cumplimiento. Esta descripción debe ser clara, concreta y específica.</div>
       </div>
 
       <div className="pdf-seccion">
         <div className="pdf-seccion-titulo">VISIÓN</div>
-        <div className="pdf-seccion-texto">En ella se expone a donde se dirige la <em>{datos.dependencia}</em> y como se ve a largo plazo; enunciar el escenario en el que se desea posicionar a la dependencia y/o entidad.</div>
-        {datos.vision && <div className="pdf-seccion-texto" style={{ marginTop: 4 }}>{datos.vision}</div>}
+        <div className="pdf-seccion-texto">En ella se expone a donde se dirige la Dependencia, Unidad Administrativa y/o entidad Municipal y como se ve a largo plazo; enunciar el escenario en el que se desea posicionar a la dependencia y/o entidad.</div>
       </div>
 
       <div className="pdf-seccion">
         <div className="pdf-seccion-titulo">PRINCIPIOS Y VALORES INSTITUCIONALES</div>
-        <div className="pdf-seccion-texto">Consiste en un referente ético que consolida y guía el pensamiento, las actitudes, prácticas y formas de actuación de los servidores públicos y colaboradores de la <em>{datos.dependencia}</em>. Representando el Conjunto de normas morales que regulan la conducta de los servidores públicos hacia los servicios que prestan a la ciudadanía y en el desarrollo de sus actividades.</div>
+        <div className="pdf-seccion-texto">Consiste en un referente ético que consolida y guía el pensamiento, las actitudes, prácticas y formas de actuación de los servidores públicos y colaboradores de la Dependencia, Unidad Administrativa y/o entidad Municipal. Representando el Conjunto de normas morales que regulan la conducta de los servidores públicos hacia los servicios que prestan a la ciudadanía y en el desarrollo de sus actividades.</div>
       </div>
 
     </div>
@@ -972,12 +983,7 @@ function PaginaCapituloI2({ datos, total, paginaInicio }) {
 
       <div className="pdf-seccion">
         <div className="pdf-seccion-titulo">MARCO CONCEPTUAL</div>
-        {datos.marco_conceptual?.length > 0 ? datos.marco_conceptual.map((c, i) => (
-          <div key={i} style={{ marginBottom: 4 }}>
-            <span style={{ fontWeight: 800, fontFamily: 'Montserrat, Arial, sans-serif' }}>{c.termino}:</span>{' '}
-            <span className="pdf-seccion-texto">{c.definicion}</span>
-          </div>
-        )) : <div className="pdf-seccion-texto">Son conceptos que se utilizan dentro del documento, con su descripción específica para ampliar la definición correspondiente que permita al lector una mejor comprensión del manual.</div>}
+        <div className="pdf-seccion-texto">Son conceptos que se utilizan dentro del documento, con su descripción específica para ampliar la definición correspondiente que permita al lector una mejor comprensión del manual.</div>
       </div>
 
       <div className="pdf-seccion">
@@ -987,7 +993,7 @@ function PaginaCapituloI2({ datos, total, paginaInicio }) {
 
       <div className="pdf-seccion">
         <div className="pdf-seccion-titulo">DESCRIPCIÓN DE PUESTO</div>
-        <div className="pdf-seccion-texto">Definición propias del puesto, dentro de los cuales se encuentran las funciones genéricas y específicas, acorde al catálogo de puestos aprobado e incluyendo los criterios determinados en los lineamientos y disposiciones en materia de transparencia.</div>
+        <div className="pdf-seccion-texto">Definiciones propias del puesto, dentro de los cuales se encuentran las funciones genéricas y específicas, acorde al catálogo de puestos aprobado e incluyendo los criterios determinados en los lineamientos y disposiciones en materia de transparencia.</div>
       </div>
 
       <div className="pdf-seccion">
@@ -1085,6 +1091,71 @@ function PaginaAntecedentes({ datos, total, paginaInicio, parrafos = [], esConti
   )
 }
 
+// ── PÁGINA: 3.5 / 3.6 / 3.7 Objetivo, Misión y Visión ───────────────────────
+function PaginaObjetivoMisionVision({ datos, total, paginaInicio }) {
+  const secciones = [
+    { num: '3.5', titulo: 'OBJETIVO GENERAL', valor: datos.objetivo_general },
+    { num: '3.6', titulo: 'MISIÓN',            valor: datos.mision },
+    { num: '3.7', titulo: 'VISIÓN',            valor: datos.vision },
+  ]
+
+  return (
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+
+      {secciones.map((sec, i) => (
+        <div key={i} style={{ marginBottom: 20 }}>
+          <div className="pdf-seccion-titulo" style={{ marginBottom: 6 }}>
+            {sec.num} {sec.titulo}
+          </div>
+          <div className="pdf-intro-texto">
+            {sec.valor || '—'}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── PÁGINA: 3.10 Marco Conceptual ─────────────────────────────────────────────
+function PaginaMarcoConceptual({ datos, total, paginaInicio }) {
+  return (
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+
+      <div className="pdf-cap-titulo">3.10 MARCO CONCEPTUAL</div>
+
+      <div className="pdf-intro-texto" style={{ marginBottom: 12 }}>
+        Son conceptos que se utilizan dentro del documento, con su descripción específica para ampliar la definición correspondiente que permita al lector una mejor comprensión del manual.
+      </div>
+
+      {datos.marco_conceptual?.length > 0 ? (
+        <table className="pdf-norma-tabla" style={{ marginTop: 8 }}>
+          <thead>
+            <tr>
+              <th style={{ width: '30%' }}>TÉRMINO</th>
+              <th>DEFINICIÓN</th>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ background: '#7F7F7F', height: 8, padding: 0, border: '1px solid #000' }}></td>
+            </tr>
+          </thead>
+          <tbody>
+            {datos.marco_conceptual.map((c, i) => (
+              <tr key={i}>
+                <td style={{ fontWeight: 'bold' }}>{c.termino}</td>
+                <td>{c.definicion}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div className="pdf-intro-texto">No hay términos registrados.</div>
+      )}
+    </div>
+  )
+}
+
 // ── PÁGINA: 3.3 Marco Normativo ──────────────────────────────────────────────
 function PaginaMarcoNormativo({ datos, total, paginaInicio }) {
   return (
@@ -1102,9 +1173,12 @@ function PaginaMarcoNormativo({ datos, total, paginaInicio }) {
           <thead>
             <tr>
               <th style={{ width: 30 }}>No.</th>
-              <th>Nombre de la Normatividad</th>
-              <th style={{ width: 120 }}>Fecha de Publicacion</th>
-              <th style={{ width: 130 }}>Medio de Publicacion</th>
+              <th>Nombre de la Normatividad / Documento</th>
+              <th style={{ width: 150 }}>Última Fecha de Publicación</th>
+              <th style={{ width: 130 }}>Medio de Publicación</th>
+            </tr>
+            <tr>
+              <td colSpan={4} style={{ background: '#7F7F7F', height: 8, padding: 0, border: '1px solid #000' }}></td>
             </tr>
           </thead>
           <tbody>
@@ -1157,42 +1231,42 @@ function PaginaAtribuciones({ datos, total, paginaInicio }) {
 
 // ── PÁGINA: 3.8 Principios y Valores Institucionales ─────────────────────────
 function PaginaPrincipiosValores({ datos, total, paginaInicio }) {
+  const principios = datos.principios || []
+  const valores    = datos.valores    || []
+
   return (
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
 
       <div className="pdf-cap-titulo">3.8 PRINCIPIOS Y VALORES INSTITUCIONALES</div>
 
-      <div className="pdf-intro-texto">
-        Consiste en un referente etico que consolida y guia el pensamiento, las actitudes, practicas y formas de actuacion de los servidores publicos y colaboradores de la dependencia.
+      <div className="pdf-intro-texto" style={{ marginBottom: 16 }}>
+        Consiste en un referente ético que consolida y guía el pensamiento, las actitudes, prácticas y formas de actuación de los servidores públicos y colaboradores de la Dependencia, Unidad Administrativa y/o entidad Municipal. Representando el Conjunto de normas morales que regulan la conducta de los servidores públicos hacia los servicios que prestan a la ciudadanía y en el desarrollo de sus actividades.
       </div>
 
-      {(datos.principios?.length > 0 || datos.valores?.length > 0) ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 8 }}>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '11pt', marginBottom: 8, fontFamily: 'Montserrat, Arial, sans-serif' }}>
-              Principios
-            </div>
-            {datos.principios?.length > 0 ? (
-              <ul className="pdf-lista">{datos.principios.map((p, i) => <li key={i}>{p}</li>)}</ul>
-            ) : (
-              <div className="pdf-seccion-texto">No aplica.</div>
-            )}
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '11pt', marginBottom: 8, fontFamily: 'Montserrat, Arial, sans-serif' }}>
-              Valores
-            </div>
-            {datos.valores?.length > 0 ? (
-              <ul className="pdf-lista">{datos.valores.map((v, i) => <li key={i}>{v}</li>)}</ul>
-            ) : (
-              <div className="pdf-seccion-texto">No aplica.</div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="pdf-intro-texto">No hay informacion de principios o valores registrada.</div>
-      )}
+      {/* PRINCIPIOS */}
+      <div style={{ marginBottom: 16 }}>
+        <div className="pdf-seccion-titulo" style={{ marginBottom: 8 }}>PRINCIPIOS</div>
+        {principios.length > 0 ? (
+          <ul className="pdf-lista">
+            {principios.map((p, i) => <li key={i}>{p}</li>)}
+          </ul>
+        ) : (
+          <div className="pdf-intro-texto">No aplica.</div>
+        )}
+      </div>
+
+      {/* VALORES */}
+      <div>
+        <div className="pdf-seccion-titulo" style={{ marginBottom: 8 }}>VALORES</div>
+        {valores.length > 0 ? (
+          <ul className="pdf-lista">
+            {valores.map((v, i) => <li key={i}>{v}</li>)}
+          </ul>
+        ) : (
+          <div className="pdf-intro-texto">No aplica.</div>
+        )}
+      </div>
     </div>
   )
 }
@@ -1229,6 +1303,106 @@ function PaginaPoliticasOperacion({ datos, total, paginaInicio }) {
   )
 }
 
+// ── PÁGINA: Portada Capítulo II ───────────────────────────────────────────────
+function PaginaPortadaCapituloII({ datos, total, paginaInicio }) {
+  return (
+    <div className="pdf-pagina" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <div style={{ textAlign: 'center', marginTop: 80 }}>
+        <div style={{
+          fontFamily: 'Montserrat, Arial, sans-serif',
+          fontWeight: 400, fontSize: '42pt',
+          letterSpacing: 2, lineHeight: 1.1
+        }}>CAPÍTULO 2</div>
+        <div style={{
+          fontFamily: 'Montserrat, Arial, sans-serif',
+          fontWeight: 800, fontSize: '42pt',
+          letterSpacing: 2, lineHeight: 1.1
+        }}>DE ORGANIZACIÓN</div>
+      </div>
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        display: 'flex', justifyContent: 'center'
+      }}>
+        <img
+          src="/LogoPortada.png"
+          alt="Logo Portada"
+          style={{ width: 'auto', maxWidth: '85%', height: 'auto', display: 'block' }}
+          crossOrigin="anonymous"
+        />
+      </div>
+    </div>
+  )
+}
+
+// ── PÁGINA: 4.1 Organigrama General ──────────────────────────────────────────
+function PaginaOrganigramaGeneral({ datos, total, paginaInicio }) {
+  const ruta = datos.organigrama_general?.ruta_archivo
+  const imgSrc = ruta ? `http://localhost:3000${ruta}` : null
+  return (
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <div className="pdf-seccion-titulo" style={{ marginBottom: 16, fontSize: '13pt' }}>
+        4.1 ORGANIGRAMA GENERAL
+      </div>
+      <div className="pdf-intro-texto" style={{ marginBottom: 16 }}>
+        Representa gráfica de la estructura orgánica general de la <em>{datos.dependencia}</em>, debidamente validada por la ley o reglamento que la defina.
+      </div>
+      {imgSrc ? (
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <img
+            src={imgSrc}
+            alt="Organigrama General"
+            style={{ maxWidth: '100%', height: 'auto', border: '1px solid #ddd' }}
+            crossOrigin="anonymous"
+          />
+        </div>
+      ) : (
+        <div style={{
+          border: '2px dashed #ccc', padding: 40, textAlign: 'center',
+          color: '#aaa', marginTop: 20, fontSize: '11pt', fontStyle: 'italic'
+        }}>
+          Organigrama General — Pendiente de carga
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── PÁGINA: 4.2 Organigrama Específico ───────────────────────────────────────
+function PaginaOrganigramaEspecifico({ datos, organigrama, index, total, paginaInicio }) {
+  const ruta = organigrama?.ruta_archivo
+  const imgSrc = ruta ? `http://localhost:3000${ruta}` : null
+  return (
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <div className="pdf-seccion-titulo" style={{ marginBottom: 16, fontSize: '13pt' }}>
+        4.2 ORGANIGRAMA ESPECÍFICO — {organigrama.tipo?.toUpperCase() || `${index + 1}`}
+      </div>
+      <div className="pdf-intro-texto" style={{ marginBottom: 16 }}>
+        Representación gráfica de la estructura orgánica del área <em>{organigrama.tipo || ''}</em>, que permite observar las líneas de autoridad y responsabilidad e identifica los canales de comunicación.
+      </div>
+      {imgSrc ? (
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <img
+            src={imgSrc}
+            alt={`Organigrama ${organigrama.tipo}`}
+            style={{ maxWidth: '100%', height: 'auto', border: '1px solid #ddd' }}
+            crossOrigin="anonymous"
+          />
+        </div>
+      ) : (
+        <div style={{
+          border: '2px dashed #ccc', padding: 40, textAlign: 'center',
+          color: '#aaa', marginTop: 20, fontSize: '11pt', fontStyle: 'italic'
+        }}>
+          Organigrama Específico — Pendiente de carga
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Página Inventario de Puestos ──────────────────────────────────────────────
 function PaginaInventario({ datos, total, paginaInicio }) {
   const totalPersonas = (datos.inventario_puestos || []).reduce(
@@ -1243,8 +1417,11 @@ function PaginaInventario({ datos, total, paginaInicio }) {
         <thead>
           <tr>
             <th style={{ width: 50 }}>NÚM.</th>
-            <th>NOMBRE DEL PUESTO / CARGO</th>
-            <th style={{ width: 150 }}>NÚMERO DE PERSONAS</th>
+            <th>PUESTO / TITULAR DE LA DEPENDENCIA O CARGO</th>
+            <th style={{ width: 150 }}>NO. DE PERSONAS EN EL CARGO</th>
+          </tr>
+          <tr>
+            <td colSpan={3} style={{ background: '#7F7F7F', height: 8, padding: 0, border: '1px solid #000' }}></td>
           </tr>
         </thead>
         <tbody>
@@ -1256,8 +1433,8 @@ function PaginaInventario({ datos, total, paginaInicio }) {
             </tr>
           ))}
           <tr className="total-row">
-            <td colSpan={2} style={{ textAlign: 'right', background: '#4a1020', color: 'white', fontWeight: 'bold', padding: '7px 10px', border: '1px solid #000' }}>TOTAL</td>
-            <td style={{ textAlign: 'center', background: '#4a1020', color: 'white', fontWeight: 'bold', border: '1px solid #000' }}>{totalPersonas}</td>
+            <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold', padding: '7px 10px', border: '1px solid #000' }}>TOTAL</td>
+            <td style={{ textAlign: 'center', fontWeight: 'bold', border: '1px solid #000' }}>{totalPersonas}</td>
           </tr>
         </tbody>
       </table>
@@ -1274,8 +1451,6 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
     { val: '4', label: 'Carrera Profesional\nno terminada (2 años)' },
     { val: '5', label: 'Carrera profesional\nterminada' },
     { val: '6', label: 'Postgrado' },
-    { val: '7', label: 'Licenciatura o\ncurreras afines.' },
-    { val: '8', label: 'Área de especialidad\nrequerida' },
   ]
 
   return (
@@ -1293,7 +1468,7 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
             <td colSpan={4} className="header-gris">INFORMACIÓN GENERAL DEL PUESTO</td>
           </tr>
           <tr>
-            <td style={{ width: 60, textAlign: 'center', fontWeight: 'bold', background: '#7a1020', color: 'white', fontSize: '10pt' }} rowSpan={2}>
+            <td style={{ width: 60, textAlign: 'center', fontWeight: 'bold', background: '#7F7F7F', color: 'white', fontSize: '10pt' }} rowSpan={2}>
               4.4.{index + 1}
             </td>
             <td className="label-cell" style={{ width: '25%' }}>NOMBRE DEL PUESTO</td>
@@ -1331,11 +1506,11 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
           )}
           {/* Total */}
           <tr>
-            <td colSpan={2} style={{ textAlign: 'center', background: '#4a1020', color: 'white', fontWeight: 'bold', border: '1px solid #000', padding: '6px' }}>
+            <td colSpan={2} style={{ textAlign: 'center', background: '#7F7F7F', color: 'white', fontWeight: 'bold', border: '1px solid #000', padding: '6px' }}>
               {(puesto.subordinados_directos || []).reduce((s, x) => s + (parseInt(x.num_personas) || 0), 0) +
                (puesto.subordinados_indirectos || []).reduce((s, x) => s + (parseInt(x.num_personas) || 0), 0)}
             </td>
-            <td colSpan={2} style={{ background: '#4a1020', color: 'white', fontWeight: 'bold', border: '1px solid #000', padding: '6px' }}>TOTAL</td>
+            <td colSpan={2} style={{ background: '#7F7F7F', color: 'white', fontWeight: 'bold', border: '1px solid #000', padding: '6px' }}>TOTAL</td>
           </tr>
         </tbody>
       </table>
@@ -1346,6 +1521,45 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
         <div className="pdf-objetivo-subtitulo">(Anote brevemente el objetivo o razón por la cual existe)</div>
         <div style={{ fontSize: '9.5pt', lineHeight: 1.6 }}>{puesto.objetivo_puesto || '—'}</div>
       </div>
+
+      {/* Ubicación en el organigrama */}
+      <table className="pdf-info-puesto-tabla" style={{ marginBottom: 14 }}>
+        <tbody>
+          <tr>
+            <td colSpan={4} className="header-gris">UBICACIÓN EN EL ORGANIGRAMA</td>
+          </tr>
+          <tr>
+            <td colSpan={4} style={{ padding: '12px 16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '9pt' }}>
+                {/* Jefe Inmediato */}
+                <div style={{ border: '1px solid #000', padding: '6px 20px', minWidth: 180, textAlign: 'center', background: '#f0f0f0', fontWeight: 'bold' }}>
+                  {puesto.jefe_inmediato || '—'}
+                </div>
+                {/* Línea vertical */}
+                <div style={{ width: 1, height: 20, background: '#000' }} />
+                {/* Puesto actual */}
+                <div style={{ border: '2px solid #7F7F7F', padding: '6px 20px', minWidth: 180, textAlign: 'center', background: '#fff', fontWeight: 'bold', color: '#7F7F7F' }}>
+                  {puesto.nombre_puesto || '—'}
+                </div>
+                {/* Línea vertical si hay subordinados */}
+                {((puesto.subordinados_directos?.length > 0)) && (
+                  <>
+                    <div style={{ width: 1, height: 20, background: '#000' }} />
+                    {/* Subordinados directos */}
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+                      {puesto.subordinados_directos.map((s, i) => (
+                        <div key={i} style={{ border: '1px solid #000', padding: '4px 12px', textAlign: 'center', background: '#fafafa', fontSize: '8pt' }}>
+                          {s.nombre_puesto}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Funciones */}
       <table className="pdf-funciones-tabla">
@@ -1391,7 +1605,7 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
           </tr>
           <tr>
             {ESCOLARIDAD_OPTS_TABLA.map((opt, i) => (
-              <td key={i} style={{ textAlign: 'center', border: '1px solid #000', padding: '4px 6px', fontSize: '8pt', width: `${100/8}%` }}>
+              <td key={i} style={{ textAlign: 'center', border: '1px solid #000', padding: '4px 6px', fontSize: '8pt', width: `${100/6}%` }}>
                 <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{i + 1}.</div>
                 <div style={{ marginBottom: 4 }}>{opt.label}</div>
                 <div className="pdf-check-box">{puesto.escolaridad === opt.val ? 'X' : ''}</div>
@@ -1421,15 +1635,129 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
             <td colSpan={6}>{puesto.equipo_herramientas?.join(', ') || 'No aplica.'}</td>
           </tr>
           <tr>
-            <td colSpan={4} className="label-bold">Experiencia:</td>
+            <td colSpan={4} className="label-bold">10. Experiencia:</td>
             <td colSpan={6}>{puesto.experiencia || 'N/A'}</td>
+          </tr>
+          {/* Competencias Laborales — dentro de la misma tabla de Perfil */}
+          <tr>
+            <td colSpan={10} style={{ background: '#d0d0d0', fontWeight: 'bold', fontSize: '9pt', textTransform: 'uppercase', padding: '5px 10px', border: '1px solid #000', letterSpacing: '.5px' }}>
+              Competencias Laborales
+            </td>
+          </tr>
+          <tr>
+            <td colSpan={2} className="label-bold" rowSpan={3} style={{ verticalAlign: 'top' }}>11. Habilidades</td>
+            <td colSpan={2} style={{ fontSize: '9pt', fontWeight: 'bold' }}>Directivas:</td>
+            <td colSpan={6}>{puesto.habilidades_directivas?.join(', ') || 'N/A'}</td>
+          </tr>
+          <tr>
+            <td colSpan={2} style={{ fontSize: '9pt', fontWeight: 'bold' }}>Técnicas:</td>
+            <td colSpan={6}>{puesto.habilidades_tecnicas?.join(', ') || 'N/A'}</td>
+          </tr>
+          <tr>
+            <td colSpan={2} style={{ fontSize: '9pt', fontWeight: 'bold' }}>Generales:</td>
+            <td colSpan={6}>{puesto.habilidades_generales?.join(', ') || 'N/A'}</td>
+          </tr>
+          <tr>
+            <td colSpan={4} className="label-bold">12. Actitudes:</td>
+            <td colSpan={6}>{puesto.actitudes?.join(', ') || 'N/A'}</td>
+          </tr>
+          <tr>
+            <td colSpan={4} className="label-bold">13. Horario Laboral:</td>
+            <td colSpan={6}>{puesto.horario_laboral || 'N/A'}</td>
           </tr>
         </tbody>
       </table>
 
+      {/* Responsabilidad */}
+      <table className="pdf-perfil-tabla" style={{ marginTop: 0 }}>
+        <tbody>
+          <tr>
+            <td colSpan={4} className="header-gris">RESPONSABILIDAD</td>
+          </tr>
+          <tr>
+            <td colSpan={4} style={{ padding: '6px 10px', fontSize: '9pt' }}>
+              <span className="label-bold" style={{ background: 'none' }}>1. Mobiliario y Equipo:</span>{' '}
+              Es Responsable de dar el uso para el que están destinados, así como, procurar su conservación y oportuno mantenimiento.
+            </td>
+          </tr>
+          <tr>
+            <td className="label-bold" style={{ width: '30%' }}>2. Manejo de Información</td>
+            <td style={{ width: '20%' }}>{puesto.manejo_informacion || 'N/A'}</td>
+            <td className="label-bold" style={{ width: '30%' }}>Nivel</td>
+            <td style={{ width: '20%' }}>
+              {puesto.nivel_informacion
+                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    {['Alta','Media','Baja','Nulo'].map(n => (
+                      <span key={n} style={{ fontSize: '8pt' }}>
+                        <span style={{ display: 'inline-block', width: 10, height: 10, border: '1px solid #000', textAlign: 'center', lineHeight: '10px', marginRight: 2, fontSize: '8pt' }}>
+                          {puesto.nivel_informacion?.toLowerCase() === n.toLowerCase() ? 'X' : ''}
+                        </span>{n}
+                      </span>
+                    ))}
+                  </span>
+                : 'N/A'
+              }
+            </td>
+          </tr>
+          <tr>
+            <td className="label-bold">3. Manejo de Presupuesto</td>
+            <td>{puesto.manejo_presupuesto || 'N/A'}</td>
+            <td className="label-bold">Nivel</td>
+            <td>
+              {puesto.nivel_presupuesto
+                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    {['Alta','Media','Baja','Nulo'].map(n => (
+                      <span key={n} style={{ fontSize: '8pt' }}>
+                        <span style={{ display: 'inline-block', width: 10, height: 10, border: '1px solid #000', textAlign: 'center', lineHeight: '10px', marginRight: 2, fontSize: '8pt' }}>
+                          {puesto.nivel_presupuesto?.toLowerCase() === n.toLowerCase() ? 'X' : ''}
+                        </span>{n}
+                      </span>
+                    ))}
+                  </span>
+                : 'N/A'
+              }
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Autoridad */}
+      {puesto.autoridad?.length > 0 && (
+        <table className="pdf-funciones-tabla" style={{ marginTop: 0 }}>
+          <tbody>
+            <tr>
+              <td colSpan={2} className="header-gris">AUTORIDAD</td>
+            </tr>
+            {puesto.autoridad.map((a, i) => (
+              <tr key={i}>
+                <td className="num-cell">{i + 1}.</td>
+                <td>{a}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {/* Indicadores de desempeño */}
+      {puesto.indicador_desempeno?.length > 0 && (
+        <table className="pdf-funciones-tabla" style={{ marginTop: 0 }}>
+          <tbody>
+            <tr>
+              <td colSpan={2} className="header-gris">INDICADORES DE DESEMPEÑO</td>
+            </tr>
+            {puesto.indicador_desempeno.map((ind, i) => (
+              <tr key={i}>
+                <td className="num-cell">{i + 1}.</td>
+                <td>{ind}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
       {/* Compromiso */}
       <div className="pdf-compromiso">
-        <strong>Compromiso del Servidor Público:</strong> Me comprometo a desempeñar con ética, profesionalismo y responsabilidad las funciones del cargo público que represento, incorporando la perspectiva de género y un enfoque basado en los Derechos Humanos en beneficio de la ciudadanía benitojuarense.
+        Me comprometo a desempeñar con ética, profesionalismo y responsabilidad las funciones del cargo público que represento, incorporando la perspectiva de género y un enfoque basado en los Derechos Humanos en beneficio de la ciudadanía benitojuarense. Con mis compañeras, compañeros y el personal a mi cargo, promuevo el trabajo en equipo a partir del respeto y el buen trato. Asimismo, me comprometo a cuidar y hacer un uso responsable de los bienes patrimoniales, conforme a lo establecido por las leyes y reglamentos vigentes.
       </div>
 
       {/* Firma */}
@@ -1443,13 +1771,19 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
             <td style={{ height: 70, verticalAlign: 'bottom', paddingBottom: 8, textAlign: 'center' }}>
               <div className="pdf-firma-espacio" />
               <div style={{ fontSize: '9pt' }}>
-                <strong>Nombre y Cargo:</strong> {puesto.ocupante_nombre || ' '}
+                <strong>Nombre:</strong> {puesto.ocupante_nombre || ' '}
+              </div>
+              <div style={{ fontSize: '9pt' }}>
+                <strong>Cargo:</strong> {puesto.ocupante_cargo || ' '}
               </div>
             </td>
             <td style={{ height: 70, verticalAlign: 'bottom', paddingBottom: 8, textAlign: 'center' }}>
               <div className="pdf-firma-espacio" />
               <div style={{ fontSize: '9pt' }}>
-                <strong>Nombre y Cargo:</strong> {puesto.jefe_inmediato || ' '}
+                <strong>Nombre:</strong> {puesto.jefe_firma_nombre || ' '}
+              </div>
+              <div style={{ fontSize: '9pt' }}>
+                <strong>Cargo:</strong> {puesto.jefe_firma_cargo || ' '}
               </div>
             </td>
           </tr>
@@ -1458,7 +1792,7 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
               <strong>Fecha:</strong> {fmtFecha(puesto.ocupante_fecha)}
             </td>
             <td style={{ fontSize: '9pt' }}>
-              <strong>Fecha:</strong> {fmtFecha(puesto.ocupante_fecha)}
+              <strong>Fecha:</strong> {fmtFecha(puesto.jefe_firma_fecha)}
             </td>
           </tr>
         </tbody>
@@ -1523,19 +1857,23 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
   }, [])
 
   const puestos = datos.puestos || []
+  const orgsEspecificos = datos.organigramas_especificos || []
   const segmentosAntecedentes = dividirTextoEnSegmentos(datos.antecedentes, 2400)
   const paginasAntecedentes = paginarSegmentos(segmentosAntecedentes, 2800)
   const totalPaginasAntecedentes = paginasAntecedentes.length || 1
   const paginaMarcoNormativo = 8 + totalPaginasAntecedentes
   const paginaAtribuciones = paginaMarcoNormativo + 1
-  const paginaPrincipiosValores = paginaAtribuciones + 1
+  const paginaObjetivoMisionVision = paginaAtribuciones + 1
+  const paginaPrincipiosValores = paginaObjetivoMisionVision + 1
   const paginaPoliticas = paginaPrincipiosValores + 1
-  const paginaInventario = paginaPoliticas + 1
+  const paginaMarcoConceptual = paginaPoliticas + 1
+  // Capítulo II: portada + organigrama general + organigramas específicos
+  const paginaPortadaCapII = paginaMarcoConceptual + 1
+  const paginaOrgGeneral = paginaPortadaCapII + 1
+  const paginaPrimerOrgEspecifico = paginaOrgGeneral + 1
+  const paginaInventario = paginaPrimerOrgEspecifico + orgsEspecificos.length
   const paginaPrimerPuesto = paginaInventario + 1
   const paginaCambios = paginaPrimerPuesto + puestos.length
-  // Total de paginas: portada, caratula, indice, portada capitulo I, capitulo I parte 1,
-  // capitulo I parte 2, introduccion, antecedentes, marco normativo, atribuciones,
-  // principios y valores, politicas, inventario, puestos y cambios.
   const totalPaginas = paginaCambios
 
   const generarPDF = async () => {
@@ -1645,8 +1983,22 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
         ))}
         <PaginaMarcoNormativo datos={datos} total={totalPaginas} paginaInicio={paginaMarcoNormativo} />
         <PaginaAtribuciones datos={datos} total={totalPaginas} paginaInicio={paginaAtribuciones} />
+        <PaginaObjetivoMisionVision datos={datos} total={totalPaginas} paginaInicio={paginaObjetivoMisionVision} />
         <PaginaPrincipiosValores datos={datos} total={totalPaginas} paginaInicio={paginaPrincipiosValores} />
         <PaginaPoliticasOperacion datos={datos} total={totalPaginas} paginaInicio={paginaPoliticas} />
+        <PaginaMarcoConceptual datos={datos} total={totalPaginas} paginaInicio={paginaMarcoConceptual} />
+        <PaginaPortadaCapituloII datos={datos} total={totalPaginas} paginaInicio={paginaPortadaCapII} />
+        <PaginaOrganigramaGeneral datos={datos} total={totalPaginas} paginaInicio={paginaOrgGeneral} />
+        {orgsEspecificos.map((org, i) => (
+          <PaginaOrganigramaEspecifico
+            key={i}
+            datos={datos}
+            organigrama={org}
+            index={i}
+            total={totalPaginas}
+            paginaInicio={paginaPrimerOrgEspecifico + i}
+          />
+        ))}
         <PaginaInventario datos={datos} total={totalPaginas} paginaInicio={paginaInventario} />
         {puestos.map((puesto, i) => (
           <PaginaPuesto
