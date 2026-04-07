@@ -163,10 +163,56 @@ export default function Paso4Procedimiento({ datos, actualizar }) {
         </div>
       )}
 
+
       <div className="proc-header">
-        <span className="proc-codigo">{proc.codigo || 'Sin codigo'}</span>
-        <span className="proc-nombre">{proc.nombre || 'Sin nombre'}</span>
-      </div>
+  <span className="proc-codigo">{proc.codigo || 'Sin codigo'}</span>
+  <span className="proc-nombre">{proc.nombre || 'Sin nombre'}</span>
+</div>
+
+{/* Caratula de autorizaciones */}
+<div className="campo-grupo">
+  <label>Caratula de Autorizaciones</label>
+  <div className="campo-fila">
+    <div className="campo-grupo">
+      <label>Elaboró — Nombre</label>
+      <input
+        type="text"
+        placeholder="Nombre completo"
+        value={proc.elaboro_nombre || ''}
+        onChange={e => actualizarProc('elaboro_nombre', e.target.value)}
+      />
+    </div>
+    <div className="campo-grupo">
+      <label>Revisó — Nombre</label>
+      <input
+        type="text"
+        placeholder="Nombre completo"
+        value={proc.reviso_nombre || ''}
+        onChange={e => actualizarProc('reviso_nombre', e.target.value)}
+      />
+    </div>
+  </div>
+  <div className="campo-fila">
+    <div className="campo-grupo">
+      <label>Autorizó — Nombre</label>
+      <input
+        type="text"
+        placeholder="Nombre completo"
+        value={proc.autorizo_nombre || ''}
+        onChange={e => actualizarProc('autorizo_nombre', e.target.value)}
+      />
+    </div>
+    <div className="campo-grupo">
+      <label>Validó — Nombre</label>
+      <input
+        type="text"
+        placeholder="Nombre completo"
+        value={proc.valido_nombre || ''}
+        onChange={e => actualizarProc('valido_nombre', e.target.value)}
+      />
+    </div>
+  </div>
+</div>
 
       <div className="campo-grupo">
         <label>1. Objetivo</label>
