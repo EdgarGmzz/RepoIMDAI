@@ -342,21 +342,29 @@ function VisorProcedimientos({ datos }) {
       {d.procedimientos?.length > 0 && (
         <Seccion numero="04" titulo="Procedimientos">
           {d.procedimientos.map((p, i) => (
-            <div key={i} style={{
-              border: '1.5px solid #e0e7ef', borderRadius: '10px',
-              marginBottom: '16px', overflow: 'hidden'
-            }}>
-              <div style={{
-                padding: '12px 16px', background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-                display: 'flex', gap: '10px', alignItems: 'center'
-              }}>
-                <span style={{
-                  background: '#2563eb', color: 'white', borderRadius: '6px',
-                  padding: '2px 8px', fontSize: '.7rem', fontWeight: '700'
-                }}>{p.codigo || `P-${i + 1}`}</span>
-                <span style={{ fontWeight: '700', color: '#1e3a5f', fontSize: '.88rem' }}>{p.nombre || `Procedimiento ${i + 1}`}</span>
+            <div key={i} style={{ border: '1.5px solid #e0e7ef', borderRadius: '10px', marginBottom: '16px', overflow: 'hidden' }}>
+              <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <span style={{ background: '#2563eb', color: 'white', borderRadius: '6px', padding: '2px 8px', fontSize: '.7rem', fontWeight: '700' }}>
+                  {p.codigo || `P-${i + 1}`}
+                </span>
+                <span style={{ fontWeight: '700', color: '#1e3a5f', fontSize: '.88rem' }}>
+                  {p.nombre || `Procedimiento ${i + 1}`}
+                </span>
               </div>
               <div style={{ padding: '14px 16px' }}>
+                {(p.elaboro_nombre || p.reviso_nombre || p.autorizo_nombre || p.valido_nombre) && (
+                  <div style={{ marginBottom: '14px' }}>
+                    <div style={{ fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#c9a0a8', marginBottom: '8px' }}>
+                      Caratula de Autorizaciones
+                    </div>
+                    <CampoGrid campos={[
+                      { label: 'Elaboró', valor: p.elaboro_nombre },
+                      { label: 'Revisó', valor: p.reviso_nombre },
+                      { label: 'Autorizó', valor: p.autorizo_nombre },
+                      { label: 'Validó', valor: p.valido_nombre },
+                    ]} />
+                  </div>
+                )}
                 <Campo label="Objetivo" valor={p.objetivo} multilinea />
                 <Campo label="Alcance" valor={p.alcance} multilinea />
                 {p.actividades?.length > 0 && (

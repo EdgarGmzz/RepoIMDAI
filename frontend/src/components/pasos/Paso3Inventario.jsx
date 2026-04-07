@@ -13,7 +13,12 @@ export default function Paso3Inventario({ datos, actualizar }) {
         actividades: [],
         referencias: '',
         registros: '',
-        diagrama: null
+        diagrama: null,
+        // Caratula de autorizaciones
+        elaboro_nombre: '',
+        reviso_nombre: '',
+        autorizo_nombre: '',
+        valido_nombre: '',
       }]
     })
   }

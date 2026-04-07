@@ -165,14 +165,16 @@ const getManualById = async (req, res) => {
       })
     )
 
-    // Procedimientos
+  // Procedimientos
     let procedimientos = []
     if (manual.tipo_manual === 'procedimientos') {
       const procsRes = await pool.query(
         `SELECT p.id_procedimiento, p.codigo, p.nombre, p.version,
                 TO_CHAR(p.fecha_emision, 'YYYY-MM-DD') AS fecha_emision,
                 pd.objetivo, pd.alcance, pd.responsabilidades,
-                pd.definiciones, pd.referencias, pd.registros
+                pd.definiciones, pd.referencias, pd.registros,
+                pd.elaboro_nombre, pd.reviso_nombre,
+                pd.autorizo_nombre, pd.valido_nombre
          FROM procedimientos p
          LEFT JOIN procedimiento_detalle pd ON pd.id_procedimiento = p.id_procedimiento
          WHERE p.id_manual = $1 ORDER BY p.orden, p.id_procedimiento`, [id]
@@ -195,6 +197,10 @@ const getManualById = async (req, res) => {
             definiciones:      proc.definiciones      || '',
             referencias:       proc.referencias       || '',
             registros:         proc.registros         || '',
+            elaboro_nombre:    proc.elaboro_nombre    || '',
+            reviso_nombre:     proc.reviso_nombre     || '',
+            autorizo_nombre:   proc.autorizo_nombre   || '',
+            valido_nombre:     proc.valido_nombre     || '',
             actividades:       pasosRes.rows.map(p => ({
               responsable: p.responsable || '',
               descripcion: p.descripcion || '',
@@ -473,6 +479,7 @@ const crearManual = async (req, res) => {
     }
 
     // 8. Procedimientos
+    console.log('primer procedimiento:', JSON.stringify(procedimientos[0], null, 2))
     for (const proc of (procedimientos || [])) {
       const procResult = await client.query(
         `INSERT INTO procedimientos (id_manual, codigo, version, nombre, fecha_emision, tipo)
@@ -482,10 +489,15 @@ const crearManual = async (req, res) => {
       const id_procedimiento = procResult.rows[0].id_procedimiento
 
       await client.query(
-        `INSERT INTO procedimiento_detalle (id_procedimiento, objetivo, alcance, responsabilidades, definiciones, referencias, registros)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [id_procedimiento, proc.objetivo, proc.alcance, proc.responsabilidades, proc.definiciones, proc.referencias, proc.registros]
-      )
+  `INSERT INTO procedimiento_detalle 
+   (id_procedimiento, objetivo, alcance, responsabilidades, definiciones, referencias, registros,
+    elaboro_nombre, reviso_nombre, autorizo_nombre, valido_nombre)
+   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+  [id_procedimiento, proc.objetivo, proc.alcance, proc.responsabilidades, 
+   proc.definiciones, proc.referencias, proc.registros,
+   proc.elaboro_nombre || null, proc.reviso_nombre || null,
+   proc.autorizo_nombre || null, proc.valido_nombre || null]
+)
 
       for (let i = 0; i < (proc.actividades || []).length; i++) {
         const act = proc.actividades[i]
@@ -731,10 +743,15 @@ const actualizarManual = async (req, res) => {
       const id_procedimiento = procResult.rows[0].id_procedimiento
 
       await client.query(
-        `INSERT INTO procedimiento_detalle (id_procedimiento, objetivo, alcance, responsabilidades, definiciones, referencias, registros)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-        [id_procedimiento, proc.objetivo, proc.alcance, proc.responsabilidades, proc.definiciones, proc.referencias, proc.registros]
-      )
+  `INSERT INTO procedimiento_detalle 
+   (id_procedimiento, objetivo, alcance, responsabilidades, definiciones, referencias, registros,
+    elaboro_nombre, reviso_nombre, autorizo_nombre, valido_nombre)
+   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+  [id_procedimiento, proc.objetivo, proc.alcance, proc.responsabilidades, 
+   proc.definiciones, proc.referencias, proc.registros,
+   proc.elaboro_nombre || null, proc.reviso_nombre || null,
+   proc.autorizo_nombre || null, proc.valido_nombre || null]
+)
 
       for (let i = 0; i < (proc.actividades || []).length; i++) {
         const act = proc.actividades[i]

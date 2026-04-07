@@ -1,4 +1,7 @@
 export default function Paso1DatosGenerales({ datos, actualizar }) {
+  const usuario = JSON.parse(localStorage.getItem('usuario'))
+  const esAdmin = usuario?.rol === 'administrador'
+
   return (
     <div className="paso-container">
       <h3 className="paso-titulo">Datos Generales del Manual</h3>
@@ -21,7 +24,14 @@ export default function Paso1DatosGenerales({ datos, actualizar }) {
           placeholder="Ej. P-001-2026"
           value={datos.codigo}
           onChange={e => actualizar({ codigo: e.target.value })}
+          disabled={!esAdmin}
+          style={!esAdmin ? { background: '#f5f0f1', color: '#a78a8f', cursor: 'not-allowed' } : {}}
         />
+        {!esAdmin && (
+          <p style={{ fontSize: '.7rem', color: '#b06070', marginTop: '4px' }}>
+            Este campo solo puede ser editado por el administrador.
+          </p>
+        )}
       </div>
 
       <div className="campo-fila">
@@ -40,7 +50,14 @@ export default function Paso1DatosGenerales({ datos, actualizar }) {
             placeholder="Ej. 01"
             value={datos.version || ''}
             onChange={e => actualizar({ version: e.target.value })}
+            disabled={!esAdmin}
+            style={!esAdmin ? { background: '#f5f0f1', color: '#a78a8f', cursor: 'not-allowed' } : {}}
           />
+          {!esAdmin && (
+            <p style={{ fontSize: '.7rem', color: '#b06070', marginTop: '4px' }}>
+              Este campo solo puede ser editado por el administrador.
+            </p>
+          )}
         </div>
       </div>
 
