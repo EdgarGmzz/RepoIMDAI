@@ -31,6 +31,17 @@ const estilos = `
     box-shadow: 0 4px 24px rgba(0,0,0,0.35);
     flex-shrink: 0;
   }
+  .pdf-pagina-horizontal {
+    width: 1056px;
+    min-height: 816px;
+    padding: 40px 48px;
+    background: white;
+    position: relative;
+    font-family: 'Montserrat', Arial, sans-serif;
+    font-weight: 500;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    flex-shrink: 0;
+  }
   /* ── Header ── */
   .pdf-header {
     display: flex;
@@ -185,7 +196,7 @@ const estilos = `
     line-height: 1.08;
     text-align: justify;
     text-justify: inter-word;
-    text-align-last: justify;
+    text-align-last: left;
     width: 100%;
     margin-bottom: 14px;
   }
@@ -476,12 +487,158 @@ const extraerParrafos = (texto) => {
   if (!texto) return []
 
   const normalizado = String(texto).replace(/\r\n/g, '\n')
-  const separador = /\n\s*\n/.test(normalizado) ? /\n\s*\n/ : /\n+/
 
-  return normalizado
-    .split(separador)
-    .map((bloque) => bloque.trim())
+  if (/\n\s*\n/.test(normalizado)) {
+    return normalizado
+      .split(/\n\s*\n/)
+      .map((bloque) => bloque.replace(/\n+/g, ' ').trim())
+      .filter(Boolean)
+  }
+
+  const lineas = normalizado
+    .split('\n')
+    .map((linea) => linea.trim())
     .filter(Boolean)
+
+  if (lineas.length === 0) return []
+
+  const parrafos = []
+  let actual = ''
+
+  lineas.forEach((linea, index) => {
+    if (!actual) {
+      actual = linea
+      return
+    }
+
+    const terminaParrafo = /[.!?:;]"?$/.test(actual)
+    const siguientePareceNuevoParrafo = /^[A-ZÁÉÍÓÚÑÜ]/.test(linea)
+
+    if (terminaParrafo && siguientePareceNuevoParrafo) {
+      parrafos.push(actual.trim())
+      actual = linea
+      return
+    }
+
+    actual = `${actual} ${linea}`.trim()
+
+    if (index === lineas.length - 1) {
+      parrafos.push(actual.trim())
+    }
+  })
+
+  if (actual && (parrafos.length === 0 || parrafos[parrafos.length - 1] !== actual.trim())) {
+    parrafos.push(actual.trim())
+  }
+
+  return parrafos.filter(Boolean)
+}
+
+const extraerParrafosAtribuciones = (texto) => {
+  if (!texto) return []
+
+  return extraerParrafos(
+    String(texto)
+      .replace(/\s+([IVXLCDM]+\))/g, '\n$1')
+  )
+}
+
+const renderTextoConEncabezadoEnNegritas = (texto) => {
+  const valor = String(texto || '').trim()
+  const match = valor.match(/^([^.:]+[.:])\s*(.*)$/)
+
+  if (!match) return valor
+
+  return (
+    <>
+      <strong>{match[1]}</strong>
+      {match[2] ? ` ${match[2]}` : ''}
+    </>
+  )
+}
+
+const renderTextoConSaltosPorPunto = (texto) => {
+  const partes = String(texto || '')
+    .split(/(?<=\.)\s+/)
+    .map((parte) => parte.trim())
+    .filter(Boolean)
+
+  return partes.map((parte, i) => (
+    <span key={i}>
+      {i > 0 && <br />}
+      {parte}
+    </span>
+  ))
+}
+
+const renderTextoPolitica = (texto) => {
+  const valor = String(texto || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\s+(?=(Horario|Ubicaci[oó]n|Telefono|Tel[eé]fono|Correo)\s*:)/gi, '\n')
+    .split('\n')
+    .map((linea) => linea.trim())
+    .filter(Boolean)
+
+  return valor.map((linea, i) => {
+    const match = linea.match(/^(Horario|Ubicaci[oó]n|Telefono|Tel[eé]fono|Correo)\s*:\s*(.*)$/i)
+
+    if (!match) {
+      return (
+        <div key={i} style={{ marginBottom: 2, textAlign: 'justify', textJustify: 'inter-word', textAlignLast: 'left', width: '100%' }}>
+          {linea}
+        </div>
+      )
+    }
+
+    let etiqueta = match[1].toUpperCase()
+    if (etiqueta === 'TELEFONO') etiqueta = 'TELÉFONO'
+    if (etiqueta === 'UBICACION') etiqueta = 'UBICACIÓN'
+
+    return (
+      <div key={i} style={{ marginBottom: 2, textAlign: 'justify', textJustify: 'inter-word', textAlignLast: 'left', width: '100%' }}>
+        <span>{etiqueta}: </span>
+        <span>{match[2]}</span>
+      </div>
+    )
+  })
+}
+
+const normalizarRutaOrganigrama = (ruta) => {
+  if (!ruta) return ''
+  if (/^https?:\/\//i.test(ruta)) return ruta
+  return `http://localhost:3000${ruta}`
+}
+
+const estimarPesoPolitica = (politica = {}) => {
+  const area = String(politica.area || '')
+  const descripcion = String(politica.descripcion || '')
+  return area.length * 2 + descripcion.length
+}
+
+const paginarPoliticas = (politicas = [], maxPesoPorPagina = 1800) => {
+  if (!politicas.length) return [[]]
+
+  const paginas = []
+  let actual = []
+  let pesoActual = 0
+
+  politicas.forEach((politica) => {
+    const peso = estimarPesoPolitica(politica)
+
+    if (actual.length > 0 && pesoActual + peso > maxPesoPorPagina) {
+      paginas.push(actual)
+      actual = [politica]
+      pesoActual = peso
+      return
+    }
+
+    actual.push(politica)
+    pesoActual += peso
+  })
+
+  if (actual.length > 0) paginas.push(actual)
+
+  return paginas
 }
 
 const dividirTextoEnSegmentos = (texto, maxChars = 2600) => {
@@ -570,6 +727,61 @@ const paginarSegmentos = (segmentos, maxCharsPorPagina = 3200) => {
   if (paginaActual.length > 0) paginas.push(paginaActual)
 
   return paginas
+}
+
+const crearMapaPaginas = ({
+  puestos = [],
+  paginasAntecedentes = 1,
+  paginaValoresSeparada = false,
+  paginasPoliticas = 1,
+  paginasOrganigramasEspecificos = 1,
+}) => {
+  const portada = 1
+  const caratula = 2
+  const indice = 3
+  const portadaCapituloI = 4
+  const capituloIParte1 = 5
+  const capituloIParte2 = 6
+  const introduccion = 7
+  const antecedentes = 8
+  const marcoNormativo = antecedentes + paginasAntecedentes
+  const atribuciones = marcoNormativo + 1
+  const objetivoMisionVision = atribuciones + 1
+  const principiosValores = objetivoMisionVision + 1
+  const valores = paginaValoresSeparada ? principiosValores + 1 : null
+  const politicas = (valores || principiosValores) + 1
+  const marcoConceptual = politicas + paginasPoliticas
+  const portadaCapituloII = marcoConceptual + 1
+  const organigramaGeneral = portadaCapituloII + 1
+  const organigramasEspecificos = organigramaGeneral + 1
+  const inventario = organigramasEspecificos + paginasOrganigramasEspecificos
+  const primerPuesto = inventario + 1
+  const cambios = primerPuesto + puestos.length
+
+  return {
+    portada,
+    caratula,
+    indice,
+    portadaCapituloI,
+    capituloIParte1,
+    capituloIParte2,
+    introduccion,
+    antecedentes,
+    marcoNormativo,
+    atribuciones,
+    objetivoMisionVision,
+    principiosValores,
+    valores,
+    politicas,
+    marcoConceptual,
+    portadaCapituloII,
+    organigramaGeneral,
+    organigramasEspecificos,
+    inventario,
+    primerPuesto,
+    cambios,
+    total: cambios,
+  }
 }
 
 // ── ESCOLARIDAD MAP ────────────────────────────────────────────────────────────
@@ -747,39 +959,31 @@ function PaginaCaratula({ datos, total }) {
 }
 
 // ── PÁGINA 3: Índice ──────────────────────────────────────────────────────────
-function PaginaIndice({ datos, total, paginasAntecedentes = 1 }) {
-  const paginaAntecedentes = 8
-  const paginaMarcoNormativo = paginaAntecedentes + paginasAntecedentes
-  const paginaAtribuciones = paginaMarcoNormativo + 1
-  const paginaPrincipiosValores = paginaAtribuciones + 1
-  const paginaPoliticas = paginaPrincipiosValores + 1
-  const paginaInventario = paginaPoliticas + 1
-  const paginaPrimerPuesto = paginaInventario + 1
-  const paginaCambios = paginaPrimerPuesto + (datos.puestos || []).length
-
+function PaginaIndice({ datos, total, mapaPaginas }) {
   const items = [
-    { num: '01', label: 'Carátula de Autorización', pag: 2, nivel: 1, linea: true },
-    { num: '02', label: 'Índice', pag: 3, nivel: 1 },
-    { num: '03', label: 'Capítulo I de Generales', pag: 4, nivel: 1 },
-    { num: '3.1',  label: 'Introducción', pag: 4, nivel: 2 },
-    { num: '3.2',  label: 'Antecedentes', pag: paginaAntecedentes, nivel: 2 },
-    { num: '3.3',  label: 'Marco Normativo', pag: paginaMarcoNormativo, nivel: 2 },
-    { num: '3.4',  label: 'Atribuciones Institucionales', pag: paginaAtribuciones, nivel: 2 },
-    { num: '3.5',  label: 'Objetivo General', pag: 4, nivel: 2 },
-    { num: '3.6',  label: 'Misión', pag: 4, nivel: 2 },
-    { num: '3.7',  label: 'Visión', pag: 4, nivel: 2 },
-    { num: '3.8',  label: 'Principios y Valores Institucionales', pag: paginaPrincipiosValores, nivel: 2 },
-    { num: '3.9',  label: 'Políticas de Operación', pag: paginaPoliticas, nivel: 2 },
-    { num: '3.10', label: 'Marco Conceptual', pag: 4, nivel: 2 },
-    { num: '04', label: 'Capítulo II de Organización', pag: 5, nivel: 1 },
-    { num: '4.1',  label: 'Organigrama General', pag: 5, nivel: 2 },
-    { num: '4.2',  label: 'Organigramas Específicos', pag: 5, nivel: 2 },
-    { num: '4.3',  label: 'Inventario de Puestos', pag: paginaInventario, nivel: 2 },
-    { num: '4.4',  label: 'Descripción de Puestos', pag: paginaPrimerPuesto, nivel: 2 },
+    { num: '01', label: 'Carátula de Autorización', pag: mapaPaginas.caratula, nivel: 1, linea: true },
+    { num: '02', label: 'Índice', pag: mapaPaginas.indice, nivel: 1 },
+    { num: '03', label: 'Capítulo I de Generales', pag: mapaPaginas.portadaCapituloI, nivel: 1 },
+    { num: '3.1',  label: 'Introducción', pag: mapaPaginas.introduccion, nivel: 2 },
+    { num: '3.2',  label: 'Antecedentes', pag: mapaPaginas.antecedentes, nivel: 2 },
+    { num: '3.3',  label: 'Marco Normativo', pag: mapaPaginas.marcoNormativo, nivel: 2 },
+    { num: '3.4',  label: 'Atribuciones Institucionales', pag: mapaPaginas.atribuciones, nivel: 2 },
+    { num: '3.5',  label: 'Objetivo General', pag: mapaPaginas.objetivoMisionVision, nivel: 2 },
+    { num: '3.6',  label: 'Misión', pag: mapaPaginas.objetivoMisionVision, nivel: 2 },
+    { num: '3.7',  label: 'Visión', pag: mapaPaginas.objetivoMisionVision, nivel: 2 },
+    { num: '3.8',  label: 'Principios y Valores Institucionales', pag: mapaPaginas.principiosValores, nivel: 2 },
+    ...(mapaPaginas.valores ? [{ num: '3.8', label: 'Valores Institucionales', pag: mapaPaginas.valores, nivel: 2 }] : []),
+    { num: '3.9',  label: 'Políticas de Operación', pag: mapaPaginas.politicas, nivel: 2 },
+    { num: '3.10', label: 'Marco Conceptual', pag: mapaPaginas.marcoConceptual, nivel: 2 },
+    { num: '04', label: 'Capítulo II de Organización', pag: mapaPaginas.portadaCapituloII, nivel: 1 },
+    { num: '4.1',  label: 'Organigrama General', pag: mapaPaginas.organigramaGeneral, nivel: 2 },
+    { num: '4.2',  label: 'Organigramas Específicos', pag: mapaPaginas.organigramasEspecificos, nivel: 2 },
+    { num: '4.3',  label: 'Inventario de Puestos', pag: mapaPaginas.inventario, nivel: 2 },
+    { num: '4.4',  label: 'Descripción de Puestos', pag: mapaPaginas.primerPuesto, nivel: 2 },
     ...(datos.puestos || []).map((p, i) => ({
-      num: `4.4.${i + 1}`, label: `Descripción de puesto ${p.nombre_puesto || ''}`, pag: paginaPrimerPuesto + i, nivel: 2
+      num: `4.4.${i + 1}`, label: `Descripción de puesto ${p.nombre_puesto || ''}`, pag: mapaPaginas.primerPuesto + i, nivel: 2
     })),
-    { num: '4.5',  label: 'Sección de Cambios', pag: paginaCambios, nivel: 2 },
+    { num: '4.5',  label: 'Sección de Cambios', pag: mapaPaginas.cambios, nivel: 2 },
   ]
 
   return (
@@ -972,12 +1176,7 @@ function PaginaCapituloI2({ datos, total, paginaInicio }) {
 
       <div className="pdf-seccion">
         <div className="pdf-seccion-titulo">MARCO CONCEPTUAL</div>
-        {datos.marco_conceptual?.length > 0 ? datos.marco_conceptual.map((c, i) => (
-          <div key={i} style={{ marginBottom: 4 }}>
-            <span style={{ fontWeight: 800, fontFamily: 'Montserrat, Arial, sans-serif' }}>{c.termino}:</span>{' '}
-            <span className="pdf-seccion-texto">{c.definicion}</span>
-          </div>
-        )) : <div className="pdf-seccion-texto">Son conceptos que se utilizan dentro del documento, con su descripción específica para ampliar la definición correspondiente que permita al lector una mejor comprensión del manual.</div>}
+        <div className="pdf-seccion-texto">Son conceptos que se utilizan dentro del documento, con su descripción específica para ampliar la definición correspondiente que permita al lector una mejor comprensión del manual.</div>
       </div>
 
       <div className="pdf-seccion">
@@ -1026,7 +1225,7 @@ function PaginaIntroduccion({ datos, total, paginaInicio }) {
         ? parrafosIntroduccion.map((parrafo, i) => (
             <div key={i} className="pdf-intro-texto"
               style={ i === 0 ? { textIndent: '1.5em' } : undefined }
-            >{parrafo}</div>
+            >{renderTextoConSaltosPorPunto(parrafo)}</div>
           ))
         : null
       }
@@ -1068,11 +1267,10 @@ function PaginaAntecedentes({ datos, total, paginaInicio, parrafos = [], esConti
               key={i}
               className="pdf-intro-texto"
               style={{
-                ...(!esContinuacion && i === 0 ? { textIndent: '1.5em' } : {}),
                 ...(parrafo.nuevoParrafo ? { marginTop: 14 } : {}),
               }}
             >
-              {parrafo.texto}
+              {renderTextoConSaltosPorPunto(parrafo.texto)}
             </div>
           ))
         : (
@@ -1129,14 +1327,16 @@ function PaginaMarcoNormativo({ datos, total, paginaInicio }) {
 
 // ── PÁGINA: 3.4 Atribuciones Institucionales ─────────────────────────────────
 function PaginaAtribuciones({ datos, total, paginaInicio }) {
+  const parrafosAtribuciones = extraerParrafosAtribuciones(datos.atribuciones)
+
   return (
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
 
       <div className="pdf-cap-titulo">3.4 ATRIBUCIONES INSTITUCIONALES</div>
 
-      {datos.atribuciones
-        ? datos.atribuciones.split('\n').filter(p => p.trim()).map((parrafo, i) => (
+      {parrafosAtribuciones.length > 0
+        ? parrafosAtribuciones.map((parrafo, i) => (
             <div
               key={i}
               className="pdf-intro-texto"
@@ -1155,75 +1355,438 @@ function PaginaAtribuciones({ datos, total, paginaInicio }) {
   )
 }
 
+// ── PÁGINA: 3.5, 3.6 y 3.7 ───────────────────────────────────────────────────
+function PaginaObjetivoMisionVision({ datos, total, paginaInicio }) {
+  const bloques = [
+    { titulo: '3.5 OBJETIVO GENERAL', texto: datos.objetivo_general },
+    { titulo: '3.6 MISIÓN', texto: datos.mision },
+    { titulo: '3.7 VISIÓN', texto: datos.vision },
+  ]
+
+  return (
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+
+      {bloques.map((bloque, i) => {
+        const parrafos = extraerParrafos(bloque.texto)
+        const mostrarLineasTitulo = i > 0
+
+        return (
+          <div key={bloque.titulo} style={{ marginBottom: i === bloques.length - 1 ? 0 : 18 }}>
+            {mostrarLineasTitulo && (
+              <div style={{
+                width: 'calc(50% + 56px)',
+                borderTop: '3px solid #000',
+                marginBottom: 6,
+                marginLeft: '-56px',
+              }} />
+            )}
+
+            <div style={{
+              fontFamily: 'Montserrat, Arial, sans-serif',
+              fontWeight: 800,
+              fontSize: '14pt',
+              color: '#262626',
+              marginBottom: 6,
+              marginLeft: mostrarLineasTitulo ? '1.5cm' : 0,
+            }}>
+              {bloque.titulo}
+            </div>
+
+            {mostrarLineasTitulo && (
+              <div style={{
+                width: 'calc(50% + 56px)',
+                borderTop: '3px solid #000',
+                marginBottom: 6,
+                marginLeft: '-56px',
+              }} />
+            )}
+
+            <div style={{
+              width: '100%',
+              paddingTop: i === 0 ? 2 : 6,
+              paddingLeft: '3cm',
+            }}>
+              {parrafos.length > 0 ? parrafos.map((parrafo, idx) => (
+                <div
+                  key={idx}
+                  className="pdf-intro-texto"
+                  style={{ marginBottom: idx === parrafos.length - 1 ? 0 : 14 }}
+                >
+                  {parrafo}
+                </div>
+              )) : (
+                <div className="pdf-intro-texto" style={{ marginBottom: 0 }}>—</div>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── PÁGINA: 3.8 Principios y Valores Institucionales ─────────────────────────
-function PaginaPrincipiosValores({ datos, total, paginaInicio }) {
+function PaginaPrincipiosValores({ datos, total, paginaInicio, mostrarValores = false }) {
   return (
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
 
       <div className="pdf-cap-titulo">3.8 PRINCIPIOS Y VALORES INSTITUCIONALES</div>
 
-      <div className="pdf-intro-texto">
-        Consiste en un referente etico que consolida y guia el pensamiento, las actitudes, practicas y formas de actuacion de los servidores publicos y colaboradores de la dependencia.
+      <div style={{
+        width: 'calc(50% + 56px)',
+        borderTop: '3px solid #000',
+        marginTop: 18,
+        marginBottom: 8,
+        marginLeft: '-56px',
+      }} />
+
+      <div style={{
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontWeight: 800,
+        fontSize: '14pt',
+        color: '#262626',
+        marginLeft: '2.5cm',
+        marginBottom: 8,
+      }}>
+        PRINCIPIOS
       </div>
 
-      {(datos.principios?.length > 0 || datos.valores?.length > 0) ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 8 }}>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '11pt', marginBottom: 8, fontFamily: 'Montserrat, Arial, sans-serif' }}>
-              Principios
-            </div>
-            {datos.principios?.length > 0 ? (
-              <ul className="pdf-lista">{datos.principios.map((p, i) => <li key={i}>{p}</li>)}</ul>
-            ) : (
-              <div className="pdf-seccion-texto">No aplica.</div>
-            )}
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '11pt', marginBottom: 8, fontFamily: 'Montserrat, Arial, sans-serif' }}>
-              Valores
-            </div>
-            {datos.valores?.length > 0 ? (
-              <ul className="pdf-lista">{datos.valores.map((v, i) => <li key={i}>{v}</li>)}</ul>
-            ) : (
-              <div className="pdf-seccion-texto">No aplica.</div>
-            )}
-          </div>
-        </div>
+      <div style={{
+        width: 'calc(50% + 56px)',
+        borderTop: '3px solid #000',
+        marginBottom: 12,
+        marginLeft: '-56px',
+      }} />
+
+      {datos.principios?.length > 0 ? (
+        <ul className="pdf-lista" style={{ marginLeft: '4cm', marginTop: 0 }}>
+          {datos.principios.map((p, i) => (
+            <li key={i} style={{ textAlign: 'justify', textJustify: 'inter-word' }}>
+              {renderTextoConEncabezadoEnNegritas(p)}
+            </li>
+          ))}
+        </ul>
       ) : (
-        <div className="pdf-intro-texto">No hay informacion de principios o valores registrada.</div>
+        <div className="pdf-intro-texto" style={{ paddingLeft: '4cm' }}>No hay informacion de principios registrada.</div>
+      )}
+      {mostrarValores && (
+        <>
+          <div style={{
+            width: 'calc(50% + 56px)',
+            borderTop: '3px solid #000',
+            marginTop: 18,
+            marginBottom: 8,
+            marginLeft: '-56px',
+          }} />
+
+          <div style={{
+            fontFamily: 'Montserrat, Arial, sans-serif',
+            fontWeight: 800,
+            fontSize: '14pt',
+            color: '#262626',
+            marginLeft: '2.5cm',
+            marginBottom: 8,
+          }}>
+            VALORES
+          </div>
+
+          <div style={{
+            width: 'calc(50% + 56px)',
+            borderTop: '3px solid #000',
+            marginBottom: 12,
+            marginLeft: '-56px',
+          }} />
+
+          {datos.valores?.length > 0 ? (
+            <ul className="pdf-lista" style={{ marginLeft: '4cm', marginTop: 0 }}>
+              {datos.valores.map((v, i) => (
+                <li key={i} style={{ textAlign: 'justify', textJustify: 'inter-word' }}>
+                  {renderTextoConEncabezadoEnNegritas(v)}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="pdf-intro-texto" style={{ paddingLeft: '4cm' }}>No hay informacion de valores registrada.</div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function PaginaValores({ datos, total, paginaInicio }) {
+  return (
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+
+      <div className="pdf-cap-titulo">3.8 PRINCIPIOS Y VALORES INSTITUCIONALES</div>
+
+      <div style={{
+        width: 'calc(50% + 56px)',
+        borderTop: '3px solid #000',
+        marginTop: 18,
+        marginBottom: 8,
+        marginLeft: '-56px',
+      }} />
+
+      <div style={{
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontWeight: 800,
+        fontSize: '14pt',
+        color: '#262626',
+        marginLeft: '2.5cm',
+        marginBottom: 8,
+      }}>
+        VALORES
+      </div>
+
+      <div style={{
+        width: 'calc(50% + 56px)',
+        borderTop: '3px solid #000',
+        marginBottom: 12,
+        marginLeft: '-56px',
+      }} />
+
+      {datos.valores?.length > 0 ? (
+        <ul className="pdf-lista" style={{ marginLeft: '4cm', marginTop: 0 }}>
+          {datos.valores.map((v, i) => (
+            <li key={i} style={{ textAlign: 'justify', textJustify: 'inter-word' }}>
+              {renderTextoConEncabezadoEnNegritas(v)}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="pdf-intro-texto" style={{ paddingLeft: '4cm' }}>No hay informacion de valores registrada.</div>
       )}
     </div>
   )
 }
 
 // ── PÁGINA: 3.9 Políticas de Operación ───────────────────────────────────────
-function PaginaPoliticasOperacion({ datos, total, paginaInicio }) {
+function PaginaPoliticasOperacion({ datos, total, paginaInicio, politicas = null }) {
+  const politicasPagina = politicas || datos.politicas_operacion || []
+
   return (
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
 
       <div className="pdf-cap-titulo">3.9 POLÍTICAS DE OPERACIÓN</div>
 
-      <div className="pdf-intro-texto">
-        Son guias generales de accion que definen los limites y parametros necesarios para ejecutar los procesos y actividades en cumplimiento de la funcion institucional.
-      </div>
-
-      {datos.politicas_operacion?.length > 0 ? (
-        datos.politicas_operacion.map((pol, i) => (
-          <div key={i} style={{ marginBottom: 10 }}>
-            {pol.area && (
-              <div style={{ fontWeight: 800, fontSize: '10pt', marginBottom: 4, fontFamily: 'Montserrat, Arial, sans-serif' }}>
-                {String.fromCharCode(65 + i)}. {pol.area}
+      {politicasPagina.length > 0 ? (
+        politicasPagina.map((pol, i) => (
+          <div key={i} style={{ marginBottom: 20 }}>
+            {pol.area ? (
+              <>
+                <div style={{
+                  fontWeight: 800,
+                  fontSize: '11pt',
+                  marginBottom: 2,
+                  fontFamily: 'Montserrat, Arial, sans-serif',
+                  color: '#262626',
+                  marginLeft: '1cm',
+                  textTransform: 'uppercase',
+                }}>
+                  {`${String.fromCharCode(65 + i)}. ${pol.area}`}
+                </div>
+                <div style={{
+                  marginBottom: 8,
+                  color: '#262626',
+                  paddingLeft: '3cm',
+                  fontFamily: 'Montserrat, Arial, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '11pt',
+                  lineHeight: 1.08,
+                  textAlign: 'left',
+                }}>
+                  {renderTextoPolitica(pol.descripcion)}
+                </div>
+              </>
+            ) : (
+              <div style={{
+                marginLeft: '1cm',
+                marginBottom: 8,
+                color: '#262626',
+                fontFamily: 'Montserrat, Arial, sans-serif',
+                fontWeight: 500,
+                fontSize: '11pt',
+                lineHeight: 1.08,
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '10px',
+              }}>
+                <span style={{ fontWeight: 800, flexShrink: 0 }}>•</span>
+                <div style={{ flex: 1, textAlign: 'justify', textJustify: 'inter-word' }}>
+                  {renderTextoPolitica(pol.descripcion)}
+                </div>
               </div>
             )}
-            <div className="pdf-intro-texto" style={{ marginBottom: 8 }}>
-              {pol.descripcion}
-            </div>
           </div>
         ))
       ) : (
-        <div className="pdf-intro-texto">No hay politicas de operacion registradas.</div>
+        <div className="pdf-intro-texto" style={{ color: '#262626', paddingLeft: '3cm' }}>No hay politicas de operacion registradas.</div>
+      )}
+    </div>
+  )
+}
+
+function PaginaPortadaCapituloII({ datos, total, paginaInicio }) {
+  return (
+    <div className="pdf-pagina" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <div style={{ textAlign: 'center', marginTop: 80 }}>
+        <div style={{
+          fontFamily: 'Montserrat, Arial, sans-serif',
+          fontWeight: 400, fontSize: '42pt',
+          letterSpacing: 2, lineHeight: 1.1
+        }}>CAPÍTULO 2</div>
+        <div style={{
+          fontFamily: 'Montserrat, Arial, sans-serif',
+          fontWeight: 800, fontSize: '42pt',
+          letterSpacing: 2, lineHeight: 1.1
+        }}>DE ORGANIZACIÓN</div>
+      </div>
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        display: 'flex', justifyContent: 'center'
+      }}>
+        <img
+          src="/LogoPortada.png"
+          alt="Logo Portada"
+          style={{ width: 'auto', maxWidth: '85%', height: 'auto', display: 'block' }}
+          crossOrigin="anonymous"
+        />
+      </div>
+    </div>
+  )
+}
+
+function PaginaOrganigramaGeneral({ datos, total, paginaInicio }) {
+  const src = normalizarRutaOrganigrama(datos.organigrama_general?.ruta_archivo)
+
+  return (
+    <div className="pdf-pagina-horizontal" data-page-orientation="landscape">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <div className="pdf-cap-titulo">4.1 ORGANIGRAMA GENERAL</div>
+
+      <div style={{
+        height: 560,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1.5px solid transparent',
+        background: '#fff',
+        overflow: 'hidden',
+      }}>
+        {src ? (
+          <img
+            src={src}
+            alt="Organigrama General"
+            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
+            crossOrigin="anonymous"
+          />
+        ) : (
+          <div style={{ color: '#262626', fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '12pt' }}>
+            No hay organigrama general registrado.
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PaginaOrganigramaEspecifico({ datos, total, paginaInicio, organigrama = null, index = 0 }) {
+  const src = normalizarRutaOrganigrama(organigrama?.ruta_archivo)
+  const nombre = organigrama?.tipo || organigrama?.nombre || `Específico ${index + 1}`
+
+  return (
+    <div className="pdf-pagina-horizontal" data-page-orientation="landscape">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <div className="pdf-cap-titulo">4.2 ORGANIGRAMA ESPECÍFICO</div>
+
+      <div style={{
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontWeight: 800,
+        fontSize: '13pt',
+        color: '#262626',
+        marginBottom: 10,
+        textTransform: 'uppercase',
+      }}>
+        {nombre}
+      </div>
+
+      <div style={{
+        height: 525,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1.5px solid transparent',
+        background: '#fff',
+        overflow: 'hidden',
+      }}>
+        {src ? (
+          <img
+            src={src}
+            alt={`Organigrama Especifico ${nombre}`}
+            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
+            crossOrigin="anonymous"
+          />
+        ) : (
+          <div style={{ color: '#262626', fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '12pt' }}>
+            No hay organigramas específicos registrados.
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PaginaMarcoConceptual({ datos, total, paginaInicio }) {
+  return (
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+
+      <div className="pdf-cap-titulo">3.10 MARCO CONCEPTUAL</div>
+
+      {datos.marco_conceptual?.length > 0 ? (
+        <div style={{ paddingLeft: '0.3cm', paddingRight: '0.5cm', marginTop: 18 }}>
+          {datos.marco_conceptual.map((concepto, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '160px 1fr',
+                columnGap: '26px',
+                alignItems: 'start',
+                marginBottom: 14,
+                color: '#262626',
+                fontFamily: 'Montserrat, Arial, sans-serif',
+              }}
+            >
+              <div style={{
+                fontWeight: 800,
+                fontSize: '11pt',
+                lineHeight: 1.08,
+                wordBreak: 'break-word',
+              }}>
+                {concepto.termino}
+              </div>
+              <div style={{
+                fontWeight: 500,
+                fontSize: '11pt',
+                lineHeight: 1.08,
+              }}>
+                {concepto.definicion}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="pdf-intro-texto" style={{ color: '#262626' }}>
+          No hay informacion de marco conceptual registrada.
+        </div>
       )}
     </div>
   )
@@ -1523,30 +2086,34 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
   }, [])
 
   const puestos = datos.puestos || []
+  const paginaValoresSeparada = (datos.valores || []).length > 0
+  const organigramasEspecificos = (datos.organigramas_especificos && datos.organigramas_especificos.length > 0)
+    ? datos.organigramas_especificos
+    : [null]
   const segmentosAntecedentes = dividirTextoEnSegmentos(datos.antecedentes, 2400)
   const paginasAntecedentes = paginarSegmentos(segmentosAntecedentes, 2800)
+  const paginasPoliticas = paginarPoliticas(datos.politicas_operacion || [])
   const totalPaginasAntecedentes = paginasAntecedentes.length || 1
-  const paginaMarcoNormativo = 8 + totalPaginasAntecedentes
-  const paginaAtribuciones = paginaMarcoNormativo + 1
-  const paginaPrincipiosValores = paginaAtribuciones + 1
-  const paginaPoliticas = paginaPrincipiosValores + 1
-  const paginaInventario = paginaPoliticas + 1
-  const paginaPrimerPuesto = paginaInventario + 1
-  const paginaCambios = paginaPrimerPuesto + puestos.length
-  // Total de paginas: portada, caratula, indice, portada capitulo I, capitulo I parte 1,
-  // capitulo I parte 2, introduccion, antecedentes, marco normativo, atribuciones,
-  // principios y valores, politicas, inventario, puestos y cambios.
-  const totalPaginas = paginaCambios
+  const totalPaginasPoliticas = paginasPoliticas.length || 1
+  const mapaPaginas = crearMapaPaginas({
+    puestos,
+    paginasAntecedentes: totalPaginasAntecedentes,
+    paginaValoresSeparada,
+    paginasPoliticas: totalPaginasPoliticas,
+    paginasOrganigramasEspecificos: organigramasEspecificos.length,
+  })
+  const totalPaginas = mapaPaginas.total
 
   const generarPDF = async () => {
     setGenerando(true)
     setProgreso('Preparando documento...')
     try {
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' })
-      const paginas = docRef.current.querySelectorAll('.pdf-pagina')
+      const paginas = docRef.current.querySelectorAll('.pdf-pagina, .pdf-pagina-horizontal')
 
       for (let i = 0; i < paginas.length; i++) {
         setProgreso(`Procesando página ${i + 1} de ${paginas.length}...`)
+        const orientation = paginas[i].dataset.pageOrientation === 'landscape' ? 'landscape' : 'portrait'
         const canvas = await html2canvas(paginas[i], {
           scale: 2,
           useCORS: true,
@@ -1554,10 +2121,10 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
           logging: false,
         })
         const imgData = canvas.toDataURL('image/jpeg', 0.95)
+        if (i > 0) pdf.addPage('letter', orientation)
         const pdfW = pdf.internal.pageSize.getWidth()
         const pdfH = pdf.internal.pageSize.getHeight()
 
-        if (i > 0) pdf.addPage()
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
       }
 
@@ -1628,26 +2195,51 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
       <div ref={docRef} className="pdf-doc">
         <PaginaPortada datos={datos} total={totalPaginas} />
         <PaginaCaratula datos={datos} total={totalPaginas} />
-        <PaginaIndice datos={datos} total={totalPaginas} paginasAntecedentes={totalPaginasAntecedentes} />
-        <PaginaPortadaCapituloI datos={datos} total={totalPaginas} paginaInicio={4} />
-        <PaginaCapituloI datos={datos} total={totalPaginas} paginaInicio={5} />
-        <PaginaCapituloI2 datos={datos} total={totalPaginas} paginaInicio={6} />
-        <PaginaIntroduccion datos={datos} total={totalPaginas} paginaInicio={7} />
+        <PaginaIndice datos={datos} total={totalPaginas} mapaPaginas={mapaPaginas} />
+        <PaginaPortadaCapituloI datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.portadaCapituloI} />
+        <PaginaCapituloI datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.capituloIParte1} />
+        <PaginaCapituloI2 datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.capituloIParte2} />
+        <PaginaIntroduccion datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.introduccion} />
         {paginasAntecedentes.map((parrafosPagina, i) => (
           <PaginaAntecedentes
             key={`antecedentes-${i}`}
             datos={datos}
             total={totalPaginas}
-            paginaInicio={8 + i}
+            paginaInicio={mapaPaginas.antecedentes + i}
             parrafos={parrafosPagina}
             esContinuacion={i > 0}
           />
         ))}
-        <PaginaMarcoNormativo datos={datos} total={totalPaginas} paginaInicio={paginaMarcoNormativo} />
-        <PaginaAtribuciones datos={datos} total={totalPaginas} paginaInicio={paginaAtribuciones} />
-        <PaginaPrincipiosValores datos={datos} total={totalPaginas} paginaInicio={paginaPrincipiosValores} />
-        <PaginaPoliticasOperacion datos={datos} total={totalPaginas} paginaInicio={paginaPoliticas} />
-        <PaginaInventario datos={datos} total={totalPaginas} paginaInicio={paginaInventario} />
+        <PaginaMarcoNormativo datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.marcoNormativo} />
+        <PaginaAtribuciones datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.atribuciones} />
+        <PaginaObjetivoMisionVision datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.objetivoMisionVision} />
+        <PaginaPrincipiosValores datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.principiosValores} />
+        {mapaPaginas.valores && (
+          <PaginaValores datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.valores} />
+        )}
+        {paginasPoliticas.map((politicasPagina, i) => (
+          <PaginaPoliticasOperacion
+            key={`politicas-${i}`}
+            datos={datos}
+            total={totalPaginas}
+            paginaInicio={mapaPaginas.politicas + i}
+            politicas={politicasPagina}
+          />
+        ))}
+        <PaginaMarcoConceptual datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.marcoConceptual} />
+        <PaginaPortadaCapituloII datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.portadaCapituloII} />
+        <PaginaOrganigramaGeneral datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.organigramaGeneral} />
+        {organigramasEspecificos.map((organigrama, i) => (
+          <PaginaOrganigramaEspecifico
+            key={`organigrama-especifico-${i}`}
+            datos={datos}
+            total={totalPaginas}
+            paginaInicio={mapaPaginas.organigramasEspecificos + i}
+            organigrama={organigrama}
+            index={i}
+          />
+        ))}
+        <PaginaInventario datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.inventario} />
         {puestos.map((puesto, i) => (
           <PaginaPuesto
             key={i}
@@ -1655,10 +2247,10 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
             puesto={puesto}
             index={i}
             total={totalPaginas}
-            paginaInicio={paginaPrimerPuesto + i}
+            paginaInicio={mapaPaginas.primerPuesto + i}
           />
         ))}
-        <PaginaCambios datos={datos} total={totalPaginas} paginaInicio={paginaCambios} />
+        <PaginaCambios datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.cambios} />
       </div>
       )}
     </div>
