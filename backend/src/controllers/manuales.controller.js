@@ -182,7 +182,7 @@ const getManualById = async (req, res) => {
       procedimientos = await Promise.all(
         procsRes.rows.map(async (proc) => {
           const pasosRes = await pool.query(
-            `SELECT numero_paso, responsable, descripcion FROM pasos_procedimiento
+            `SELECT numero_paso, tipo, paso_no, responsable, descripcion FROM pasos_procedimiento
              WHERE id_procedimiento = $1 ORDER BY numero_paso`,
             [proc.id_procedimiento]
           )
@@ -202,6 +202,8 @@ const getManualById = async (req, res) => {
             autorizo_nombre:   proc.autorizo_nombre   || '',
             valido_nombre:     proc.valido_nombre     || '',
             actividades:       pasosRes.rows.map(p => ({
+              tipo:        p.tipo        || 'actividad',
+              paso_no:     p.paso_no     ?? null,
               responsable: p.responsable || '',
               descripcion: p.descripcion || '',
             })),
@@ -501,7 +503,7 @@ const crearManual = async (req, res) => {
     }
 
     // 8. Procedimientos
-    console.log('primer procedimiento:', JSON.stringify(procedimientos[0], null, 2))
+    console.log('primer procedimiento:', JSON.stringify((procedimientos || [])[0], null, 2))
     for (const proc of (procedimientos || [])) {
       const procResult = await client.query(
         `INSERT INTO procedimientos (id_manual, codigo, version, nombre, fecha_emision, tipo)
@@ -524,9 +526,9 @@ const crearManual = async (req, res) => {
       for (let i = 0; i < (proc.actividades || []).length; i++) {
         const act = proc.actividades[i]
         await client.query(
-          `INSERT INTO pasos_procedimiento (id_procedimiento, numero_paso, responsable, descripcion)
-           VALUES ($1, $2, $3, $4)`,
-          [id_procedimiento, i + 1, act.responsable, act.descripcion]
+          `INSERT INTO pasos_procedimiento (id_procedimiento, numero_paso, tipo, paso_no, responsable, descripcion)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [id_procedimiento, i + 1, act.tipo || 'actividad', act.paso_no || null, act.responsable, act.descripcion]
         )
       }
     }
@@ -809,9 +811,9 @@ const actualizarManual = async (req, res) => {
       for (let i = 0; i < (proc.actividades || []).length; i++) {
         const act = proc.actividades[i]
         await client.query(
-          `INSERT INTO pasos_procedimiento (id_procedimiento, numero_paso, responsable, descripcion)
-           VALUES ($1,$2,$3,$4)`,
-          [id_procedimiento, i + 1, act.responsable, act.descripcion]
+          `INSERT INTO pasos_procedimiento (id_procedimiento, numero_paso, tipo, paso_no, responsable, descripcion)
+           VALUES ($1,$2,$3,$4,$5,$6)`,
+          [id_procedimiento, i + 1, act.tipo || 'actividad', act.paso_no || null, act.responsable, act.descripcion]
         )
       }
     }

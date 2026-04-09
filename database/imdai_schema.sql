@@ -199,13 +199,19 @@ CREATE TABLE procedimiento_detalle (
     responsabilidades   TEXT,
     definiciones        TEXT,
     referencias         TEXT,
-    registros           TEXT
+    registros           TEXT,
+    elaboro_nombre      VARCHAR(200),
+    reviso_nombre       VARCHAR(200),
+    autorizo_nombre     VARCHAR(200),
+    valido_nombre       VARCHAR(200)
 );
 
 CREATE TABLE pasos_procedimiento (
     id_paso          SERIAL PRIMARY KEY,
     id_procedimiento INT NOT NULL REFERENCES procedimientos(id_procedimiento) ON DELETE CASCADE,
     numero_paso      INT NOT NULL,
+    tipo             VARCHAR(20) DEFAULT 'actividad',
+    paso_no          INT NULL,
     responsable      VARCHAR(150),
     descripcion      TEXT,
     es_fin           BOOLEAN DEFAULT FALSE
