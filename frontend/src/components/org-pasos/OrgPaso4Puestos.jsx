@@ -292,21 +292,22 @@ function TarjetaPuesto({ puesto, index, onChange, puestosDisponibles }) {
         <div>
           <div className="campo-grupo">
             <label>Escolaridad requerida</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
               {ESCOLARIDAD_OPTS.map(opt => (
                 <label key={opt.val} style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '8px 12px', borderRadius: '8px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '9px 14px', borderRadius: '8px', cursor: 'pointer',
                   border: `1.5px solid ${puesto.escolaridad === opt.val ? '#e11d48' : '#f5e8ea'}`,
-                  background: puesto.escolaridad === opt.val ? '#fff0f2' : 'white',
-                  fontSize: '.75rem', fontWeight: puesto.escolaridad === opt.val ? '600' : '400',
+                  background: puesto.escolaridad === opt.val ? '#fff0f2' : '#fdf8f9',
+                  fontSize: '.8rem',
+                  fontWeight: puesto.escolaridad === opt.val ? '600' : '400',
                   color: puesto.escolaridad === opt.val ? '#be123c' : '#5a2030',
                   transition: 'all .15s'
                 }}>
                   <input type="radio" name={`esc-${index}`} value={opt.val}
                     checked={puesto.escolaridad === opt.val}
                     onChange={() => upd('escolaridad', opt.val)}
-                    style={{ accentColor: '#e11d48' }} />
+                    style={{ accentColor: '#e11d48', flexShrink: 0, width: 'auto', padding: 0 }} />
                   {opt.label}
                 </label>
               ))}

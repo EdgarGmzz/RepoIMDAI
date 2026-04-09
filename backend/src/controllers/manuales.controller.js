@@ -96,7 +96,7 @@ const getManualById = async (req, res) => {
        FROM puestos WHERE id_manual = $1 ORDER BY id_puesto`, [id]
     )
 
-    // Descripción de puestos — horario viene de descripcion_puesto (dp)
+    // Descripción de puestos — solo filas con descripción (evita duplicar con inventario)
     const puestosRes = await pool.query(
       `SELECT p.id_puesto, p.nombre_puesto, p.titular, p.numero_personas,
               p2.nombre_puesto AS jefe_inmediato,
@@ -110,7 +110,7 @@ const getManualById = async (req, res) => {
               pp.escolaridad, pp.carreras_afines, pp.especialidad, pp.experiencia
        FROM puestos p
        LEFT JOIN puestos p2            ON p.jefe_inmediato_id = p2.id_puesto
-       LEFT JOIN descripcion_puesto dp ON dp.id_puesto = p.id_puesto
+       INNER JOIN descripcion_puesto dp ON dp.id_puesto = p.id_puesto
        LEFT JOIN perfil_puesto pp      ON pp.id_puesto = p.id_puesto
        WHERE p.id_manual = $1 ORDER BY p.id_puesto`, [id]
     )
@@ -388,22 +388,34 @@ const crearManual = async (req, res) => {
       )
     }
 
-    // 6. Inventario de puestos
+    // 6. Puestos — inventario + descripciones sin duplicar
+    const inventarioMap = {}
     for (const p of (inventario_puestos || [])) {
-      await client.query(
-        `INSERT INTO puestos (id_manual, nombre_puesto, numero_personas) VALUES ($1, $2, $3)`,
-        [id_manual, p.nombre_puesto, p.num_personas || 1]
-      )
+      if (p.nombre_puesto) inventarioMap[p.nombre_puesto] = p.num_personas || 1
+    }
+    const puestosNombres = new Set((puestos || []).map(p => p.nombre_puesto))
+
+    // Insertar entradas del inventario que NO tienen descripción
+    for (const p of (inventario_puestos || [])) {
+      if (p.nombre_puesto && !puestosNombres.has(p.nombre_puesto)) {
+        await client.query(
+          `INSERT INTO puestos (id_manual, nombre_puesto, numero_personas) VALUES ($1, $2, $3)`,
+          [id_manual, p.nombre_puesto, p.num_personas || 1]
+        )
+      }
     }
 
     // 7. Descripción de puestos completa
+    const puestoIds = {}
     for (const p of (puestos || [])) {
+      const numPersonas = inventarioMap[p.nombre_puesto] || 1
       const puestoRes = await client.query(
         `INSERT INTO puestos (id_manual, nombre_puesto, titular, numero_personas)
          VALUES ($1, $2, $3, $4) RETURNING id_puesto`,
-        [id_manual, p.nombre_puesto, p.ocupante_nombre || null, 1]
+        [id_manual, p.nombre_puesto, p.ocupante_nombre || null, numPersonas]
       )
       const id_puesto = puestoRes.rows[0].id_puesto
+      puestoIds[p.nombre_puesto] = id_puesto
 
       await client.query(
         `INSERT INTO descripcion_puesto
@@ -474,6 +486,16 @@ const crearManual = async (req, res) => {
         if (s.nombre_puesto) await client.query(
           `INSERT INTO subordinados_puesto (id_puesto, tipo, num_personas, nombre_puesto) VALUES ($1, 'indirecto', $2, $3)`,
           [id_puesto, parseInt(s.num_personas) || 1, s.nombre_puesto]
+        )
+      }
+    }
+
+    // Segunda pasada: asignar jefe_inmediato_id por nombre
+    for (const p of (puestos || [])) {
+      if (p.jefe_inmediato && puestoIds[p.jefe_inmediato] && puestoIds[p.nombre_puesto]) {
+        await client.query(
+          `UPDATE puestos SET jefe_inmediato_id = $1 WHERE id_puesto = $2`,
+          [puestoIds[p.jefe_inmediato], puestoIds[p.nombre_puesto]]
         )
       }
     }
@@ -572,10 +594,18 @@ const actualizarManual = async (req, res) => {
     } = req.body
 
     // 1. Datos base
-    await client.query(
-      `UPDATE manuales SET codigo=$1, dependencia=$2, version=$3, fecha_emision=$4 WHERE id_manual=$5`,
-      [codigo, dependencia, version || 1, fecha_elaboracion || null, id]
-    )
+    // Solo el admin puede modificar codigo y version
+    if (rol === 'administrador') {
+      await client.query(
+        `UPDATE manuales SET codigo=$1, dependencia=$2, version=$3, fecha_emision=$4 WHERE id_manual=$5`,
+        [codigo, dependencia, version || 1, fecha_elaboracion || null, id]
+      )
+    } else {
+      await client.query(
+        `UPDATE manuales SET dependencia=$1, fecha_emision=$2 WHERE id_manual=$3`,
+        [dependencia, fecha_elaboracion || null, id]
+      )
+    }
 
     // 2. Secciones
     await client.query('DELETE FROM secciones_manual WHERE id_manual = $1', [id])
@@ -644,20 +674,33 @@ const actualizarManual = async (req, res) => {
     // 6. Puestos (CASCADE elimina descripciones, perfiles, funciones, competencias)
     await client.query('DELETE FROM puestos WHERE id_manual = $1', [id])
 
+    // Construir mapa inventario y set de puestos con descripción para no duplicar
+    const inventarioMapUpd = {}
     for (const p of (inventario_puestos || [])) {
-      await client.query(
-        `INSERT INTO puestos (id_manual, nombre_puesto, numero_personas) VALUES ($1,$2,$3)`,
-        [id, p.nombre_puesto, p.num_personas || 1]
-      )
+      if (p.nombre_puesto) inventarioMapUpd[p.nombre_puesto] = p.num_personas || 1
+    }
+    const puestosNombresUpd = new Set((puestos || []).map(p => p.nombre_puesto))
+
+    // Solo insertar entradas del inventario que NO tienen descripción
+    for (const p of (inventario_puestos || [])) {
+      if (p.nombre_puesto && !puestosNombresUpd.has(p.nombre_puesto)) {
+        await client.query(
+          `INSERT INTO puestos (id_manual, nombre_puesto, numero_personas) VALUES ($1,$2,$3)`,
+          [id, p.nombre_puesto, p.num_personas || 1]
+        )
+      }
     }
 
+    const puestoIdsUpd = {}
     for (const p of (puestos || [])) {
+      const numPersonas = inventarioMapUpd[p.nombre_puesto] || 1
       const puestoRes = await client.query(
         `INSERT INTO puestos (id_manual, nombre_puesto, titular, numero_personas)
          VALUES ($1,$2,$3,$4) RETURNING id_puesto`,
-        [id, p.nombre_puesto, p.ocupante_nombre || null, 1]
+        [id, p.nombre_puesto, p.ocupante_nombre || null, numPersonas]
       )
       const id_puesto = puestoRes.rows[0].id_puesto
+      puestoIdsUpd[p.nombre_puesto] = id_puesto
 
       await client.query(
         `INSERT INTO descripcion_puesto
@@ -728,6 +771,16 @@ const actualizarManual = async (req, res) => {
         if (s.nombre_puesto) await client.query(
           `INSERT INTO subordinados_puesto (id_puesto, tipo, num_personas, nombre_puesto) VALUES ($1, 'indirecto', $2, $3)`,
           [id_puesto, parseInt(s.num_personas) || 1, s.nombre_puesto]
+        )
+      }
+    }
+
+    // Segunda pasada: asignar jefe_inmediato_id por nombre
+    for (const p of (puestos || [])) {
+      if (p.jefe_inmediato && puestoIdsUpd[p.jefe_inmediato] && puestoIdsUpd[p.nombre_puesto]) {
+        await client.query(
+          `UPDATE puestos SET jefe_inmediato_id = $1 WHERE id_puesto = $2`,
+          [puestoIdsUpd[p.jefe_inmediato], puestoIdsUpd[p.nombre_puesto]]
         )
       }
     }
@@ -812,12 +865,23 @@ const cambiarEstado = async (req, res) => {
         return res.status(400).json({ error: `Transición no permitida de "${manual.estado}" a "${estado}"` })
     }
 
+    const { comentario, seccion } = req.body
+
     await pool.query('UPDATE manuales SET estado=$1 WHERE id_manual=$2', [estado, id])
     await pool.query(
       `INSERT INTO historial_versiones (id_manual, usuario, version, razon_cambio)
        VALUES ($1,$2,(SELECT version FROM manuales WHERE id_manual=$1),$3)`,
       [id, id_usuario, `Cambio de estado: ${manual.estado} → ${estado}`]
     )
+
+    // Guardar observación si se envió comentario
+    if (estado === 'observaciones' && comentario) {
+      await pool.query(
+        `INSERT INTO observaciones (id_manual, seccion, comentario, emitido_por, estatus)
+         VALUES ($1, $2, $3, $4, 'pendiente')`,
+        [id, seccion || 'General', comentario, id_usuario]
+      )
+    }
 
     res.json({ mensaje: 'Estado actualizado correctamente', estado })
   } catch (error) {
@@ -886,4 +950,61 @@ const subirOrganigrama = async (req, res) => {
   }
 }
 
-module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado, eliminarManuales, subirOrganigrama }
+// ── PATCH /manuales/:id/codigo ───────────────────────────────────────────────
+const asignarCodigo = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { rol } = req.usuario
+    const { codigo, version } = req.body
+
+    if (rol !== 'administrador')
+      return res.status(403).json({ error: 'Solo el administrador puede asignar el código y versión' })
+
+    if (!codigo?.trim())
+      return res.status(400).json({ error: 'El código es requerido' })
+
+    await pool.query(
+      'UPDATE manuales SET codigo = $1, version = $2 WHERE id_manual = $3',
+      [codigo.trim(), version || 1, id]
+    )
+
+    res.json({ mensaje: 'Código y versión actualizados correctamente' })
+  } catch (error) {
+    console.error('❌ Error en asignarCodigo:', error.message)
+    res.status(500).json({ error: error.message })
+  }
+}
+
+// ── GET /manuales/:id/observaciones ──────────────────────────────────────────
+const getObservaciones = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { id_usuario, rol } = req.usuario
+
+    const manualRes = await pool.query(
+      'SELECT creado_por FROM manuales WHERE id_manual = $1', [id]
+    )
+    if (manualRes.rows.length === 0)
+      return res.status(404).json({ error: 'Manual no encontrado' })
+
+    if (rol !== 'administrador' && manualRes.rows[0].creado_por !== id_usuario)
+      return res.status(403).json({ error: 'Acceso denegado' })
+
+    const obsRes = await pool.query(
+      `SELECT o.id_observacion, o.seccion, o.comentario, o.estatus,
+              TO_CHAR(o.fecha, 'DD/MM/YYYY HH24:MI') AS fecha,
+              u.nombre AS emitido_por_nombre
+       FROM observaciones o
+       LEFT JOIN usuarios u ON u.id_usuario = o.emitido_por
+       WHERE o.id_manual = $1
+       ORDER BY o.fecha DESC`,
+      [id]
+    )
+    res.json(obsRes.rows)
+  } catch (error) {
+    console.error('❌ Error en getObservaciones:', error.message)
+    res.status(500).json({ error: error.message })
+  }
+}
+
+module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado, eliminarManuales, subirOrganigrama, getObservaciones, asignarCodigo }

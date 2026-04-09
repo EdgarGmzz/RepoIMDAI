@@ -10,7 +10,11 @@ export default function MisManuales() {
   const [wizardOpen, setWizardOpen] = useState(false)
   const [wizardOrgOpen, setWizardOrgOpen] = useState(false)
   const [manualEditar, setManualEditar] = useState(null)
-  const [enviando, setEnviando] = useState(null)
+  const [enviando, setEnviando]           = useState(null)
+  const [modalObsOpen, setModalObsOpen]   = useState(false)
+  const [observaciones, setObservaciones] = useState([])
+  const [loadingObs, setLoadingObs]       = useState(false)
+  const [manualObs, setManualObs]         = useState(null)
   const [seleccionados, setSeleccionados] = useState([])
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const navigate = useNavigate()
@@ -80,6 +84,23 @@ const eliminarSeleccionados = async () => {
     fetchManuales()
   }
 
+  const verObservaciones = async (m) => {
+    setManualObs(m)
+    setObservaciones([])
+    setLoadingObs(true)
+    setModalObsOpen(true)
+    try {
+      const res = await axios.get(`http://localhost:3000/manuales/${m.id_manual}/observaciones`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setObservaciones(res.data)
+    } catch {
+      setObservaciones([])
+    } finally {
+      setLoadingObs(false)
+    }
+  }
+
   const enviarARevision = async (id_manual) => {
     setEnviando(id_manual)
     try {
@@ -123,31 +144,46 @@ const eliminarSeleccionados = async () => {
   const accionesPorEstado = (m) => {
     switch (m.estado) {
       case 'borrador':
-      case 'observaciones':
         return (
           <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-            {/* Editar */}
             <button title="Continuar editando" onClick={() => abrirEdicion(m)} style={btnStyle('#2563eb', '#eff6ff', '#bfdbfe')}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </button>
-            {/* Enviar a revisión */}
-            <button
-              title="Enviar a revisión IMDAI"
-              disabled={enviando === m.id_manual}
-              onClick={() => enviarARevision(m.id_manual)}
-              style={btnStyle('#059669', '#f0fdf4', '#bbf7d0')}
-            >
-              {enviando === m.id_manual ? (
-                <div style={{ width: '13px', height: '13px', border: '2px solid #bbf7d0', borderTopColor: '#059669', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
-              ) : (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-              )}
+            <button title="Enviar a revisión IMDAI" disabled={enviando === m.id_manual} onClick={() => enviarARevision(m.id_manual)} style={btnStyle('#059669', '#f0fdf4', '#bbf7d0')}>
+              {enviando === m.id_manual
+                ? <div style={{ width: '13px', height: '13px', border: '2px solid #bbf7d0', borderTopColor: '#059669', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+                : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              }
+            </button>
+          </div>
+        )
+
+      case 'observaciones':
+        return (
+          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+            {/* Ver observaciones */}
+            <button title="Ver observaciones del IMDAI" onClick={() => verObservaciones(m)} style={btnStyle('#d97706', '#fffbeb', '#fed7aa')}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </button>
+            {/* Editar */}
+            <button title="Corregir y editar" onClick={() => abrirEdicion(m)} style={btnStyle('#2563eb', '#eff6ff', '#bfdbfe')}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            {/* Reenviar a revisión */}
+            <button title="Reenviar a revisión" disabled={enviando === m.id_manual} onClick={() => enviarARevision(m.id_manual)} style={btnStyle('#059669', '#f0fdf4', '#bbf7d0')}>
+              {enviando === m.id_manual
+                ? <div style={{ width: '13px', height: '13px', border: '2px solid #bbf7d0', borderTopColor: '#059669', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+                : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              }
             </button>
           </div>
         )
@@ -321,6 +357,11 @@ const eliminarSeleccionados = async () => {
       </td>
       <td>
         <div className="manual-name">{m.codigo || 'Sin código'}</div>
+        {m.version && (
+          <div style={{ fontSize: '.68rem', color: '#a78a8f', marginTop: '2px' }}>
+            Versión {String(m.version).padStart(2, '0')}
+          </div>
+        )}
         <div className="manual-dep">{m.dependencia}</div>
       </td>
       <td>
@@ -426,6 +467,62 @@ const eliminarSeleccionados = async () => {
                 Eliminar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Observaciones del IMDAI */}
+      {modalObsOpen && (
+        <div className="modal-overlay open" onClick={() => setModalObsOpen(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '560px' }}>
+
+            <h2 style={{ marginBottom: '4px' }}>Observaciones del IMDAI</h2>
+            <p style={{ fontSize: '.8rem', color: '#b06070', marginBottom: '20px' }}>
+              {manualObs?.codigo} — {manualObs?.dependencia}
+            </p>
+
+            {loadingObs ? (
+              <div style={{ textAlign: 'center', padding: '30px', color: '#a78a8f', fontSize: '.83rem' }}>
+                Cargando observaciones...
+              </div>
+            ) : observaciones.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '30px', color: '#a78a8f', fontSize: '.83rem' }}>
+                No hay observaciones registradas.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto' }}>
+                {observaciones.map((obs, i) => (
+                  <div key={i} style={{
+                    padding: '14px 16px', borderRadius: '10px',
+                    background: '#fff7ed', border: '1.5px solid #fed7aa'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{
+                        fontSize: '.68rem', fontWeight: '700', letterSpacing: '.5px',
+                        textTransform: 'uppercase', color: '#d97706',
+                        background: '#ffedd5', padding: '2px 10px', borderRadius: '5px'
+                      }}>
+                        {obs.seccion}
+                      </span>
+                      <span style={{ fontSize: '.68rem', color: '#a78a8f' }}>{obs.fecha}</span>
+                    </div>
+                    <p style={{ fontSize: '.84rem', color: '#1a0a0f', lineHeight: '1.6', margin: 0 }}>
+                      {obs.comentario}
+                    </p>
+                    <div style={{ fontSize: '.68rem', color: '#9a3412', marginTop: '8px', fontWeight: '600' }}>
+                      — {obs.emitido_por_nombre}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button className="modal-cancel" onClick={() => setModalObsOpen(false)} style={{ margin: 0 }}>
+                Cerrar
+              </button>
+            </div>
+
           </div>
         </div>
       )}

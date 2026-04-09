@@ -11,6 +11,17 @@ export default function Dashboard() {
   const [wizardOpen, setWizardOpen] = useState(false)
   const [manualVisor, setManualVisor] = useState(null)
   const [wizardOrgOpen, setWizardOrgOpen] = useState(false)
+  const [modalObsOpen, setModalObsOpen]     = useState(false)
+  const [manualObs, setManualObs]           = useState(null)
+  const [textoObs, setTextoObs]             = useState('')
+  const [seccionObs, setSeccionObs]         = useState('General')
+  const [enviandoObs, setEnviandoObs]       = useState(false)
+
+  const [modalCodigoOpen, setModalCodigoOpen] = useState(false)
+  const [manualCodigo, setManualCodigo]       = useState(null)
+  const [inputCodigo, setInputCodigo]         = useState('')
+  const [inputVersion, setInputVersion]       = useState('')
+  const [guardandoCodigo, setGuardandoCodigo] = useState(false)
   const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem('usuario'))
   const token = localStorage.getItem('token')
@@ -46,6 +57,59 @@ export default function Dashboard() {
       autorizado:    { label: 'Autorizado',    clase: 'validado' }
     }
     return map[estado] || { label: estado, clase: 'borrador' }
+  }
+
+  const cambiarEstado = async (id_manual, nuevoEstado, comentario = null, seccion = null) => {
+    try {
+      await axios.patch(
+        `http://localhost:3000/manuales/${id_manual}/estado`,
+        { estado: nuevoEstado, comentario, seccion },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      fetchManuales()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error al cambiar el estado')
+    }
+  }
+
+  const abrirModalCodigo = (manual) => {
+    setManualCodigo(manual)
+    setInputCodigo(manual.codigo || '')
+    setInputVersion(manual.version ? String(manual.version).padStart(2, '0') : '01')
+    setModalCodigoOpen(true)
+  }
+
+  const guardarCodigo = async () => {
+    if (!inputCodigo.trim()) return
+    setGuardandoCodigo(true)
+    try {
+      await axios.patch(
+        `http://localhost:3000/manuales/${manualCodigo.id_manual}/codigo`,
+        { codigo: inputCodigo.trim(), version: inputVersion },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setModalCodigoOpen(false)
+      fetchManuales()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error al guardar')
+    } finally {
+      setGuardandoCodigo(false)
+    }
+  }
+
+  const abrirModalObs = (manual) => {
+    setManualObs(manual)
+    setTextoObs('')
+    setSeccionObs('General')
+    setModalObsOpen(true)
+  }
+
+  const enviarObservaciones = async () => {
+    if (!textoObs.trim()) return
+    setEnviandoObs(true)
+    await cambiarEstado(manualObs.id_manual, 'observaciones', textoObs.trim(), seccionObs)
+    setEnviandoObs(false)
+    setModalObsOpen(false)
   }
 
   const totalManuales = manuales.length
@@ -178,7 +242,7 @@ export default function Dashboard() {
                 <th>Estado</th>
                 <th>Creado por</th>
                 <th>Fecha</th>
-                <th style={{ width: '80px', textAlign: 'center' }}>Acciones</th>
+                <th style={{ width: '220px', textAlign: 'center' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -227,32 +291,92 @@ export default function Dashboard() {
 
                       {/* Acciones */}
                       <td style={{ textAlign: 'center' }}>
-                        <button
-                          onClick={() => setManualVisor(m)}
-                          title="Ver avances del manual"
-                          style={{
-                            width: '32px', height: '32px', borderRadius: '7px',
-                            border: '1.5px solid #fecdd3', background: 'white',
-                            color: '#b06070', cursor: 'pointer',
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'all .2s'
-                          }}
-                          onMouseOver={e => {
-                            e.currentTarget.style.background = '#fff1f2'
-                            e.currentTarget.style.borderColor = '#e11d48'
-                            e.currentTarget.style.color = '#e11d48'
-                          }}
-                          onMouseOut={e => {
-                            e.currentTarget.style.background = 'white'
-                            e.currentTarget.style.borderColor = '#fecdd3'
-                            e.currentTarget.style.color = '#b06070'
-                          }}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                          </svg>
-                        </button>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+
+                          {/* Ver */}
+                          <button
+                            onClick={() => setManualVisor(m)}
+                            title="Ver manual"
+                            style={{
+                              width: '32px', height: '32px', borderRadius: '7px',
+                              border: '1.5px solid #fecdd3', background: 'white',
+                              color: '#b06070', cursor: 'pointer',
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              transition: 'all .2s'
+                            }}
+                            onMouseOver={e => { e.currentTarget.style.background = '#fff1f2'; e.currentTarget.style.borderColor = '#e11d48'; e.currentTarget.style.color = '#e11d48' }}
+                            onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#fecdd3'; e.currentTarget.style.color = '#b06070' }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                              <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                          </button>
+
+                          {/* Validar (en_revision → validado) */}
+                          {m.estado === 'en_revision' && (
+                            <button
+                              onClick={() => cambiarEstado(m.id_manual, 'validado')}
+                              title="Validar manual"
+                              style={{
+                                height: '32px', padding: '0 10px', borderRadius: '7px',
+                                border: '1.5px solid #bbf7d0', background: 'white',
+                                color: '#059669', cursor: 'pointer', fontSize: '.72rem',
+                                fontFamily: 'Poppins, sans-serif', fontWeight: '600',
+                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                transition: 'all .2s'
+                              }}
+                              onMouseOver={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.borderColor = '#059669' }}
+                              onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#bbf7d0' }}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                              Validar
+                            </button>
+                          )}
+
+                          {/* Observaciones (en_revision → observaciones) */}
+                          {m.estado === 'en_revision' && (
+                            <button
+                              onClick={() => abrirModalObs(m)}
+                              title="Enviar con observaciones"
+                              style={{
+                                height: '32px', padding: '0 10px', borderRadius: '7px',
+                                border: '1.5px solid #fed7aa', background: 'white',
+                                color: '#d97706', cursor: 'pointer', fontSize: '.72rem',
+                                fontFamily: 'Poppins, sans-serif', fontWeight: '600',
+                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                transition: 'all .2s'
+                              }}
+                              onMouseOver={e => { e.currentTarget.style.background = '#fffbeb'; e.currentTarget.style.borderColor = '#d97706' }}
+                              onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#fed7aa' }}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                              Observaciones
+                            </button>
+                          )}
+
+                          {/* Autorizar (validado → autorizado) */}
+                          {m.estado === 'validado' && (
+                            <button
+                              onClick={() => cambiarEstado(m.id_manual, 'autorizado')}
+                              title="Autorizar manual"
+                              style={{
+                                height: '32px', padding: '0 10px', borderRadius: '7px',
+                                border: '1.5px solid #bfdbfe', background: 'white',
+                                color: '#2563eb', cursor: 'pointer', fontSize: '.72rem',
+                                fontFamily: 'Poppins, sans-serif', fontWeight: '600',
+                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                transition: 'all .2s'
+                              }}
+                              onMouseOver={e => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.borderColor = '#2563eb' }}
+                              onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#bfdbfe' }}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                              Autorizar
+                            </button>
+                          )}
+
+                        </div>
                       </td>
 
                     </tr>
@@ -323,8 +447,170 @@ export default function Dashboard() {
       {manualVisor && (
         <VisorManual
           manual={manualVisor}
-          onCerrar={() => setManualVisor(null)}
+          onCerrar={() => { setManualVisor(null); fetchManuales() }}
+          onActualizado={fetchManuales}
         />
+      )}
+
+      {/* ── Modal Código y Versión ───────────────────────────────────────────── */}
+      {modalCodigoOpen && (
+        <div className="modal-overlay open" onClick={() => setModalCodigoOpen(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+
+            <h2 style={{ marginBottom: '4px' }}>Asignar Código y Versión</h2>
+            <p style={{ fontSize: '.8rem', color: '#b06070', marginBottom: '24px' }}>
+              {manualCodigo?.dependencia} — {manualCodigo?.tipo_manual === 'organizacion' ? 'Organización' : 'Procedimientos'}
+            </p>
+
+            <div className="campo-grupo">
+              <label>Código del Manual <span style={{ color: '#e11d48' }}>*</span></label>
+              <input
+                type="text"
+                placeholder="Ej. MO-ADM-2026-001"
+                value={inputCodigo}
+                onChange={e => setInputCodigo(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className="campo-grupo">
+              <label>Versión</label>
+              <input
+                type="text"
+                placeholder="Ej. 01"
+                value={inputVersion}
+                onChange={e => setInputVersion(e.target.value)}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '8px' }}>
+              <button className="modal-cancel" onClick={() => setModalCodigoOpen(false)} style={{ margin: 0 }}>
+                Cancelar
+              </button>
+              <button
+                onClick={guardarCodigo}
+                disabled={!inputCodigo.trim() || guardandoCodigo}
+                style={{
+                  padding: '10px 22px', borderRadius: '8px', border: 'none',
+                  background: inputCodigo.trim() ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : '#e5e7eb',
+                  color: inputCodigo.trim() ? 'white' : '#9ca3af',
+                  fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', fontWeight: '600',
+                  cursor: inputCodigo.trim() ? 'pointer' : 'not-allowed'
+                }}
+              >
+                {guardandoCodigo ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Observaciones ──────────────────────────────────────────────── */}
+      {modalObsOpen && (
+        <div className="modal-overlay open" onClick={() => setModalObsOpen(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+
+            <h2 style={{ marginBottom: '4px' }}>Enviar Observaciones</h2>
+            <p style={{ fontSize: '.8rem', color: '#b06070', marginBottom: '20px' }}>
+              {manualObs?.codigo} — {manualObs?.dependencia}
+            </p>
+
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '.72rem', fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', color: '#7a3a4a', marginBottom: '6px' }}>
+                Sección
+              </label>
+              <select
+                value={seccionObs}
+                onChange={e => setSeccionObs(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 12px', border: '1.5px solid #ffe4e6',
+                  borderRadius: '8px', fontFamily: 'Poppins, sans-serif', fontSize: '.83rem',
+                  color: '#1a0a0f', background: 'white', outline: 'none'
+                }}
+              >
+                {manualObs?.tipo_manual === 'organizacion' ? (
+                  <>
+                    <option>General</option>
+                    <option>Datos Generales</option>
+                    <option>3.1 Introducción</option>
+                    <option>3.2 Antecedentes</option>
+                    <option>3.3 Marco Normativo</option>
+                    <option>3.4 Atribuciones Institucionales</option>
+                    <option>3.5 Objetivo General</option>
+                    <option>3.6 Misión</option>
+                    <option>3.7 Visión</option>
+                    <option>Principios y Valores</option>
+                    <option>Políticas de Operación</option>
+                    <option>Marco Conceptual</option>
+                    <option>Organigrama</option>
+                    <option>Inventario de Puestos</option>
+                    <option>Descripción de Puestos</option>
+                  </>
+                ) : (
+                  <>
+                    <option>General</option>
+                    <option>Datos Generales</option>
+                    <option>3.1 Introducción</option>
+                    <option>3.2 Antecedentes</option>
+                    <option>3.3 Marco Normativo</option>
+                    <option>3.4 Atribuciones Institucionales</option>
+                    <option>3.5 Objetivo General</option>
+                    <option>3.6 Misión</option>
+                    <option>3.7 Visión</option>
+                    <option>Marco Conceptual</option>
+                    <option>Inventario de Procedimientos</option>
+                    <option>1. Objetivo del Procedimiento</option>
+                    <option>2. Alcance</option>
+                    <option>3. Responsabilidades</option>
+                    <option>4. Definiciones</option>
+                    <option>5. Descripción de Actividades</option>
+                    <option>6. Referencia del Documento</option>
+                    <option>7. Registros</option>
+                    <option>Carátula de Autorizaciones</option>
+                  </>
+                )}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '.72rem', fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase', color: '#7a3a4a', marginBottom: '6px' }}>
+                Observación <span style={{ color: '#e11d48' }}>*</span>
+              </label>
+              <textarea
+                value={textoObs}
+                onChange={e => setTextoObs(e.target.value)}
+                placeholder="Describe detalladamente la observación o corrección que debe atender el sujeto obligado..."
+                rows={5}
+                style={{
+                  width: '100%', padding: '10px 12px', border: '1.5px solid #ffe4e6',
+                  borderRadius: '8px', fontFamily: 'Poppins, sans-serif', fontSize: '.83rem',
+                  color: '#1a0a0f', resize: 'vertical', outline: 'none', boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button className="modal-cancel" onClick={() => setModalObsOpen(false)} style={{ margin: 0 }}>
+                Cancelar
+              </button>
+              <button
+                onClick={enviarObservaciones}
+                disabled={!textoObs.trim() || enviandoObs}
+                style={{
+                  padding: '10px 22px', borderRadius: '8px', border: 'none',
+                  background: textoObs.trim() ? 'linear-gradient(135deg, #d97706, #b45309)' : '#e5e7eb',
+                  color: textoObs.trim() ? 'white' : '#9ca3af',
+                  fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', fontWeight: '600',
+                  cursor: textoObs.trim() ? 'pointer' : 'not-allowed', transition: 'all .2s'
+                }}
+              >
+                {enviandoObs ? 'Enviando...' : 'Enviar Observaciones'}
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
 
     </div>

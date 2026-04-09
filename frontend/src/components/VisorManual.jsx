@@ -388,11 +388,18 @@ function VisorProcedimientos({ datos }) {
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
-export default function VisorManual({ manual, onCerrar }) {
+export default function VisorManual({ manual, onCerrar, onActualizado }) {
   const [datosExtra, setDatosExtra] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [verPDF, setVerPDF] = useState(false)
   const token = localStorage.getItem('token')
+  const usuario = JSON.parse(localStorage.getItem('usuario'))
+  const esAdmin = usuario?.rol === 'administrador'
+
+  const [editCodigo, setEditCodigo]   = useState('')
+  const [editVersion, setEditVersion] = useState('')
+  const [guardando, setGuardando]     = useState(false)
+  const [guardado, setGuardado]       = useState(false)
 
   useEffect(() => {
     const fetchDetalle = async () => {
@@ -402,15 +409,37 @@ export default function VisorManual({ manual, onCerrar }) {
           headers: { Authorization: `Bearer ${token}` }
         })
         setDatosExtra(res.data)
+        setEditCodigo(res.data.codigo || '')
+        setEditVersion(res.data.version ? String(res.data.version).padStart(2, '0') : '01')
       } catch {
-        // Si el endpoint detallado no existe aún, usar los datos básicos
         setDatosExtra(manual)
+        setEditCodigo(manual.codigo || '')
+        setEditVersion(manual.version ? String(manual.version).padStart(2, '0') : '01')
       } finally {
         setCargando(false)
       }
     }
     fetchDetalle()
   }, [manual.id_manual])
+
+  const guardarCodigo = async () => {
+    if (!editCodigo.trim() || guardando) return
+    setGuardando(true)
+    try {
+      await axios.patch(
+        `http://localhost:3000/manuales/${manual.id_manual}/codigo`,
+        { codigo: editCodigo.trim(), version: editVersion },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setGuardado(true)
+      setTimeout(() => setGuardado(false), 2500)
+      if (onActualizado) onActualizado()
+    } catch {
+      alert('Error al guardar el código')
+    } finally {
+      setGuardando(false)
+    }
+  }
 
   const datos = datosExtra || manual
   const esOrg = manual.tipo_manual === 'organizacion'
@@ -461,12 +490,61 @@ export default function VisorManual({ manual, onCerrar }) {
               )}
             </div>
             <div>
-              <div style={{ fontSize: '1rem', fontWeight: '700', color: '#1a0a0f', letterSpacing: '-.2px' }}>
-                {manual.codigo || 'Sin código'} — {esOrg ? 'Manual de Organización' : 'Manual de Procedimientos'}
-              </div>
-              <div style={{ fontSize: '.74rem', color: '#b06070', marginTop: '2px' }}>
-                {manual.dependencia} · Creado por {manual.creado_por_nombre}
-              </div>
+              {esAdmin && manual.estado === 'en_revision' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <input
+                      value={editCodigo}
+                      onChange={e => setEditCodigo(e.target.value)}
+                      placeholder="Código del manual"
+                      style={{
+                        padding: '5px 10px', border: '1.5px solid #fecdd3', borderRadius: '7px',
+                        fontFamily: 'Poppins, sans-serif', fontSize: '.88rem', fontWeight: '700',
+                        color: '#1a0a0f', outline: 'none', width: '200px'
+                      }}
+                      onFocus={e => e.target.style.borderColor = '#e11d48'}
+                      onBlur={e => e.target.style.borderColor = '#fecdd3'}
+                    />
+                    <input
+                      value={editVersion}
+                      onChange={e => setEditVersion(e.target.value)}
+                      placeholder="Versión"
+                      style={{
+                        padding: '5px 10px', border: '1.5px solid #fecdd3', borderRadius: '7px',
+                        fontFamily: 'Poppins, sans-serif', fontSize: '.88rem', fontWeight: '700',
+                        color: '#1a0a0f', outline: 'none', width: '80px'
+                      }}
+                      onFocus={e => e.target.style.borderColor = '#e11d48'}
+                      onBlur={e => e.target.style.borderColor = '#fecdd3'}
+                    />
+                    <button
+                      onClick={guardarCodigo}
+                      disabled={!editCodigo.trim() || guardando}
+                      style={{
+                        padding: '5px 14px', borderRadius: '7px', border: 'none',
+                        background: guardado ? '#059669' : '#e11d48',
+                        color: 'white', fontFamily: 'Poppins, sans-serif',
+                        fontSize: '.75rem', fontWeight: '600', cursor: 'pointer',
+                        transition: 'background .3s'
+                      }}
+                    >
+                      {guardado ? '✓ Guardado' : guardando ? '...' : 'Guardar'}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '.74rem', color: '#b06070' }}>
+                    {esOrg ? 'Manual de Organización' : 'Manual de Procedimientos'} · {manual.dependencia}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: '1rem', fontWeight: '700', color: '#1a0a0f', letterSpacing: '-.2px' }}>
+                    {manual.codigo || 'Sin código'} — {esOrg ? 'Manual de Organización' : 'Manual de Procedimientos'}
+                  </div>
+                  <div style={{ fontSize: '.74rem', color: '#b06070', marginTop: '2px' }}>
+                    {manual.dependencia} · Creado por {manual.creado_por_nombre}
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <button
