@@ -367,6 +367,8 @@ function VisorProcedimientos({ datos }) {
                 )}
                 <Campo label="Objetivo" valor={p.objetivo} multilinea />
                 <Campo label="Alcance" valor={p.alcance} multilinea />
+                <Campo label="Responsabilidades" valor={p.responsabilidades} multilinea />
+                <Campo label="Definiciones" valor={p.definiciones} multilinea />
                 {p.actividades?.length > 0 && (
                   <div style={{ marginTop: '10px' }}>
                     <div style={{ fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#c9a0a8', marginBottom: '8px' }}>
@@ -379,6 +381,8 @@ function VisorProcedimientos({ datos }) {
                   </div>
                 )}
               </div>
+                  <Campo label="6. Referencia del Documento" valor={p.referencias} multilinea />
+                  <Campo label="7. Registros" valor={p.registros} multilinea />
             </div>
           ))}
         </Seccion>
