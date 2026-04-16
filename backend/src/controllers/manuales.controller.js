@@ -493,14 +493,18 @@ const crearManual = async (req, res) => {
       }
     }
 
-    // Segunda pasada: asignar jefe_inmediato_id por nombre
+    // Segunda pasada: asignar jefe_inmediato_id por nombre (comparación SQL case-insensitive)
     for (const p of (puestos || [])) {
-      if (p.jefe_inmediato && puestoIds[p.jefe_inmediato] && puestoIds[p.nombre_puesto]) {
-        await client.query(
-          `UPDATE puestos SET jefe_inmediato_id = $1 WHERE id_puesto = $2`,
-          [puestoIds[p.jefe_inmediato], puestoIds[p.nombre_puesto]]
-        )
-      }
+      if (!p.jefe_inmediato?.trim()) continue
+      await client.query(
+        `UPDATE puestos SET jefe_inmediato_id = (
+           SELECT id_puesto FROM puestos
+           WHERE id_manual = $1 AND LOWER(TRIM(nombre_puesto)) = LOWER(TRIM($2))
+           LIMIT 1
+         )
+         WHERE id_manual = $1 AND LOWER(TRIM(nombre_puesto)) = LOWER(TRIM($3))`,
+        [id_manual, p.jefe_inmediato, p.nombre_puesto]
+      )
     }
 
     // 8. Procedimientos
@@ -778,14 +782,18 @@ const actualizarManual = async (req, res) => {
       }
     }
 
-    // Segunda pasada: asignar jefe_inmediato_id por nombre
+    // Segunda pasada: asignar jefe_inmediato_id por nombre (comparación SQL case-insensitive)
     for (const p of (puestos || [])) {
-      if (p.jefe_inmediato && puestoIdsUpd[p.jefe_inmediato] && puestoIdsUpd[p.nombre_puesto]) {
-        await client.query(
-          `UPDATE puestos SET jefe_inmediato_id = $1 WHERE id_puesto = $2`,
-          [puestoIdsUpd[p.jefe_inmediato], puestoIdsUpd[p.nombre_puesto]]
-        )
-      }
+      if (!p.jefe_inmediato?.trim()) continue
+      await client.query(
+        `UPDATE puestos SET jefe_inmediato_id = (
+           SELECT id_puesto FROM puestos
+           WHERE id_manual = $1 AND LOWER(TRIM(nombre_puesto)) = LOWER(TRIM($2))
+           LIMIT 1
+         )
+         WHERE id_manual = $1 AND LOWER(TRIM(nombre_puesto)) = LOWER(TRIM($3))`,
+        [id, p.jefe_inmediato, p.nombre_puesto]
+      )
     }
 
     // 7. Procedimientos
