@@ -7,8 +7,9 @@ const getManuales = async (req, res) => {
     let result
     if (rol === 'administrador') {
       result = await pool.query(
-        `SELECT m.*, u.nombre as creado_por_nombre 
-         FROM manuales m JOIN usuarios u ON m.creado_por = u.id_usuario 
+        `SELECT m.*, u.nombre as creado_por_nombre
+         FROM manuales m JOIN usuarios u ON m.creado_por = u.id_usuario
+         WHERE m.estado != 'borrador'
          ORDER BY m.fecha_creacion DESC`
       )
     } else {
@@ -859,9 +860,8 @@ const cambiarEstado = async (req, res) => {
 
     if (rol === 'administrador') {
       const permitidas = {
-        en_revision:   ['observaciones', 'validado', 'autorizado', 'borrador'],
-        validado:      ['autorizado'],
-        observaciones: ['validado', 'autorizado'],
+        en_revision:   ['observaciones', 'validado'],
+        observaciones: ['validado'],
       }
       if (!permitidas[manual.estado]?.includes(estado))
         return res.status(400).json({ error: `Transición no permitida de "${manual.estado}" a "${estado}"` })
@@ -1009,4 +1009,50 @@ const getObservaciones = async (req, res) => {
   }
 }
 
-module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado, eliminarManuales, subirOrganigrama, getObservaciones, asignarCodigo }
+// ── GET /manuales/actividad ───────────────────────────────────────────────────
+const getActividad = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT h.id_historial,
+              h.razon_cambio,
+              TO_CHAR(h.fecha, 'YYYY-MM-DD HH24:MI') AS fecha,
+              m.dependencia,
+              m.codigo,
+              m.tipo_manual,
+              m.estado,
+              u.nombre AS usuario_nombre
+       FROM historial_versiones h
+       JOIN manuales m ON m.id_manual = h.id_manual
+       JOIN usuarios u ON u.id_usuario = h.usuario
+       ORDER BY h.fecha DESC
+       LIMIT 10`
+    )
+    res.json(result.rows)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+// ── GET /manuales/:id/historial ───────────────────────────────────────────────
+const getHistorial = async (req, res) => {
+  try {
+    const { id } = req.params
+    const result = await pool.query(
+      `SELECT h.id_historial,
+              h.version,
+              h.razon_cambio,
+              TO_CHAR(h.fecha, 'DD/MM/YYYY HH24:MI') AS fecha,
+              u.nombre AS usuario_nombre
+       FROM historial_versiones h
+       LEFT JOIN usuarios u ON u.id_usuario = h.usuario
+       WHERE h.id_manual = $1
+       ORDER BY h.fecha DESC`,
+      [id]
+    )
+    res.json(result.rows)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado, eliminarManuales, subirOrganigrama, getObservaciones, asignarCodigo, getActividad, getHistorial }

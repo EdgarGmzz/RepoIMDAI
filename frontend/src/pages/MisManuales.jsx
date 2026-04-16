@@ -123,7 +123,7 @@ const eliminarSeleccionados = async () => {
       en_revision:   { label: 'En Revisión',   clase: 'revision' },
       observaciones: { label: 'Observaciones', clase: 'observaciones' },
       validado:      { label: 'Validado',      clase: 'validado' },
-      autorizado:    { label: 'Autorizado',    clase: 'validado' },
+      autorizado:    { label: 'Validado',      clase: 'validado' },
     }
     return map[estado] || { label: estado, clase: 'borrador' }
   }
@@ -132,7 +132,7 @@ const eliminarSeleccionados = async () => {
   const enBorrador       = manuales.filter(m => m.estado === 'borrador').length
   const enRevision       = manuales.filter(m => m.estado === 'en_revision').length
   const conObservaciones = manuales.filter(m => m.estado === 'observaciones').length
-  const validados        = manuales.filter(m => ['validado','autorizado'].includes(m.estado)).length
+  const validados        = manuales.filter(m => m.estado === 'validado' || m.estado === 'autorizado').length
 
   const btnStyle = (color, bg, border) => ({
     width: '32px', height: '32px', borderRadius: '7px',

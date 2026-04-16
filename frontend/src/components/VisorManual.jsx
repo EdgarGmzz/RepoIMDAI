@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import GeneradorPDFManual from './GeneradorPDFManual'
+import DiagramaFlujo from './DiagramaFlujo'
 
 // ── Helpers de UI ────────────────────────────────────────────────────────────
 
@@ -378,6 +379,10 @@ function VisorProcedimientos({ datos }) {
                       columnas={['Paso', 'Responsable', 'Descripción']}
                       filas={p.actividades.map((a, j) => [j + 1, a.responsable, a.descripcion])}
                     />
+                    <div style={{ fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#c9a0a8', margin: '16px 0 4px' }}>
+                      Diagrama de Flujo
+                    </div>
+                    <DiagramaFlujo actividades={p.actividades} />
                   </div>
                 )}
               </div>

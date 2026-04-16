@@ -46,11 +46,60 @@ const toDateStr = (val) => {
   return ''
 }
 
+const validarFormulario = (datos) => {
+  const usuario = JSON.parse(localStorage.getItem('usuario'))
+  const esAdmin = usuario?.rol === 'administrador'
+  const errores = []
+
+  // ── Paso 1: Datos Generales ──────────────────────────────────────────────
+  if (!datos.dependencia?.trim())    errores.push('Dependencia / Unidad Administrativa')
+  if (!datos.fecha_elaboracion)      errores.push('Fecha de Elaboración')
+  if (!datos.titular?.trim())        errores.push('Nombre del Titular de la Dependencia')
+  if (!datos.cargo_titular?.trim())  errores.push('Cargo del Titular')
+  if (esAdmin && !datos.codigo?.trim()) errores.push('Código del Manual')
+
+  // ── Paso 2: Capítulo I ───────────────────────────────────────────────────
+  if (!datos.introduccion?.trim())     errores.push('Introducción (Capítulo I)')
+  if (!datos.antecedentes?.trim())     errores.push('Antecedentes (Capítulo I)')
+  if (!datos.atribuciones?.trim())     errores.push('Atribuciones Institucionales')
+  if (!datos.objetivo_general?.trim()) errores.push('Objetivo General')
+  if (!datos.mision?.trim())           errores.push('Misión')
+  if (!datos.vision?.trim())           errores.push('Visión')
+
+  // ── Paso 3: Inventario ───────────────────────────────────────────────────
+  if (datos.procedimientos.length === 0) {
+    errores.push('Debe agregar al menos un procedimiento en el Inventario')
+  } else {
+    datos.procedimientos.forEach((p, i) => {
+      if (!p.nombre?.trim()) errores.push(`Nombre del Procedimiento ${i + 1} (Inventario)`)
+    })
+  }
+
+  // ── Paso 4: Detalle de procedimientos ────────────────────────────────────
+  datos.procedimientos.forEach((p, i) => {
+    const label = p.nombre?.trim() ? `"${p.nombre}"` : `#${i + 1}`
+    if (!p.objetivo?.trim())           errores.push(`Objetivo del procedimiento ${label}`)
+    if (!p.alcance?.trim())            errores.push(`Alcance del procedimiento ${label}`)
+    if (!p.responsabilidades?.trim())  errores.push(`Responsabilidades del procedimiento ${label}`)
+    if (p.actividades.length === 0) {
+      errores.push(`Actividades del procedimiento ${label} (debe tener al menos una)`)
+    } else {
+      p.actividades.forEach((a, j) => {
+        if (!a.responsable?.trim()) errores.push(`Responsable de actividad ${j + 1} en procedimiento ${label}`)
+        if (!a.descripcion?.trim()) errores.push(`Descripción de actividad ${j + 1} en procedimiento ${label}`)
+      })
+    }
+  })
+
+  return errores
+}
+
 export default function WizardManual({ onCancelar, onGuardado, manualEditar = null }) {
   const [pasoActual, setPasoActual] = useState(1)
   const [guardando, setGuardando] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
+  const [erroresValidacion, setErroresValidacion] = useState([])
   const token = localStorage.getItem('token')
 
   const modoEdicion = !!manualEditar
@@ -136,6 +185,12 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
   const anterior   = () => setPasoActual(p => Math.max(p - 1, 1))
 
  const guardar = async () => {
+    const errores = validarFormulario(datos)
+    if (errores.length > 0) {
+      setErroresValidacion(errores)
+      return
+    }
+    setErroresValidacion([])
     setGuardando(true)
     setError('')
     try {
@@ -226,7 +281,22 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
               Siguiente
             </button>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', maxWidth: '480px' }}>
+              {erroresValidacion.length > 0 && (
+                <div style={{
+                  background: '#fff1f2', border: '1px solid #fda4af', borderRadius: '8px',
+                  padding: '10px 14px', fontSize: '.76rem', color: '#9f1239', textAlign: 'left', width: '100%'
+                }}>
+                  <p style={{ fontWeight: 700, marginBottom: '6px' }}>
+                    {erroresValidacion.length === 1
+                      ? 'Falta completar el siguiente campo:'
+                      : `Faltan completar ${erroresValidacion.length} campos:`}
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: '16px', lineHeight: '1.7' }}>
+                    {erroresValidacion.map((e, i) => <li key={i}>{e}</li>)}
+                  </ul>
+                </div>
+              )}
               {error && <span style={{ fontSize: '.75rem', color: '#e11d48' }}>{error}</span>}
               <button className="wizard-btn-success" onClick={guardar} disabled={guardando}>
                 {guardando ? 'Guardando...' : modoEdicion ? 'Guardar Cambios' : 'Guardar Manual'}
