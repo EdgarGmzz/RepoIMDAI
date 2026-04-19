@@ -1,5 +1,16 @@
 const pool = require('../config/db')
 
+// ── Helper: busca suplencia activa ────────────────────────────────────────────
+// Devuelve el id del sujeto_obligado al que cubre este usuario, o null
+async function getSuplenciaActiva(id_usuario) {
+  const res = await pool.query(
+    `SELECT sujeto_obligado FROM suplencias
+     WHERE suplente = $1 AND activo = TRUE LIMIT 1`,
+    [id_usuario]
+  )
+  return res.rows[0]?.sujeto_obligado || null
+}
+
 // ── GET /manuales ─────────────────────────────────────────────────────────────
 const getManuales = async (req, res) => {
   try {
@@ -13,11 +24,17 @@ const getManuales = async (req, res) => {
          ORDER BY m.fecha_creacion DESC`
       )
     } else {
+      // Incluye los manuales propios Y los del sujeto que el usuario cubre como suplente
+      const cubreA = await getSuplenciaActiva(id_usuario)
+      const idsConsulta = cubreA ? [id_usuario, cubreA] : [id_usuario]
       result = await pool.query(
-        `SELECT m.*, u.nombre as creado_por_nombre 
-         FROM manuales m JOIN usuarios u ON m.creado_por = u.id_usuario 
-         WHERE m.creado_por = $1 ORDER BY m.fecha_creacion DESC`,
-        [id_usuario]
+        `SELECT m.*, u.nombre as creado_por_nombre,
+                CASE WHEN m.creado_por = $1 THEN NULL ELSE m.creado_por END AS en_suplencia_de_id,
+                CASE WHEN m.creado_por = $1 THEN NULL ELSE u.nombre END      AS en_suplencia_de_nombre
+         FROM manuales m JOIN usuarios u ON m.creado_por = u.id_usuario
+         WHERE m.creado_por = ANY($2)
+         ORDER BY m.creado_por = $1 DESC, m.fecha_creacion DESC`,
+        [id_usuario, idsConsulta]
       )
     }
     res.json(result.rows)
@@ -46,8 +63,12 @@ const getManualById = async (req, res) => {
       return res.status(404).json({ error: 'Manual no encontrado' })
 
     const manual = manualRes.rows[0]
-    if (rol !== 'administrador' && manual.creado_por !== id_usuario)
-      return res.status(403).json({ error: 'Acceso denegado' })
+    if (rol !== 'administrador' && manual.creado_por !== id_usuario) {
+      // Verificar si el usuario es suplente activo del dueño del manual
+      const cubreA = await getSuplenciaActiva(id_usuario)
+      if (cubreA !== manual.creado_por)
+        return res.status(403).json({ error: 'Acceso denegado' })
+    }
 
     // Secciones de texto
     const seccionesRes = await pool.query(
@@ -581,8 +602,13 @@ const actualizarManual = async (req, res) => {
       return res.status(404).json({ error: 'Manual no encontrado' })
 
     const manual = manualRes.rows[0]
-    if (rol !== 'administrador' && manual.creado_por !== id_usuario)
-      return res.status(403).json({ error: 'Acceso denegado' })
+    let suplenciaDeId = null  // ID del sujeto_obligado si quien edita es su suplente
+    if (rol !== 'administrador' && manual.creado_por !== id_usuario) {
+      const cubreA = await getSuplenciaActiva(id_usuario)
+      if (cubreA !== manual.creado_por)
+        return res.status(403).json({ error: 'Acceso denegado' })
+      suplenciaDeId = cubreA
+    }
     if (!['borrador', 'observaciones'].includes(manual.estado))
       return res.status(400).json({ error: `No se puede editar un manual en estado "${manual.estado}"` })
 
@@ -827,6 +853,13 @@ const actualizarManual = async (req, res) => {
       }
     }
 
+    // Registrar en historial (con indicador de suplencia si aplica)
+    await client.query(
+      `INSERT INTO historial_versiones (id_manual, usuario, version, razon_cambio, en_suplencia_de)
+       VALUES ($1, $2, (SELECT version FROM manuales WHERE id_manual=$1), $3, $4)`,
+      [id, id_usuario, 'Guardado de cambios en el manual', suplenciaDeId]
+    )
+
     await client.query('COMMIT')
     res.json({ mensaje: 'Manual actualizado correctamente' })
   } catch (error) {
@@ -857,10 +890,16 @@ const cambiarEstado = async (req, res) => {
       return res.status(404).json({ error: 'Manual no encontrado' })
 
     const manual = manualRes.rows[0]
+    let suplenciaDeId = null
 
     if (rol === 'sujeto_obligado') {
-      if (manual.creado_por !== id_usuario)
-        return res.status(403).json({ error: 'Acceso denegado' })
+      if (manual.creado_por !== id_usuario) {
+        // Verificar si es suplente activo del dueño
+        const cubreA = await getSuplenciaActiva(id_usuario)
+        if (cubreA !== manual.creado_por)
+          return res.status(403).json({ error: 'Acceso denegado' })
+        suplenciaDeId = cubreA
+      }
       const permitidas = { borrador: ['en_revision'], observaciones: ['en_revision'] }
       if (!permitidas[manual.estado]?.includes(estado))
         return res.status(400).json({ error: `No puedes cambiar de "${manual.estado}" a "${estado}"` })
@@ -879,9 +918,9 @@ const cambiarEstado = async (req, res) => {
 
     await pool.query('UPDATE manuales SET estado=$1 WHERE id_manual=$2', [estado, id])
     await pool.query(
-      `INSERT INTO historial_versiones (id_manual, usuario, version, razon_cambio)
-       VALUES ($1,$2,(SELECT version FROM manuales WHERE id_manual=$1),$3)`,
-      [id, id_usuario, `Cambio de estado: ${manual.estado} → ${estado}`]
+      `INSERT INTO historial_versiones (id_manual, usuario, version, razon_cambio, en_suplencia_de)
+       VALUES ($1,$2,(SELECT version FROM manuales WHERE id_manual=$1),$3,$4)`,
+      [id, id_usuario, `Cambio de estado: ${manual.estado} → ${estado}`, suplenciaDeId]
     )
 
     // Guardar observación si se envió comentario
@@ -1050,9 +1089,11 @@ const getHistorial = async (req, res) => {
               h.version,
               h.razon_cambio,
               TO_CHAR(h.fecha, 'DD/MM/YYYY HH24:MI') AS fecha,
-              u.nombre AS usuario_nombre
+              u.nombre  AS usuario_nombre,
+              us.nombre AS en_suplencia_de_nombre
        FROM historial_versiones h
-       LEFT JOIN usuarios u ON u.id_usuario = h.usuario
+       LEFT JOIN usuarios u  ON u.id_usuario  = h.usuario
+       LEFT JOIN usuarios us ON us.id_usuario = h.en_suplencia_de
        WHERE h.id_manual = $1
        ORDER BY h.fecha DESC`,
       [id]

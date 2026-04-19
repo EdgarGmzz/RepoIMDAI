@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import OrgPaso1DatosGenerales from './org-pasos/OrgPaso1DatosGenerales'
 import OrgPaso2CapituloI from './org-pasos/OrgPaso2CapituloI'
 import OrgPaso3Organizacion from './org-pasos/OrgPaso3Organizacion'
 import OrgPaso4Puestos from './org-pasos/OrgPaso4Puestos'
 import OrgPaso5Revision from './org-pasos/OrgPaso5Revision'
+import { validarOrganizacion } from '../utils/validarOrganizacion'
 
 const pasos = [
   { numero: 1, titulo: 'Datos Generales' },
@@ -63,47 +64,6 @@ const puestoVacio = () => ({
   jefe_firma_nombre: '', jefe_firma_cargo: '', jefe_firma_fecha: '',
 })
 
-const validarFormulario = (datos) => {
-  const usuario = JSON.parse(localStorage.getItem('usuario'))
-  const esAdmin = usuario?.rol === 'administrador'
-  const errores = []
-
-  // ── Paso 1: Datos Generales ──────────────────────────────────────────────
-  if (!datos.dependencia?.trim())    errores.push('Dependencia / Unidad Administrativa')
-  if (!datos.fecha_elaboracion)      errores.push('Fecha de Elaboración')
-  if (!datos.elaboro_nombre?.trim()) errores.push('Elaboró — Nombre')
-  if (!datos.elaboro_cargo?.trim())  errores.push('Elaboró — Cargo')
-  if (esAdmin && !datos.codigo?.trim()) errores.push('Código del Manual')
-
-  // ── Paso 2: Capítulo I ───────────────────────────────────────────────────
-  if (!datos.introduccion?.trim())     errores.push('Introducción (Capítulo I)')
-  if (!datos.antecedentes?.trim())     errores.push('Antecedentes (Capítulo I)')
-  if (!datos.atribuciones?.trim())     errores.push('Atribuciones Institucionales')
-  if (!datos.objetivo_general?.trim()) errores.push('Objetivo General')
-  if (!datos.mision?.trim())           errores.push('Misión')
-  if (!datos.vision?.trim())           errores.push('Visión')
-
-  // ── Paso 3: Inventario de puestos ────────────────────────────────────────
-  if (datos.inventario_puestos.length === 0) {
-    errores.push('Debe agregar al menos un puesto en el Inventario de Puestos')
-  } else {
-    datos.inventario_puestos.forEach((p, i) => {
-      if (!p.nombre_puesto?.trim()) errores.push(`Nombre del puesto ${i + 1} (Inventario)`)
-    })
-  }
-
-  // ── Paso 4: Descripción de puestos ───────────────────────────────────────
-  datos.puestos.forEach((p, i) => {
-    const label = p.nombre_puesto?.trim() ? `"${p.nombre_puesto}"` : `#${i + 1}`
-    if (!p.nombre_puesto?.trim())   errores.push(`Nombre del puesto ${label}`)
-    if (!p.jefe_inmediato?.trim())  errores.push(`Jefe inmediato del puesto ${label}`)
-    if (!p.objetivo_puesto?.trim()) errores.push(`Objetivo del puesto ${label}`)
-    const tieneFunciones = (p.funciones_institucionales?.length > 0 || p.funciones_propias?.length > 0)
-    if (!tieneFunciones) errores.push(`Funciones del puesto ${label} (debe tener al menos una)`)
-  })
-
-  return errores
-}
 
 // Convierte cualquier valor de fecha a string YYYY-MM-DD para inputs type="date"
 const toDateStr = (val) => {
@@ -243,6 +203,9 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
   const siguiente  = () => setPasoActual(p => Math.min(p + 1, pasos.length))
   const anterior   = () => setPasoActual(p => Math.max(p - 1, 1))
 
+  // Campos pendientes — solo informativo, no bloquea el guardado
+  const camposPendientes = useMemo(() => validarOrganizacion(datos), [datos])
+
   const subirOrganigramas = async (id_manual) => {
     const headers = { Authorization: `Bearer ${token}` }
 
@@ -264,11 +227,6 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
   }
 
   const guardar = async () => {
-    const errores = validarFormulario(datos)
-    if (errores.length > 0) {
-      setErroresValidacion(errores)
-      return
-    }
     setErroresValidacion([])
     setGuardando(true)
     setError('')
@@ -366,25 +324,23 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
               Siguiente
             </button>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', maxWidth: '480px' }}>
-              {erroresValidacion.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', maxWidth: '500px' }}>
+              {camposPendientes.length > 0 && (
                 <div style={{
-                  background: '#fff1f2', border: '1px solid #fda4af', borderRadius: '8px',
-                  padding: '10px 14px', fontSize: '.76rem', color: '#9f1239', textAlign: 'left', width: '100%'
+                  background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px',
+                  padding: '10px 14px', fontSize: '.76rem', color: '#92400e', textAlign: 'left', width: '100%'
                 }}>
                   <p style={{ fontWeight: 700, marginBottom: '6px' }}>
-                    {erroresValidacion.length === 1
-                      ? 'Falta completar el siguiente campo:'
-                      : `Faltan completar ${erroresValidacion.length} campos:`}
+                    Puedes guardar el borrador, pero faltan {camposPendientes.length} campo{camposPendientes.length > 1 ? 's' : ''} para poder enviarlo a revisión:
                   </p>
                   <ul style={{ margin: 0, paddingLeft: '16px', lineHeight: '1.7' }}>
-                    {erroresValidacion.map((e, i) => <li key={i}>{e}</li>)}
+                    {camposPendientes.map((e, i) => <li key={i}>{e}</li>)}
                   </ul>
                 </div>
               )}
               {error && <span style={{ fontSize: '.75rem', color: '#e11d48' }}>{error}</span>}
               <button className="wizard-btn-success" onClick={guardar} disabled={guardando}>
-                {guardando ? 'Guardando...' : modoEdicion ? 'Guardar Cambios' : 'Guardar Manual'}
+                {guardando ? 'Guardando...' : modoEdicion ? 'Guardar Cambios' : 'Guardar Borrador'}
               </button>
             </div>
           )}

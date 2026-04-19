@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import WizardManual from '../components/WizardManual'
 import WizardOrganizacion from '../components/WizardOrganizacion'
+import { validarOrganizacion } from '../utils/validarOrganizacion'
 
 export default function MisManuales() {
   const [manuales, setManuales] = useState([])
@@ -17,6 +18,7 @@ export default function MisManuales() {
   const [manualObs, setManualObs]         = useState(null)
   const [seleccionados, setSeleccionados] = useState([])
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
+  const [modalIncompleto, setModalIncompleto] = useState({ open: false, campos: [] })
   const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem('usuario'))
   const token = localStorage.getItem('token')
@@ -101,11 +103,24 @@ const eliminarSeleccionados = async () => {
     }
   }
 
-  const enviarARevision = async (id_manual) => {
-    setEnviando(id_manual)
+  const enviarARevision = async (m) => {
+    setEnviando(m.id_manual)
     try {
+      // Validar completitud solo para manuales de organización
+      if (m.tipo_manual === 'organizacion') {
+        const detalleRes = await axios.get(`http://localhost:3000/manuales/${m.id_manual}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const errores = validarOrganizacion(detalleRes.data)
+        if (errores.length > 0) {
+          setModalIncompleto({ open: true, campos: errores })
+          setEnviando(null)
+          return
+        }
+      }
+
       await axios.patch(
-        `http://localhost:3000/manuales/${id_manual}/estado`,
+        `http://localhost:3000/manuales/${m.id_manual}/estado`,
         { estado: 'en_revision' },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -152,7 +167,7 @@ const eliminarSeleccionados = async () => {
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </button>
-            <button title="Enviar a revisión IMDAI" disabled={enviando === m.id_manual} onClick={() => enviarARevision(m.id_manual)} style={btnStyle('#059669', '#f0fdf4', '#bbf7d0')}>
+            <button title="Enviar a revisión IMDAI" disabled={enviando === m.id_manual} onClick={() => enviarARevision(m)} style={btnStyle('#059669', '#f0fdf4', '#bbf7d0')}>
               {enviando === m.id_manual
                 ? <div style={{ width: '13px', height: '13px', border: '2px solid #bbf7d0', borderTopColor: '#059669', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
                 : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -179,7 +194,7 @@ const eliminarSeleccionados = async () => {
               </svg>
             </button>
             {/* Reenviar a revisión */}
-            <button title="Reenviar a revisión" disabled={enviando === m.id_manual} onClick={() => enviarARevision(m.id_manual)} style={btnStyle('#059669', '#f0fdf4', '#bbf7d0')}>
+            <button title="Reenviar a revisión" disabled={enviando === m.id_manual} onClick={() => enviarARevision(m)} style={btnStyle('#059669', '#f0fdf4', '#bbf7d0')}>
               {enviando === m.id_manual
                 ? <div style={{ width: '13px', height: '13px', border: '2px solid #bbf7d0', borderTopColor: '#059669', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
                 : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -343,10 +358,11 @@ const eliminarSeleccionados = async () => {
               ) : (
                 manuales.map(m => {
   const badge = estadoBadge(m.estado)
+  const esSuplente = !!m.en_suplencia_de_nombre
   return (
     <tr key={m.id_manual}>
       <td>
-        {m.estado === 'borrador' && (
+        {m.estado === 'borrador' && !esSuplente && (
           <input
             type="checkbox"
             checked={seleccionados.includes(m.id_manual)}
@@ -363,6 +379,16 @@ const eliminarSeleccionados = async () => {
           </div>
         )}
         <div className="manual-dep">{m.dependencia}</div>
+        {esSuplente && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            marginTop: '4px', padding: '2px 8px',
+            background: '#eff6ff', border: '1px solid #bfdbfe',
+            borderRadius: '5px', fontSize: '.63rem', color: '#1d4ed8', fontWeight: '600'
+          }}>
+            En suplencia de: {m.en_suplencia_de_nombre}
+          </div>
+        )}
       </td>
       <td>
         <span className={`type-badge ${m.tipo_manual === 'organizacion' ? 'org' : 'proc'}`}>
@@ -533,6 +559,31 @@ const eliminarSeleccionados = async () => {
       )}
       {wizardOrgOpen && (
         <WizardOrganizacion manualEditar={manualEditar} onCancelar={cerrarWizard} onGuardado={onGuardado} />
+      )}
+
+      {/* Modal: manual incompleto para enviar a revisión */}
+      {modalIncompleto.open && (
+        <div className="modal-overlay open" onClick={() => setModalIncompleto({ open: false, campos: [] })}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <h2 style={{ marginBottom: '4px' }}>Manual incompleto</h2>
+            <p style={{ fontSize: '.8rem', color: '#b06070', marginBottom: '16px' }}>
+              Para enviar a revisión debes completar los siguientes campos:
+            </p>
+            <div style={{
+              background: '#fffbeb', border: '1px solid #fde68a',
+              borderRadius: '10px', padding: '14px 16px', maxHeight: '320px', overflowY: 'auto'
+            }}>
+              <ul style={{ margin: 0, paddingLeft: '18px', lineHeight: '1.9', fontSize: '.82rem', color: '#92400e' }}>
+                {modalIncompleto.campos.map((c, i) => <li key={i}>{c}</li>)}
+              </ul>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button className="modal-cancel" onClick={() => setModalIncompleto({ open: false, campos: [] })} style={{ margin: 0 }}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

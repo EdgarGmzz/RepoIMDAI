@@ -5,7 +5,8 @@ require('dotenv').config()
 
 const authRoutes = require('./routes/auth.routes')
 
-const manualesRoutes = require('./routes/manuales.routes')
+const manualesRoutes  = require('./routes/manuales.routes')
+const suplenciasRoutes = require('./routes/suplencias.routes')
 
 const path = require('path')
 
@@ -16,7 +17,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
 app.use('/auth', authRoutes)
 
-app.use('/manuales', manualesRoutes)
+app.use('/manuales',   manualesRoutes)
+app.use('/suplencias', suplenciasRoutes)
 
 const { verificarToken } = require('./middlewares/auth.middleware')
 

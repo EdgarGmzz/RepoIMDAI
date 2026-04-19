@@ -4,6 +4,7 @@ import axios from 'axios'
 import WizardManual from '../components/WizardManual'
 import VisorManual from '../components/VisorManual'
 import WizardOrganizacion from '../components/WizardOrganizacion'
+import ModalSuplencias from '../components/ModalSuplencias'
 
 export default function Dashboard() {
   const [manuales, setManuales]                     = useState([])
@@ -34,6 +35,7 @@ export default function Dashboard() {
   const [historialManual, setHistorialManual]       = useState(null)
   const [historialData, setHistorialData]           = useState([])
   const [loadingHistorial, setLoadingHistorial]     = useState(false)
+  const [modalSuplenciasOpen, setModalSuplenciasOpen] = useState(false)
 
   const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem('usuario'))
@@ -491,6 +493,20 @@ export default function Dashboard() {
                 Eliminar ({seleccionados.length})
               </button>
             )}
+            {/* Suplencias */}
+            <button
+              className="btn-new"
+              style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)' }}
+              onClick={() => setModalSuplenciasOpen(true)}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              Suplencias
+            </button>
             {/* Nuevo */}
             {usuario?.rol !== 'administrador' && (
               <button className="btn-new" onClick={() => setModalOpen(true)}>
@@ -731,6 +747,11 @@ export default function Dashboard() {
                         </div>
                         <div style={{ fontSize: '.7rem', color: '#a78a8f', marginTop: '4px' }}>
                           {h.fecha} · {h.usuario_nombre || 'Sistema'}
+                          {h.en_suplencia_de_nombre && (
+                            <span style={{ marginLeft: '6px', background: '#eff6ff', color: '#1d4ed8', padding: '1px 7px', borderRadius: '4px', fontWeight: '600', fontSize: '.65rem' }}>
+                              suplencia de {h.en_suplencia_de_nombre}
+                            </span>
+                          )}
                           {h.version && <span style={{ marginLeft: '8px', background: '#f5f3ff', color: '#7c3aed', padding: '1px 7px', borderRadius: '4px', fontWeight: '600' }}>v{String(h.version).padStart(2, '0')}</span>}
                         </div>
                       </div>
@@ -859,6 +880,11 @@ export default function Dashboard() {
           onCancelar={() => setWizardOrgOpen(false)}
           onGuardado={() => { setWizardOrgOpen(false); fetchManuales() }}
         />
+      )}
+
+      {/* ── Modal Suplencias ────────────────────────────────────────────────── */}
+      {modalSuplenciasOpen && (
+        <ModalSuplencias onCerrar={() => setModalSuplenciasOpen(false)} />
       )}
 
       {/* ── Visor de manual ─────────────────────────────────────────────────── */}
