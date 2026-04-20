@@ -294,6 +294,8 @@ function VisorOrganizacion({ datos }) {
 
 function VisorProcedimientos({ datos }) {
   const d = datos || {}
+  const [diagramaIdx, setDiagramaIdx] = useState(null)
+
   return (
     <div>
       <Seccion numero="01" titulo="Datos Generales">
@@ -345,7 +347,7 @@ function VisorProcedimientos({ datos }) {
           {d.procedimientos.map((p, i) => (
             <div key={i} style={{ border: '1.5px solid #e0e7ef', borderRadius: '10px', marginBottom: '16px', overflow: 'hidden' }}>
               <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <span style={{ background: '#2563eb', color: 'white', borderRadius: '6px', padding: '2px 8px', fontSize: '.7rem', fontWeight: '700' }}>
+                <span style={{ background: '#2563eb', color: 'white', borderRadius: '6px', padding: '2px 8px', fontSize: '.7rem', fontWeight: '700', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   {p.codigo || `P-${i + 1}`}
                 </span>
                 <span style={{ fontWeight: '700', color: '#1e3a5f', fontSize: '.88rem' }}>
@@ -379,8 +381,16 @@ function VisorProcedimientos({ datos }) {
                       columnas={['Paso', 'Responsable', 'Descripción']}
                       filas={p.actividades.map((a, j) => [j + 1, a.responsable, a.descripcion])}
                     />
-                    <div style={{ fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#c9a0a8', margin: '16px 0 4px' }}>
-                      Diagrama de Flujo
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '16px 0 4px' }}>
+                      <div style={{ fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#c9a0a8' }}>
+                        Diagrama de Flujo
+                      </div>
+                      <button
+                        onClick={() => setDiagramaIdx(i)}
+                        style={{ background: '#f0f9ff', border: '1px solid #7dd3fc', borderRadius: 6, padding: '4px 10px', fontSize: '.75rem', fontWeight: '600', color: '#0369a1', cursor: 'pointer' }}
+                      >
+                        ⛶ Ver completo
+                      </button>
                     </div>
                     <DiagramaFlujo actividades={p.actividades} />
                   </div>
@@ -391,6 +401,28 @@ function VisorProcedimientos({ datos }) {
             </div>
           ))}
         </Seccion>
+      )}
+
+      {/* Modal fullscreen diagrama */}
+      {diagramaIdx !== null && d.procedimientos?.[diagramaIdx] && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.6)', display: 'flex' }}>
+          <div style={{ background: '#fff', width: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+              <span style={{ fontWeight: '700', fontSize: '.95rem', color: '#1e293b' }}>
+                Diagrama de Flujo — {d.procedimientos[diagramaIdx].nombre || `Procedimiento ${diagramaIdx + 1}`}
+              </span>
+              <button
+                onClick={() => setDiagramaIdx(null)}
+                style={{ background: '#e11d48', color: 'white', border: 'none', borderRadius: 6, padding: '6px 16px', cursor: 'pointer', fontWeight: '700' }}
+              >
+                ✕ Cerrar
+              </button>
+            </div>
+            <div style={{ flex: 1, overflow: 'auto', padding: '20px', background: '#fafafa', display: 'flex', justifyContent: 'center' }}>
+              <div><DiagramaFlujo actividades={d.procedimientos[diagramaIdx].actividades} /></div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

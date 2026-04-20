@@ -19,38 +19,49 @@ const COLORES_NO = [
   '#be185d', // rosa oscuro
 ]
 
-function textoLineas(texto, maxChars = 22) {
-  const palabras = (texto || '').split(' ')
+function textoLineas(texto, maxChars = 25) {
+  const segmentos = (texto || '').split(/\r?\n/)
   const lineas = []
-  let linea = ''
-  palabras.forEach(p => {
-    if ((linea + ' ' + p).trim().length > maxChars) {
-      if (linea) lineas.push(linea.trim())
-      linea = p
-    } else {
-      linea = (linea + ' ' + p).trim()
-    }
+  segmentos.forEach(seg => {
+    const palabras = seg.split(' ').filter(Boolean)
+    if (palabras.length === 0) { lineas.push(''); return }
+    let linea = ''
+    palabras.forEach(p => {
+      const candidato = linea ? linea + ' ' + p : p
+      if (candidato.length > maxChars) {
+        if (linea) lineas.push(linea)
+        // palabra muy larga: partirla en trozos
+        while (p.length > maxChars) {
+          lineas.push(p.slice(0, maxChars))
+          p = p.slice(maxChars)
+        }
+        linea = p
+      } else {
+        linea = candidato
+      }
+    })
+    if (linea) lineas.push(linea)
   })
-  if (linea) lineas.push(linea.trim())
   return lineas.length ? lineas : ['']
 }
 
 export default function DiagramaFlujo({ actividades }) {
   if (!actividades || actividades.length === 0) return null
 
-  const PASO_COL_W = 28
-  const LANE_W     = 190
-  const HEADER_H   = 46
-  const ROW_H      = 100
-  const NODE_W     = 155
-  const NODE_H     = 56
-  const DEC_HW     = 72
-  const DEC_HH     = 40
-  const OVAL_RX    = 54
-  const OVAL_RY    = 19
-  const PAD        = 20
-  const LINE_H     = 12
-  const GUIA_SEP   = 14  // separación entre guías de retorno
+  const PASO_COL_W  = 28
+  const LANE_W      = 190
+  const HEADER_H    = 46
+  const NODE_W      = 155
+  const NODE_H_MIN  = 56
+  const DEC_HW      = 72
+  const DEC_HH_MIN  = 40
+  const OVAL_RX     = 54
+  const OVAL_RY     = 19
+  const PAD         = 20
+  const LINE_H      = 12
+  const NODE_PAD    = 28  // padding vertical dentro del nodo
+  const ROW_MARGIN  = 40  // espacio mínimo entre nodos
+  const GUIA_SEP    = 14
 
   // ── Pre-computar decisiones con retorno válido ──────────────────────────
   // decRetornos[i] = índice k entre todas las decisiones con retorno (0,1,2…) o -1
@@ -77,25 +88,42 @@ export default function DiagramaFlujo({ actividades }) {
   const svgW       = PASO_COL_W + lanesW + RETORNO_W
   const inicioY    = HEADER_H + PAD
   const stepStartY = inicioY + OVAL_RY * 2 + 26
-  const finY       = stepStartY + actividades.length * ROW_H + 18
-  const svgH       = finY + OVAL_RY * 2 + PAD
 
-  const laneX   = i => PASO_COL_W + i * LANE_W
-  const laneCX  = i => laneX(i) + LANE_W / 2
-  const stepCY  = i => stepStartY + i * ROW_H + ROW_H / 2
-  const centerX = PASO_COL_W + lanesW / 2
-
-  // Posición X de la guía de retorno para la k-ésima decisión
-  // Se escalonan de derecha a izquierda dentro de la zona de retorno
+  const laneX      = i => PASO_COL_W + i * LANE_W
+  const laneCX     = i => laneX(i) + LANE_W / 2
   const guiaXparaK = k => PASO_COL_W + lanesW + RETORNO_W - 8 - k * GUIA_SEP
 
   const nodeCX = i => {
     const lane = (actividades[i].responsable || 'Sin responsable').trim() || 'Sin responsable'
     return laneCX(lanes.indexOf(lane))
   }
-  const nodeCY      = i => stepCY(i)
-  const nodeBottomY = i => (actividades[i].tipo || 'actividad') === 'decision' ? nodeCY(i) + DEC_HH : nodeCY(i) + NODE_H / 2
-  const nodeTopY    = i => (actividades[i].tipo || 'actividad') === 'decision' ? nodeCY(i) - DEC_HH : nodeCY(i) - NODE_H / 2
+
+  // ── Alturas dinámicas: cada nodo crece con su contenido ───────────────────
+  const allLines = actividades.map((a, i) => textoLineas(a.descripcion || `Paso ${i + 1}`))
+
+  const nodeHFor = i => {
+    const tipo   = actividades[i].tipo || 'actividad'
+    const needed = allLines[i].length * LINE_H + NODE_PAD
+    return tipo === 'decision' ? Math.max(DEC_HH_MIN * 2, needed) : Math.max(NODE_H_MIN, needed)
+  }
+
+  const decHHFor = i => nodeHFor(i) / 2
+
+  // Posiciones Y acumulativas (cada fila ocupa su propia altura)
+  const stepCYArr = actividades.reduce((acc, _, i) => {
+    const prevBottom = i === 0 ? stepStartY : acc[i - 1] + nodeHFor(i - 1) / 2 + ROW_MARGIN
+    acc.push(prevBottom + nodeHFor(i) / 2)
+    return acc
+  }, [])
+
+  const finY = stepCYArr.length > 0
+    ? stepCYArr[stepCYArr.length - 1] + nodeHFor(actividades.length - 1) / 2 + 18
+    : stepStartY + 18
+  const svgH = finY + OVAL_RY * 2 + PAD
+
+  const nodeCY      = i => stepCYArr[i]
+  const nodeBottomY = i => (actividades[i].tipo || 'actividad') === 'decision' ? nodeCY(i) + decHHFor(i) : nodeCY(i) + nodeHFor(i) / 2
+  const nodeTopY    = i => (actividades[i].tipo || 'actividad') === 'decision' ? nodeCY(i) - decHHFor(i) : nodeCY(i) - nodeHFor(i) / 2
   const nodeRightX  = i => (actividades[i].tipo || 'actividad') === 'decision' ? nodeCX(i) + DEC_HW : nodeCX(i) + NODE_W / 2
 
   const pathLShape = (x1, y1, x2, y2) => {
@@ -112,6 +140,26 @@ export default function DiagramaFlujo({ actividades }) {
           <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
             <polygon points="0 0, 8 3, 0 6" fill="#64748b" />
           </marker>
+          {/* ClipPath por nodo para garantizar que el texto no se salga */}
+          {actividades.map((_, i) => {
+            const tipo = actividades[i].tipo || 'actividad'
+            const cx = nodeCX(i), cy = nodeCY(i)
+            if (tipo === 'decision') {
+              const dHH = decHHFor(i)
+              return (
+                <clipPath key={`clip-${i}`} id={`clip-${i}`}>
+                  <rect x={cx - DEC_HW + 6} y={cy - dHH + 4} width={(DEC_HW - 6) * 2} height={dHH * 2 - 8} />
+                </clipPath>
+              )
+            }
+            const nh = nodeHFor(i)
+            return (
+              <clipPath key={`clip-${i}`} id={`clip-${i}`}>
+                <rect x={cx - NODE_W / 2 + 4} y={cy - nh / 2 + 4} width={NODE_W - 8} height={nh - 8} />
+              </clipPath>
+            )
+          })}
+
           {/* Un marcador único por cada decisión con retorno */}
           {actividades.map((act, i) => {
             const k = decRetornos[i]
@@ -151,18 +199,18 @@ export default function DiagramaFlujo({ actividades }) {
 
         {/* Numeración de pasos */}
         {actividades.map((_, i) => (
-          <text key={i} x={PASO_COL_W / 2} y={stepCY(i) + 4} textAnchor="middle" fontSize={10} fill="#64748b" fontWeight="700">
+          <text key={i} x={PASO_COL_W / 2} y={nodeCY(i) + 4} textAnchor="middle" fontSize={10} fill="#64748b" fontWeight="700">
             {i + 1}
           </text>
         ))}
 
-        {/* INICIO */}
-        <ellipse cx={centerX} cy={inicioY + OVAL_RY} rx={OVAL_RX} ry={OVAL_RY} fill="#059669" />
-        <text x={centerX} y={inicioY + OVAL_RY + 4} textAnchor="middle" fontSize={11} fill="white" fontWeight="700">INICIO</text>
+        {/* INICIO — alineado al carril del primer paso */}
+        <ellipse cx={nodeCX(0)} cy={inicioY + OVAL_RY} rx={OVAL_RX} ry={OVAL_RY} fill="#059669" />
+        <text x={nodeCX(0)} y={inicioY + OVAL_RY + 4} textAnchor="middle" fontSize={11} fill="white" fontWeight="700">INICIO</text>
 
         {/* INICIO → primer paso */}
         {actividades.length > 0 && (
-          <path d={pathLShape(centerX, inicioY + OVAL_RY * 2, nodeCX(0), nodeTopY(0) - 2)}
+          <path d={pathLShape(nodeCX(0), inicioY + OVAL_RY * 2, nodeCX(0), nodeTopY(0) - 2)}
             fill="none" stroke="#64748b" strokeWidth={1.5} markerEnd="url(#arr)" />
         )}
 
@@ -173,26 +221,30 @@ export default function DiagramaFlujo({ actividades }) {
           const cy      = nodeCY(i)
           const laneIdx = lanes.indexOf((act.responsable || 'Sin responsable').trim() || 'Sin responsable')
           const c       = COLORES_LANE[laneIdx % COLORES_LANE.length]
-          const lineas  = textoLineas(act.descripcion || `Paso ${i + 1}`)
+          const lineas  = allLines[i]
 
           if (tipo === 'decision') {
-            const pts = `${cx},${cy - DEC_HH} ${cx + DEC_HW},${cy} ${cx},${cy + DEC_HH} ${cx - DEC_HW},${cy}`
+            const dHH = decHHFor(i)
+            const pts = `${cx},${cy - dHH} ${cx + DEC_HW},${cy} ${cx},${cy + dHH} ${cx - DEC_HW},${cy}`
             return (
               <g key={i}>
                 <polygon points={pts} fill={c.bg} stroke={c.stroke} strokeWidth={2} />
-                {lineas.map((l, li) => (
-                  <text key={li} x={cx} y={cy + (li - (lineas.length - 1) / 2) * LINE_H + 4}
-                    textAnchor="middle" fontSize={9} fill={c.texto}>{l}</text>
-                ))}
+                <g clipPath={`url(#clip-${i})`}>
+                  {lineas.map((l, li) => (
+                    <text key={li} x={cx} y={cy + (li - (lineas.length - 1) / 2) * LINE_H + 4}
+                      textAnchor="middle" fontSize={9} fill={c.texto}>{l}</text>
+                  ))}
+                </g>
               </g>
             )
           }
 
+          const nh = nodeHFor(i)
           const nx = cx - NODE_W / 2
-          const ny = cy - NODE_H / 2
+          const ny = cy - nh / 2
           return (
             <g key={i}>
-              <rect x={nx} y={ny} width={NODE_W} height={NODE_H} rx={tipo === 'documento' ? 0 : 5}
+              <rect x={nx} y={ny} width={NODE_W} height={nh} rx={tipo === 'documento' ? 0 : 5}
                 fill={c.bg} stroke={c.stroke} strokeWidth={2} />
               {tipo === 'documento' && (
                 <>
@@ -202,10 +254,12 @@ export default function DiagramaFlujo({ actividades }) {
                   <line x1={nx + NODE_W - 12} y1={ny + 12} x2={nx + NODE_W} y2={ny + 12} stroke={c.stroke} strokeWidth={1} opacity={0.5} />
                 </>
               )}
-              {lineas.map((l, li) => (
-                <text key={li} x={cx} y={cy + (li - (lineas.length - 1) / 2) * LINE_H + 4}
-                  textAnchor="middle" fontSize={9} fill={c.texto}>{l}</text>
-              ))}
+              <g clipPath={`url(#clip-${i})`}>
+                {lineas.map((l, li) => (
+                  <text key={li} x={cx} y={cy + (li - (lineas.length - 1) / 2) * LINE_H + 4}
+                    textAnchor="middle" fontSize={9} fill={c.texto}>{l}</text>
+                ))}
+              </g>
             </g>
           )
         })}
@@ -227,13 +281,13 @@ export default function DiagramaFlujo({ actividades }) {
 
         {/* Último paso → FIN */}
         {actividades.length > 0 && (
-          <path d={pathLShape(nodeCX(actividades.length - 1), nodeBottomY(actividades.length - 1), centerX, finY)}
+          <path d={pathLShape(nodeCX(actividades.length - 1), nodeBottomY(actividades.length - 1), nodeCX(actividades.length - 1), finY)}
             fill="none" stroke="#64748b" strokeWidth={1.5} markerEnd="url(#arr)" />
         )}
 
-        {/* FIN */}
-        <ellipse cx={centerX} cy={finY + OVAL_RY} rx={OVAL_RX} ry={OVAL_RY} fill="#e11d48" />
-        <text x={centerX} y={finY + OVAL_RY + 4} textAnchor="middle" fontSize={11} fill="white" fontWeight="700">FIN</text>
+        {/* FIN — alineado al carril del último paso */}
+        <ellipse cx={nodeCX(actividades.length - 1)} cy={finY + OVAL_RY} rx={OVAL_RX} ry={OVAL_RY} fill="#e11d48" />
+        <text x={nodeCX(actividades.length - 1)} y={finY + OVAL_RY + 4} textAnchor="middle" fontSize={11} fill="white" fontWeight="700">FIN</text>
 
         {/* Flechas de retorno "No" — cada una con su propia guía escalonada y color */}
         {actividades.map((act, i) => {

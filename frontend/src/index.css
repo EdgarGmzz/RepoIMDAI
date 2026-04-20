@@ -635,6 +635,39 @@ td { padding: 13px 18px; font-size: .82rem; color: #2d1520; }
 
 .btn-eliminar:hover { background: #fff1f2; border-color: #fb7185; color: #e11d48; }
 
+.btn-orden {
+  width: 24px;
+  height: 20px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.6rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.btn-orden:hover:not(:disabled) { background: #e2e8f0; color: #1e293b; }
+.btn-orden:disabled { opacity: 0.3; cursor: default; }
+
+.btn-secundario {
+  padding: 6px 14px;
+  background: #f0f9ff;
+  border: 1px solid #7dd3fc;
+  border-radius: 8px;
+  color: #0369a1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-secundario:hover { background: #e0f2fe; border-color: #38bdf8; }
+
 .item-fila {
   display: flex;
   gap: 8px;
@@ -754,6 +787,8 @@ td { padding: 13px 18px; font-size: .82rem; color: #2d1520; }
   background: #fff1f2;
   padding: 3px 10px;
   border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .proc-nombre {
