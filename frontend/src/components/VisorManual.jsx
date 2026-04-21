@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import GeneradorPDFManual from './GeneradorPDFManual'
+import GeneradorPDFProcedimientos from './GeneradorPDFProcedimientos'
 import DiagramaFlujo from './DiagramaFlujo'
 
 // ── Helpers de UI ────────────────────────────────────────────────────────────
@@ -638,18 +639,19 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
             Vista de solo lectura — Administrador IMDAI
           </span>
           <div style={{ display: 'flex', gap: '10px' }}>
-            {esOrg && !cargando && (
+            {!cargando && (
               <button
                 onClick={() => setVerPDF(true)}
                 style={{
                   padding: '8px 20px', borderRadius: '8px',
-                  border: '1.5px solid #e11d48', background: '#e11d48',
+                  border: esOrg ? '1.5px solid #e11d48' : '1.5px solid #4a1455',
+                  background: esOrg ? '#e11d48' : '#4a1455',
                   color: 'white', fontFamily: 'Poppins, sans-serif',
                   fontSize: '.78rem', fontWeight: '600', cursor: 'pointer',
                   transition: 'all .2s', display: 'flex', alignItems: 'center', gap: '6px'
                 }}
-                onMouseOver={e => e.currentTarget.style.background = '#be123c'}
-                onMouseOut={e => e.currentTarget.style.background = '#e11d48'}
+                onMouseOver={e => e.currentTarget.style.background = esOrg ? '#be123c' : '#3a0f42'}
+                onMouseOut={e => e.currentTarget.style.background = esOrg ? '#e11d48' : '#4a1455'}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -681,12 +683,19 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
       </div>
     </div>
 
-    {/* Generador de PDF */}
+    {/* Generador de PDF — organización usa GeneradorPDFManual; procedimientos usa el layout institucional */}
     {verPDF && (
-      <GeneradorPDFManual
-        datos={datos}
-        onCerrar={() => setVerPDF(false)}
-      />
+      esOrg ? (
+        <GeneradorPDFManual
+          datos={datos}
+          onCerrar={() => setVerPDF(false)}
+        />
+      ) : (
+        <GeneradorPDFProcedimientos
+          datos={datos}
+          onCerrar={() => setVerPDF(false)}
+        />
+      )
     )}
   </>
   )
