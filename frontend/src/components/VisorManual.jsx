@@ -639,7 +639,7 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
             Vista de solo lectura — Administrador IMDAI
           </span>
           <div style={{ display: 'flex', gap: '10px' }}>
-            {!cargando && (
+            {!cargando && esAdmin && manual.estado === 'validado' && (
               <button
                 onClick={() => setVerPDF(true)}
                 style={{
