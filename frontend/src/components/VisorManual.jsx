@@ -437,6 +437,10 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
   const token = localStorage.getItem('token')
   const usuario = JSON.parse(localStorage.getItem('usuario'))
   const esAdmin = usuario?.rol === 'administrador'
+  const puedeGenerarPDF =
+    manual.estado === 'validado' ||
+    manual.estado === 'autorizado' ||
+    manual.estado === 'en_revision'
 
   const [editCodigo, setEditCodigo]   = useState('')
   const [editVersion, setEditVersion] = useState('')
@@ -639,7 +643,7 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
             Vista de solo lectura — Administrador IMDAI
           </span>
           <div style={{ display: 'flex', gap: '10px' }}>
-            {!cargando && esAdmin && manual.estado === 'validado' && (
+            {!cargando && esAdmin && puedeGenerarPDF && (
               <button
                 onClick={() => setVerPDF(true)}
                 style={{

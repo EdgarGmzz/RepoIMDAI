@@ -89,7 +89,7 @@ const estilos = `
     margin-bottom: 30px;
   }
   .pdf-portada-titulo h1 {
-    font-size: 42pt;
+    font-size: 45pt;
     font-weight: normal;
     letter-spacing: 2px;
     line-height: 1.1;
@@ -97,12 +97,14 @@ const estilos = `
   .pdf-portada-titulo h1 strong {
     font-weight: 900;
     display: block;
+    font-size: 44pt;
   }
   .pdf-portada-dep {
     text-align: center;
-    font-size: 18pt;
+    font-size: 24pt;
     font-weight: normal;
     letter-spacing: 3px;
+    margin-top: 55px;
     margin-bottom: 40px;
     text-transform: uppercase;
   }
@@ -807,11 +809,11 @@ function HeaderPagina({ datos, numeroPagina, totalPaginas }) {
       <tbody>
         <tr>
           {/* Logo Municipio — izquierda */}
-          <td style={{ width: '42%', padding: '0 0 8px 0', verticalAlign: 'middle' }}>
+          <td style={{ width: '42%', padding: '0 0 8px 0', verticalAlign: 'middle', position: 'relative', top: '-24px' }}>
             <img
               src="/LogoMunicipio.png"
               alt="Municipio de Benito Juárez"
-              style={{ height: 100, width: 'auto', display: 'block' }}
+              style={{ height: 160, width: 'auto', display: 'block' }}
               crossOrigin="anonymous"
             />
           </td>
@@ -824,7 +826,7 @@ function HeaderPagina({ datos, numeroPagina, totalPaginas }) {
               <img
                 src="/LogoIMDAI.png"
                 alt="IMDAI"
-                style={{ height: 110, width: 'auto', display: 'block', flexShrink: 0, marginTop: 2 }}
+                style={{ height: 110, width: 'auto', display: 'block', flexShrink: 0, marginTop: -8 }}
                 crossOrigin="anonymous"
               />
 
@@ -840,7 +842,9 @@ function HeaderPagina({ datos, numeroPagina, totalPaginas }) {
                   borderBottom: '1.5px solid #000',
                   paddingTop: 3, paddingBottom: 3, marginTop: 4,
                   marginLeft: '-112px',
+                  marginRight: '-56px',
                   paddingLeft: '112px',
+                  paddingRight: '56px',
                 }}>
                   <span style={{ fontWeight: 800 }}>PÁGINA:</span> {numeroPagina} DE {totalPaginas}
                 </div>
@@ -882,12 +886,12 @@ function PaginaPortada({ datos, total }) {
 // ── PÁGINA 2: Carátula de Autorizaciones ─────────────────────────────────────
 function PaginaCaratula({ datos, total }) {
   return (
-    <div className="pdf-pagina">
+    <div className="pdf-pagina" style={{ display: 'flex', flexDirection: 'column' }}>
       <HeaderPagina datos={datos} numeroPagina={2} totalPaginas={total} />
-      <div style={{ textAlign: 'center', marginBottom: 30 }}>
-        <div style={{ fontSize: '24pt', fontWeight: 'normal', letterSpacing: 2 }}>MANUAL DE</div>
-        <div style={{ fontSize: '30pt', fontWeight: '900', letterSpacing: 2 }}>ORGANIZACIÓN</div>
-        <div style={{ fontSize: '14pt', marginTop: 16, letterSpacing: 3, textTransform: 'uppercase' }}>
+      <div style={{ textAlign: 'center', marginBottom: 35 }}>
+        <div style={{ fontSize: '36pt', fontWeight: 'normal', letterSpacing: 2, lineHeight: 1.1 }}>MANUAL DE</div>
+        <div style={{ fontSize: '36pt', fontWeight: '900', letterSpacing: 2, lineHeight: 1.1 }}>ORGANIZACIÓN</div>
+        <div style={{ fontSize: '24pt', marginTop: 108, letterSpacing: 3, textTransform: 'uppercase' }}>
           {datos.dependencia}
         </div>
       </div>
@@ -896,7 +900,7 @@ function PaginaCaratula({ datos, total }) {
       <table style={{
         width: '100%', borderCollapse: 'separate', borderSpacing: 0,
         border: '3px solid #000', borderRadius: 12, overflow: 'hidden',
-        fontFamily: 'Montserrat, Arial, sans-serif', marginTop: 20
+        fontFamily: 'Montserrat, Arial, sans-serif', marginTop: 'auto', marginBottom: '1.25cm'
       }}>
         {/* Headers */}
         <thead>
@@ -906,7 +910,7 @@ function PaginaCaratula({ datos, total }) {
                 width: '25%', padding: '16px 10px', textAlign: 'center',
                 fontWeight: 800, fontSize: '13pt', color: '#7a1020',
                 borderBottom: 'none',
-                borderRight: 'none',
+                borderRight: i < 3 ? '3px solid #000' : 'none',
                 background: 'white'
               }}>{h}</th>
             ))}
@@ -919,7 +923,7 @@ function PaginaCaratula({ datos, total }) {
               <td key={i} style={{
                 padding: '20px 14px', textAlign: 'center', verticalAlign: 'top',
                 fontStyle: 'italic', fontWeight: 500, fontSize: '10.5pt',
-                borderRight: 'none',
+                borderRight: i < 3 ? '3px solid #000' : 'none',
                 borderBottom: 'none', minHeight: 80
               }}>{nombre || ' '}</td>
             ))}
@@ -929,7 +933,7 @@ function PaginaCaratula({ datos, total }) {
             {[null, null, null, null].map((_, i) => (
               <td key={i} style={{
                 height: 100,
-                borderRight: 'none',
+                borderRight: i < 3 ? '3px solid #000' : 'none',
                 borderBottom: 'none'
               }}></td>
             ))}
@@ -940,7 +944,7 @@ function PaginaCaratula({ datos, total }) {
               <td key={i} style={{
                 padding: '16px 14px', textAlign: 'center', verticalAlign: 'middle',
                 fontWeight: 500, fontSize: '10.5pt',
-                borderRight: 'none',
+                borderRight: i < 3 ? '3px solid #000' : 'none',
               }}>{cargo || ' '}</td>
             ))}
           </tr>
@@ -949,7 +953,7 @@ function PaginaCaratula({ datos, total }) {
             {[null, null, null, null].map((_, i) => (
               <td key={i} style={{
                 height: 80,
-                borderRight: 'none',
+                borderRight: i < 3 ? '3px solid #000' : 'none',
               }}></td>
             ))}
           </tr>
@@ -963,8 +967,8 @@ function PaginaCaratula({ datos, total }) {
 function PaginaIndice({ datos, total, mapaPaginas }) {
   const items = [
     { num: '01', label: 'Carátula de Autorización', pag: mapaPaginas.caratula, nivel: 1, linea: true },
-    { num: '02', label: 'Índice', pag: mapaPaginas.indice, nivel: 1 },
-    { num: '03', label: 'Capítulo I de Generales', pag: mapaPaginas.portadaCapituloI, nivel: 1 },
+    { num: '02', label: 'Índice', pag: mapaPaginas.indice, nivel: 1, linea: true },
+    { num: '03', label: 'Capítulo I de Generales', pag: mapaPaginas.portadaCapituloI, nivel: 1, linea: true },
     { num: '3.1',  label: 'Introducción', pag: mapaPaginas.introduccion, nivel: 2 },
     { num: '3.2',  label: 'Antecedentes', pag: mapaPaginas.antecedentes, nivel: 2 },
     { num: '3.3',  label: 'Marco Normativo', pag: mapaPaginas.marcoNormativo, nivel: 2 },
@@ -975,7 +979,7 @@ function PaginaIndice({ datos, total, mapaPaginas }) {
     { num: '3.8',  label: 'Principios y Valores Institucionales', pag: mapaPaginas.principiosValores, nivel: 2 },
     { num: '3.9',  label: 'Políticas de Operación', pag: mapaPaginas.politicas, nivel: 2 },
     { num: '3.10', label: 'Marco Conceptual', pag: mapaPaginas.marcoConceptual, nivel: 2 },
-    { num: '04', label: 'Capítulo II de Organización', pag: mapaPaginas.portadaCapituloII, nivel: 1 },
+    { num: '04', label: 'Capítulo II de Organización', pag: mapaPaginas.portadaCapituloII, nivel: 1, linea: true },
     { num: '4.1',  label: 'Organigrama General', pag: mapaPaginas.organigramaGeneral, nivel: 2 },
     { num: '4.2',  label: 'Organigramas Específicos', pag: mapaPaginas.organigramasEspecificos, nivel: 2 },
     { num: '4.3',  label: 'Inventario de Puestos', pag: mapaPaginas.inventario, nivel: 2 },
@@ -993,7 +997,7 @@ function PaginaIndice({ datos, total, mapaPaginas }) {
       {/* Título ÍNDICE */}
       <div style={{
         fontFamily: 'Montserrat, Arial, sans-serif',
-        fontWeight: 800, fontSize: '28pt',
+        fontWeight: 999, fontSize: '20pt',
         color: '#000', marginBottom: 24
       }}>ÍNDICE</div>
 
@@ -1007,11 +1011,11 @@ function PaginaIndice({ datos, total, mapaPaginas }) {
                 fontFamily: 'Montserrat, Arial, sans-serif',
               }}>
                 <span style={{
-                  fontWeight: 800, fontSize: '20pt', color: '#888',
+                  fontWeight: 700, fontSize: '16pt', color: '#888',
                   minWidth: 44, flexShrink: 0
                 }}>{item.num}</span>
                 <span style={{
-                  fontWeight: 800, fontSize: '13pt', color: '#888', flex: 1
+                  fontWeight: 700, fontSize: '13pt', color: '#888', flex: 1
                 }}>{item.label}</span>
                 <span style={{
                   fontWeight: 500, fontSize: '11pt', color: '#000',
@@ -1022,6 +1026,7 @@ function PaginaIndice({ datos, total, mapaPaginas }) {
                 <div style={{
                   height: 3, background: '#aaa',
                   marginTop: 6, marginBottom: 4,
+                  marginLeft: '-40px',
                   marginRight: 70
                 }} />
               )}
@@ -1251,6 +1256,18 @@ function PaginaAntecedentes({ datos, total, paginaInicio, parrafos = [], esConti
   const parrafosAntecedentes = parrafos.length > 0
     ? parrafos
     : extraerParrafos(datos.antecedentes).map((texto, i) => ({ texto, nuevoParrafo: i > 0 }))
+  const bloquesAntecedentes = parrafosAntecedentes.reduce((acum, segmento) => {
+    const texto = String(segmento?.texto || '').trim()
+    if (!texto) return acum
+
+    if (acum.length === 0 || segmento.nuevoParrafo) {
+      acum.push(texto)
+      return acum
+    }
+
+    acum[acum.length - 1] = `${acum[acum.length - 1]} ${texto}`.trim()
+    return acum
+  }, [])
 
   return (
     <div className="pdf-pagina">
@@ -1258,16 +1275,18 @@ function PaginaAntecedentes({ datos, total, paginaInicio, parrafos = [], esConti
 
       <div className="pdf-cap-titulo">3.2 ANTECEDENTES</div>
 
-      {parrafosAntecedentes.length > 0
-        ? parrafosAntecedentes.map((parrafo, i) => (
+      {bloquesAntecedentes.length > 0
+        ? bloquesAntecedentes.map((parrafo, i) => (
             <div
               key={i}
               className="pdf-intro-texto"
               style={{
-                ...(parrafo.nuevoParrafo ? { marginTop: 14 } : {}),
+                whiteSpace: 'normal',
+                wordBreak: 'normal',
+                overflowWrap: 'break-word',
               }}
             >
-              {renderTextoConSaltosPorPunto(parrafo.texto)}
+              {parrafo}
             </div>
           ))
         : (
@@ -1290,32 +1309,43 @@ function PaginaMarcoConceptual({ datos, total, paginaInicio }) {
 
       <div className="pdf-cap-titulo">3.10 MARCO CONCEPTUAL</div>
 
-      <div className="pdf-intro-texto" style={{ marginBottom: 12 }}>
-        Son conceptos que se utilizan dentro del documento, con su descripción específica para ampliar la definición correspondiente que permita al lector una mejor comprensión del manual.
-      </div>
-
       {datos.marco_conceptual?.length > 0 ? (
-        <table className="pdf-norma-tabla" style={{ marginTop: 8 }}>
-          <thead>
-            <tr>
-              <th style={{ width: '30%' }}>TÉRMINO</th>
-              <th>DEFINICIÓN</th>
-            </tr>
-            <tr>
-              <td colSpan={2} style={{ background: '#7F7F7F', height: 8, padding: 0, border: '1px solid #000' }}></td>
-            </tr>
-          </thead>
-          <tbody>
-            {datos.marco_conceptual.map((c, i) => (
-              <tr key={i}>
-                <td style={{ fontWeight: 'bold' }}>{c.termino}</td>
-                <td>{c.definicion}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div style={{ paddingLeft: '0.3cm', paddingRight: '0.5cm', marginTop: 18 }}>
+          {datos.marco_conceptual.map((concepto, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '160px 1fr',
+                columnGap: '26px',
+                alignItems: 'start',
+                marginBottom: 14,
+                color: '#262626',
+                fontFamily: 'Montserrat, Arial, sans-serif',
+              }}
+            >
+              <div style={{
+                fontWeight: 800,
+                fontSize: '11pt',
+                lineHeight: 1.08,
+                wordBreak: 'break-word',
+              }}>
+                {concepto.termino}
+              </div>
+              <div style={{
+                fontWeight: 500,
+                fontSize: '11pt',
+                lineHeight: 1.08,
+              }}>
+                {concepto.definicion}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
-        <div className="pdf-intro-texto">No hay términos registrados.</div>
+        <div className="pdf-intro-texto" style={{ color: '#262626' }}>
+          No hay informacion de marco conceptual registrada.
+        </div>
       )}
     </div>
   )
@@ -1411,6 +1441,18 @@ function PaginaObjetivoMisionVision({ datos, total, paginaInicio }) {
       {bloques.map((bloque, i) => {
         const parrafos = extraerParrafos(bloque.texto)
         const mostrarLineasTitulo = i > 0
+        const estiloTitulo = i === 0
+          ? {
+              marginBottom: 12,
+            }
+          : {
+              fontFamily: 'Montserrat, Arial, sans-serif',
+              fontWeight: 800,
+              fontSize: '14pt',
+              color: '#262626',
+              marginBottom: 6,
+              marginLeft: '1.5cm',
+            }
 
         return (
           <div key={bloque.titulo} style={{ marginBottom: i === bloques.length - 1 ? 0 : 18 }}>
@@ -1423,14 +1465,10 @@ function PaginaObjetivoMisionVision({ datos, total, paginaInicio }) {
               }} />
             )}
 
-            <div style={{
-              fontFamily: 'Montserrat, Arial, sans-serif',
-              fontWeight: 800,
-              fontSize: '14pt',
-              color: '#262626',
-              marginBottom: 6,
-              marginLeft: mostrarLineasTitulo ? '1.5cm' : 0,
-            }}>
+            <div
+              className={i === 0 ? 'pdf-cap-titulo' : undefined}
+              style={estiloTitulo}
+            >
               {bloque.titulo}
             </div>
 
@@ -1469,48 +1507,78 @@ function PaginaObjetivoMisionVision({ datos, total, paginaInicio }) {
 
 // ── PÁGINA: 3.8 Principios y Valores Institucionales ─────────────────────────
 function PaginaPrincipiosValores({ datos, total, paginaInicio }) {
+  const bloques = [
+    { titulo: 'PRINCIPIOS', items: datos.principios || [] },
+    { titulo: 'VALORES', items: datos.valores || [] },
+  ]
+
   return (
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
 
       <div className="pdf-cap-titulo">3.8 PRINCIPIOS Y VALORES INSTITUCIONALES</div>
 
-      <div className="pdf-intro-texto">
-        Consiste en un referente etico que consolida y guia el pensamiento, las actitudes, practicas y formas de actuacion de los servidores publicos y colaboradores de la dependencia.
-      </div>
-
       {(datos.principios?.length > 0 || datos.valores?.length > 0) ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 8 }}>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '11pt', marginBottom: 8, fontFamily: 'Montserrat, Arial, sans-serif' }}>
-              Principios
+        <div style={{ marginTop: 18 }}>
+          {bloques.map((bloque, i) => (
+            <div key={bloque.titulo} style={{ marginBottom: i === bloques.length - 1 ? 0 : 28 }}>
+              <div style={{
+                width: 'calc(50% + 56px)',
+                borderTop: '3px solid #000',
+                marginBottom: 6,
+                marginLeft: '-56px',
+              }} />
+
+              <div style={{
+                fontFamily: 'Montserrat, Arial, sans-serif',
+                fontWeight: 800,
+                fontSize: '14pt',
+                color: '#262626',
+                marginBottom: 6,
+                marginLeft: '2.5cm',
+              }}>
+                {bloque.titulo}
+              </div>
+
+              <div style={{
+                width: 'calc(50% + 56px)',
+                borderTop: '3px solid #000',
+                marginBottom: 16,
+                marginLeft: '-56px',
+              }} />
+
+              {bloque.items.length > 0 ? (
+                <div style={{ paddingLeft: '4cm', color: '#262626' }}>
+                  {bloque.items.map((item, idx) => (
+                    <div
+                      key={`${bloque.titulo}-${idx}`}
+                      className="pdf-intro-texto"
+                      style={{ marginBottom: idx === bloque.items.length - 1 ? 0 : 10 }}
+                    >
+                      <span style={{ marginRight: 12 }}>•</span>
+                      {renderTextoConEncabezadoEnNegritas(item)}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="pdf-intro-texto" style={{ color: '#262626', paddingLeft: '4cm', marginBottom: 0 }}>
+                  No aplica.
+                </div>
+              )}
             </div>
-            {datos.principios?.length > 0 ? (
-              <ul className="pdf-lista">{datos.principios.map((p, i) => <li key={i}>{p}</li>)}</ul>
-            ) : (
-              <div className="pdf-seccion-texto">No aplica.</div>
-            )}
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: '11pt', marginBottom: 8, fontFamily: 'Montserrat, Arial, sans-serif' }}>
-              Valores
-            </div>
-            {datos.valores?.length > 0 ? (
-              <ul className="pdf-lista">{datos.valores.map((v, i) => <li key={i}>{v}</li>)}</ul>
-            ) : (
-              <div className="pdf-seccion-texto">No aplica.</div>
-            )}
-          </div>
+          ))}
         </div>
       ) : (
-        <div className="pdf-intro-texto">No hay informacion de principios o valores registrada.</div>
+        <div className="pdf-intro-texto" style={{ color: '#262626' }}>
+          No hay informacion de principios o valores registrada.
+        </div>
       )}
     </div>
   )
 }
 
 // ── PÁGINA: 3.9 Políticas de Operación ───────────────────────────────────────
-function PaginaPoliticasOperacion({ datos, total, paginaInicio, politicas = null }) {
+function PaginaPoliticasOperacion({ datos, total, paginaInicio, politicas = null, indiceBase = 0 }) {
   const politicasPagina = politicas || datos.politicas_operacion || []
 
   return (
@@ -1533,7 +1601,7 @@ function PaginaPoliticasOperacion({ datos, total, paginaInicio, politicas = null
                   marginLeft: '1cm',
                   textTransform: 'uppercase',
                 }}>
-                  {`${String.fromCharCode(65 + i)}. ${pol.area}`}
+                  {`${String.fromCharCode(65 + indiceBase + i)}. ${pol.area}`}
                 </div>
                 <div style={{
                   marginBottom: 8,
@@ -2276,6 +2344,7 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
             total={totalPaginas}
             paginaInicio={mapaPaginas.politicas + i}
             politicas={politicasPagina}
+            indiceBase={paginasPoliticas.slice(0, i).reduce((acum, pagina) => acum + pagina.length, 0)}
           />
         ))}
         <PaginaMarcoConceptual datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.marcoConceptual} />

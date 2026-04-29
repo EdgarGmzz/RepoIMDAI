@@ -30,8 +30,9 @@ export const validarOrganizacion = (datos) => {
   // ── Paso 4: Descripción de puestos ────────────────────────────────────────
   datos.puestos.forEach((p, i) => {
     const label = p.nombre_puesto?.trim() ? `"${p.nombre_puesto}"` : `#${i + 1}`
+    const tieneJefeInmediato = !!(p.jefe_inmediato?.trim() || p.jefe_firma_cargo?.trim())
     if (!p.nombre_puesto?.trim())   errores.push(`Nombre del puesto ${label}`)
-    if (!p.jefe_inmediato?.trim())  errores.push(`Jefe inmediato del puesto ${label}`)
+    if (!tieneJefeInmediato)        errores.push(`Jefe inmediato del puesto ${label}`)
     if (!p.objetivo_puesto?.trim()) errores.push(`Objetivo del puesto ${label}`)
     const tieneFunciones = (p.funciones_institucionales?.length > 0 || p.funciones_propias?.length > 0)
     if (!tieneFunciones) errores.push(`Funciones del puesto ${label} (debe tener al menos una)`)
