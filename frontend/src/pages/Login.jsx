@@ -55,32 +55,7 @@ export default function Login() {
         <div className="orb orb-2"></div>
         <div className="orb orb-3"></div>
         <div className="login-left-content">
-          <svg className="escudo-hero" width="148" height="148" viewBox="0 0 200 200">
-            <defs>
-              <clipPath id="c1"><circle cx="100" cy="100" r="96"/></clipPath>
-              <clipPath id="top"><rect x="0" y="0" width="200" height="105"/></clipPath>
-              <clipPath id="bot"><rect x="0" y="105" width="200" height="95"/></clipPath>
-            </defs>
-            <circle cx="100" cy="100" r="96" fill="#d42b2b"/>
-            <g clipPath="url(#top)">
-              <path d="M100 100 L72 4  A96 96 0 0 1 128 4  Z" fill="#1a1a1a"/>
-              <path d="M100 100 L128 4  A96 96 0 0 1 178 40 Z" fill="#d42b2b"/>
-              <path d="M100 100 L178 40 A96 96 0 0 1 196 90 Z" fill="#1a1a1a"/>
-              <path d="M100 100 L196 90 A96 96 0 0 1 196 105 Z" fill="#d42b2b"/>
-              <path d="M100 100 L4  90 A96 96 0 0 0 4  105 Z" fill="#d42b2b"/>
-              <path d="M100 100 L22 40 A96 96 0 0 1 72 4  Z" fill="#d42b2b"/>
-              <path d="M100 100 L4  90 A96 96 0 0 1 22 40 Z" fill="#1a1a1a"/>
-            </g>
-            <rect x="4" y="96" width="192" height="16" fill="#f0c030" clipPath="url(#c1)"/>
-            <rect x="4" y="112" width="192" height="84" fill="#1976d2" clipPath="url(#c1)"/>
-            <g clipPath="url(#c1)">
-              <path d="M4 128 Q34 118 64 128 Q94 138 124 128 Q154 118 196 128 L196 144 Q154 134 124 144 Q94 154 64 144 Q34 134 4 144 Z" fill="#1565c0"/>
-              <path d="M4 148 Q34 138 64 148 Q94 158 124 148 Q154 138 196 148 L196 164 Q154 154 124 164 Q94 174 64 164 Q34 154 4 164 Z" fill="#0d47a1"/>
-              <rect x="4" y="162" width="192" height="34" fill="#1976d2"/>
-            </g>
-            <circle cx="100" cy="100" r="18" fill="#111111"/>
-            <circle cx="100" cy="100" r="96" fill="none" stroke="white" strokeWidth="5"/>
-          </svg>
+          <img src="/Logoprueba.png" alt="Logo IMDAI" className="escudo-hero" style={{ width: '220px', height: '220px', objectFit: 'contain' }} />
           <h1>Manuales Digitales</h1>
           <p className="inst">Municipio de Benito Juárez</p>
           <p className="sub">Instituto Municipal de Desarrollo<br/>Administrativo e Innovación</p>

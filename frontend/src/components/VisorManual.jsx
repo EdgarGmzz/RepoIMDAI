@@ -305,9 +305,20 @@ function VisorProcedimientos({ datos }) {
           { label: 'Dependencia', valor: d.dependencia },
           { label: 'Versión', valor: d.version },
           { label: 'Fecha de Elaboración', valor: d.fecha_elaboracion },
-          { label: 'Titular', valor: d.titular },
-          { label: 'Cargo', valor: d.cargo_titular },
         ]} />
+        {(d.elaboro_nombre || d.reviso_nombre || d.autorizo_nombre || d.valido_nombre) && (
+          <div style={{ marginTop: '12px' }}>
+            <div style={{ fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#c9a0a8', marginBottom: '8px' }}>
+              Carátula de Autorizaciones
+            </div>
+            <CampoGrid campos={[
+              { label: 'Elaboró', valor: d.elaboro_nombre ? `${d.elaboro_nombre}${d.elaboro_cargo ? ` — ${d.elaboro_cargo}` : ''}` : null },
+              { label: 'Revisó', valor: d.reviso_nombre ? `${d.reviso_nombre}${d.reviso_cargo ? ` — ${d.reviso_cargo}` : ''}` : null },
+              { label: 'Autorizó', valor: d.autorizo_nombre ? `${d.autorizo_nombre}${d.autorizo_cargo ? ` — ${d.autorizo_cargo}` : ''}` : null },
+              { label: 'Validó (IMDAI)', valor: d.valido_nombre ? `${d.valido_nombre}${d.valido_cargo ? ` — ${d.valido_cargo}` : ''}` : null },
+            ]} />
+          </div>
+        )}
       </Seccion>
 
       <Seccion numero="3.1" titulo="Introducción">
@@ -439,8 +450,7 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
   const esAdmin = usuario?.rol === 'administrador'
   const puedeGenerarPDF =
     manual.estado === 'validado' ||
-    manual.estado === 'autorizado' ||
-    manual.estado === 'en_revision'
+    manual.estado === 'autorizado'
 
   const [editCodigo, setEditCodigo]   = useState('')
   const [editVersion, setEditVersion] = useState('')
@@ -648,14 +658,14 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
                 onClick={() => setVerPDF(true)}
                 style={{
                   padding: '8px 20px', borderRadius: '8px',
-                  border: esOrg ? '1.5px solid #e11d48' : '1.5px solid #4a1455',
-                  background: esOrg ? '#e11d48' : '#4a1455',
+                  border: '1.5px solid #e11d48',
+                  background: '#e11d48',
                   color: 'white', fontFamily: 'Poppins, sans-serif',
                   fontSize: '.78rem', fontWeight: '600', cursor: 'pointer',
                   transition: 'all .2s', display: 'flex', alignItems: 'center', gap: '6px'
                 }}
-                onMouseOver={e => e.currentTarget.style.background = esOrg ? '#be123c' : '#3a0f42'}
-                onMouseOut={e => e.currentTarget.style.background = esOrg ? '#e11d48' : '#4a1455'}
+                onMouseOver={e => e.currentTarget.style.background = '#be123c'}
+                onMouseOut={e => e.currentTarget.style.background = '#e11d48'}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>

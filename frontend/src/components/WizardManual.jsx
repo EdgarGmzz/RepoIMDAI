@@ -22,6 +22,14 @@ const datosVacios = {
   version: '01',
   titular: '',
   cargo_titular: '',
+  elaboro_nombre: '',
+  elaboro_cargo: '',
+  reviso_nombre: '',
+  reviso_cargo: '',
+  autorizo_nombre: '',
+  autorizo_cargo: '',
+  valido_nombre: '',
+  valido_cargo: '',
   introduccion: '',
   antecedentes: '',
   marco_normativo: [],
@@ -54,8 +62,6 @@ const validarFormulario = (datos) => {
   // ── Paso 1: Datos Generales ──────────────────────────────────────────────
   if (!datos.dependencia?.trim())    errores.push('Dependencia / Unidad Administrativa')
   if (!datos.fecha_elaboracion)      errores.push('Fecha de Elaboración')
-  if (!datos.titular?.trim())        errores.push('Nombre del Titular de la Dependencia')
-  if (!datos.cargo_titular?.trim())  errores.push('Cargo del Titular')
   if (esAdmin && !datos.codigo?.trim()) errores.push('Código del Manual')
 
   // ── Paso 2: Capítulo I ───────────────────────────────────────────────────
@@ -127,6 +133,14 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
                               : '01',
           titular:          d.titular           || '',
           cargo_titular:    d.cargo_titular     || '',
+          elaboro_nombre:   d.elaboro_nombre    || '',
+          elaboro_cargo:    d.elaboro_cargo     || '',
+          reviso_nombre:    d.reviso_nombre     || '',
+          reviso_cargo:     d.reviso_cargo      || '',
+          autorizo_nombre:  d.autorizo_nombre   || '',
+          autorizo_cargo:   d.autorizo_cargo    || '',
+          valido_nombre:    d.valido_nombre     || '',
+          valido_cargo:     d.valido_cargo      || '',
           introduccion:     d.introduccion      || '',
           antecedentes:     d.antecedentes      || '',
           atribuciones:     d.atribuciones      || '',

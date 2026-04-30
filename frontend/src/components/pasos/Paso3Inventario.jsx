@@ -53,7 +53,7 @@ export default function Paso3Inventario({ datos, actualizar }) {
             <thead>
               <tr>
                 <th>Código</th>
-                <th>Versión</th>
+                <th>Revisión</th>
                 <th>Nombre del Procedimiento</th>
                 <th>Fecha Última Emisión</th>
                 <th></th>
