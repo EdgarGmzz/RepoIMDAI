@@ -800,7 +800,9 @@ const ESCOLARIDAD_MAP = {
 }
 
 // ── Header de página ─────────────────────────────────────────────────────────
-function HeaderPagina({ datos, numeroPagina, totalPaginas }) {
+function HeaderPagina({ datos, numeroPagina, totalPaginas, esHorizontal = false }) {
+  const ajusteDerechoPagina = esHorizontal ? '2cm' : '-56px'
+
   return (
     <table style={{
       width: '100%', borderCollapse: 'collapse',
@@ -831,7 +833,7 @@ function HeaderPagina({ datos, numeroPagina, totalPaginas }) {
               />
 
               {/* Todo el metadata incluido PÁGINA — alineado a la izquierda del texto */}
-              <div style={{ flex: 1, fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '11pt', lineHeight: 1.6 }}>
+              <div style={{ flex: 1, fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '12pt', lineHeight: 1.6 }}>
                 <span style={{ fontWeight: 800 }}>CÓDIGO:</span> {datos.codigo || '—'}<br />
                 <span style={{ fontWeight: 800 }}>FECHA</span><br />
                 <span style={{ fontWeight: 800 }}>DE EMISIÓN:</span> {fmtFecha(datos.fecha_elaboracion || datos.fecha_emision)}<br />
@@ -842,9 +844,9 @@ function HeaderPagina({ datos, numeroPagina, totalPaginas }) {
                   borderBottom: '1.5px solid #000',
                   paddingTop: 3, paddingBottom: 3, marginTop: 4,
                   marginLeft: '-112px',
-                  marginRight: '-56px',
+                  marginRight: ajusteDerechoPagina,
                   paddingLeft: '112px',
-                  paddingRight: '56px',
+                  paddingRight: esHorizontal ? 0 : '56px',
                 }}>
                   <span style={{ fontWeight: 800 }}>PÁGINA:</span> {numeroPagina} DE {totalPaginas}
                 </div>
@@ -1064,12 +1066,12 @@ function PaginaPortadaCapituloI({ datos, total, paginaInicio }) {
       <div style={{ textAlign: 'center', marginTop: 80 }}>
         <div style={{
           fontFamily: 'Montserrat, Arial, sans-serif',
-          fontWeight: 400, fontSize: '42pt',
+          fontWeight: 500, fontSize: '66pt',
           letterSpacing: 2, lineHeight: 1.1
         }}>CAPÍTULO 1</div>
         <div style={{
           fontFamily: 'Montserrat, Arial, sans-serif',
-          fontWeight: 800, fontSize: '42pt',
+          fontWeight: 800, fontSize: '48pt',
           letterSpacing: 2, lineHeight: 1.1
         }}>DE GENERALES</div>
       </div>
@@ -1221,7 +1223,7 @@ function PaginaIntroduccion({ datos, total, paginaInicio }) {
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
 
-      <div className="pdf-cap-titulo">3.1 INTRODUCCIÓN</div>
+      <div className="pdf-cap-titulo" style={{ fontSize: '20pt' }}>3.1 INTRODUCCIÓN</div>
 
       {parrafosIntroduccion.length > 0
         ? parrafosIntroduccion.map((parrafo, i) => (
@@ -1652,12 +1654,12 @@ function PaginaPortadaCapituloII({ datos, total, paginaInicio }) {
       <div style={{ textAlign: 'center', marginTop: 80 }}>
         <div style={{
           fontFamily: 'Montserrat, Arial, sans-serif',
-          fontWeight: 400, fontSize: '42pt',
+          fontWeight: 500, fontSize: '66pt',
           letterSpacing: 2, lineHeight: 1.1
         }}>CAPÍTULO 2</div>
         <div style={{
           fontFamily: 'Montserrat, Arial, sans-serif',
-          fontWeight: 800, fontSize: '42pt',
+          fontWeight: 800, fontSize: '48pt',
           letterSpacing: 2, lineHeight: 1.1
         }}>DE ORGANIZACIÓN</div>
       </div>
@@ -1681,7 +1683,7 @@ function PaginaOrganigramaGeneral({ datos, total, paginaInicio }) {
 
   return (
     <div className="pdf-pagina-horizontal" data-page-orientation="landscape">
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} esHorizontal />
       <div className="pdf-cap-titulo">4.1 ORGANIGRAMA GENERAL</div>
 
       <div style={{
@@ -1712,23 +1714,11 @@ function PaginaOrganigramaGeneral({ datos, total, paginaInicio }) {
 
 function PaginaOrganigramaEspecifico({ datos, total, paginaInicio, organigrama = null, index = 0 }) {
   const src = normalizarRutaOrganigrama(organigrama?.ruta_archivo)
-  const nombre = organigrama?.tipo || organigrama?.nombre || `Específico ${index + 1}`
 
   return (
     <div className="pdf-pagina-horizontal" data-page-orientation="landscape">
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} esHorizontal />
       <div className="pdf-cap-titulo">4.2 ORGANIGRAMA ESPECÍFICO</div>
-
-      <div style={{
-        fontFamily: 'Montserrat, Arial, sans-serif',
-        fontWeight: 800,
-        fontSize: '13pt',
-        color: '#262626',
-        marginBottom: 10,
-        textTransform: 'uppercase',
-      }}>
-        {nombre}
-      </div>
 
       <div style={{
         height: 525,
@@ -1742,7 +1732,7 @@ function PaginaOrganigramaEspecifico({ datos, total, paginaInicio, organigrama =
         {src ? (
           <img
             src={src}
-            alt={`Organigrama Especifico ${nombre}`}
+            alt={`Organigrama Especifico ${index + 1}`}
             style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
             crossOrigin="anonymous"
           />

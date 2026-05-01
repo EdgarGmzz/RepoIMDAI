@@ -217,10 +217,11 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
     }
 
     for (const org of datos.organigramas_especificos) {
+      const i = datos.organigramas_especificos.indexOf(org)
       if (org.archivo instanceof File) {
         const fd = new FormData()
         fd.append('archivo', org.archivo)
-        fd.append('tipo', org.nombre || 'especifico')
+        fd.append('tipo', org.nombre?.trim() || `especifico_${i + 1}`)
         await axios.post(`http://localhost:3000/manuales/${id_manual}/organigrama`, fd, { headers })
       }
     }

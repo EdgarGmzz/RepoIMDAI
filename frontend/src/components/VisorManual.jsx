@@ -449,7 +449,9 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
   const usuario = JSON.parse(localStorage.getItem('usuario'))
   const esAdmin = usuario?.rol === 'administrador'
   const puedeGenerarPDF =
+    manual.estado === 'borrador' ||
     manual.estado === 'validado' ||
+    manual.estado === 'en_revision' ||
     manual.estado === 'autorizado'
 
   const [editCodigo, setEditCodigo]   = useState('')
