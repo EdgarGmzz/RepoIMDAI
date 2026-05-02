@@ -345,6 +345,38 @@ function VisorProcedimientos({ datos }) {
         <Campo label="Visión" valor={d.vision} multilinea />
       </Seccion>
 
+      {(d.principios?.length > 0 || d.valores?.length > 0) && (
+        <Seccion numero="3.8" titulo="Principios y Valores Institucionales">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div>
+              <div style={{ fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#c9a0a8', marginBottom: '8px' }}>Principios</div>
+              <ListaItems items={d.principios || []} />
+            </div>
+            <div>
+              <div style={{ fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#c9a0a8', marginBottom: '8px' }}>Valores</div>
+              <ListaItems items={d.valores || []} />
+            </div>
+          </div>
+        </Seccion>
+      )}
+
+      {d.politicas_operacion?.length > 0 && (
+        <Seccion numero="3.9" titulo="Políticas de Operación">
+          {d.politicas_operacion.map((pol, i) => (
+            <div key={i} style={{
+              marginBottom: '12px', padding: '12px 16px',
+              background: '#f0f9ff', borderRadius: '8px',
+              borderLeft: '3px solid #7dd3fc'
+            }}>
+              <div style={{ fontSize: '.75rem', fontWeight: '700', color: '#0369a1', marginBottom: '4px' }}>
+                {String.fromCharCode(65 + i)}. {pol.area || 'Sin nombre'}
+              </div>
+              <div style={{ fontSize: '.82rem', color: '#2d1520', lineHeight: '1.6' }}>{pol.descripcion}</div>
+            </div>
+          ))}
+        </Seccion>
+      )}
+
       {d.marco_conceptual?.length > 0 && (
         <Seccion numero="3.10" titulo="Marco Conceptual">
           <TablaSimple
@@ -384,6 +416,8 @@ function VisorProcedimientos({ datos }) {
                 <Campo label="Alcance" valor={p.alcance} multilinea />
                 <Campo label="Responsabilidades" valor={p.responsabilidades} multilinea />
                 <Campo label="Definiciones" valor={p.definiciones} multilinea />
+                <Campo label="Referencia del Documento" valor={p.referencias} multilinea />
+                <Campo label="Registros" valor={p.registros} multilinea />
                 {p.actividades?.length > 0 && (
                   <div style={{ marginTop: '10px' }}>
                     <div style={{ fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#c9a0a8', marginBottom: '8px' }}>
@@ -408,8 +442,6 @@ function VisorProcedimientos({ datos }) {
                   </div>
                 )}
               </div>
-                  <Campo label="6. Referencia del Documento" valor={p.referencias} multilinea />
-                  <Campo label="7. Registros" valor={p.registros} multilinea />
             </div>
           ))}
         </Seccion>
