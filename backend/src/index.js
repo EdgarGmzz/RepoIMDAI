@@ -17,6 +17,10 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
 app.use('/auth', authRoutes)
 
+// Endpoint público para el visor de diagramas (sin token, usado por el QR del PDF)
+const { getDiagramaPublico } = require('./controllers/manuales.controller')
+app.get('/public/diagrama/:manualId/:procIdx', getDiagramaPublico)
+
 app.use('/manuales',   manualesRoutes)
 app.use('/suplencias', suplenciasRoutes)
 

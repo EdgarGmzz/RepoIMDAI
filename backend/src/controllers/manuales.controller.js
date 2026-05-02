@@ -1111,4 +1111,62 @@ const getHistorial = async (req, res) => {
   }
 }
 
-module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado, eliminarManuales, subirOrganigrama, getObservaciones, asignarCodigo, getActividad, getHistorial }
+// ── GET /public/diagrama/:manualId/:procIdx ───────────────────────────────────
+// Endpoint PÚBLICO (sin token) para servir las actividades de un procedimiento
+// específico. Lo usa el visor que se abre al escanear el QR del PDF.
+// Sólo expone: nombre, código, versión, fecha de emisión y actividades del paso.
+const getDiagramaPublico = async (req, res) => {
+  try {
+    const { manualId, procIdx } = req.params
+    const idx = parseInt(procIdx, 10)
+    if (Number.isNaN(idx) || idx < 0) {
+      return res.status(400).json({ error: 'Índice inválido' })
+    }
+
+    const procRes = await pool.query(
+      `SELECT p.id_procedimiento, p.codigo, p.nombre, p.version,
+              TO_CHAR(p.fecha_emision, 'YYYY-MM-DD') AS fecha_emision,
+              m.codigo AS manual_codigo, m.dependencia AS manual_dependencia
+       FROM procedimientos p
+       JOIN manuales m ON m.id_manual = p.id_manual
+       WHERE p.id_manual = $1
+       ORDER BY p.orden, p.id_procedimiento
+       LIMIT 1 OFFSET $2`,
+      [manualId, idx]
+    )
+    if (procRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Procedimiento no encontrado' })
+    }
+    const proc = procRes.rows[0]
+
+    const pasosRes = await pool.query(
+      `SELECT numero_paso, tipo, paso_no, responsable, descripcion
+       FROM pasos_procedimiento
+       WHERE id_procedimiento = $1
+       ORDER BY numero_paso`,
+      [proc.id_procedimiento]
+    )
+
+    res.json({
+      manual_codigo: proc.manual_codigo || '',
+      manual_dependencia: proc.manual_dependencia || '',
+      procedimiento: {
+        codigo: proc.codigo || '',
+        nombre: proc.nombre || '',
+        version: proc.version != null ? String(proc.version).padStart(2, '0') : '00',
+        fecha_emision: proc.fecha_emision || '',
+        actividades: pasosRes.rows.map((p) => ({
+          tipo: p.tipo || 'actividad',
+          paso_no: p.paso_no ?? null,
+          responsable: p.responsable || '',
+          descripcion: p.descripcion || '',
+        })),
+      },
+    })
+  } catch (error) {
+    console.error('Error en getDiagramaPublico:', error.message)
+    res.status(500).json({ error: error.message })
+  }
+}
+
+module.exports = { getManuales, getManualById, crearManual, actualizarManual, cambiarEstado, eliminarManuales, subirOrganigrama, getObservaciones, asignarCodigo, getActividad, getHistorial, getDiagramaPublico }

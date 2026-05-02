@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MisManuales from './pages/MisManuales'
+import VistaDiagrama from './pages/VistaDiagrama'
 
 // ── Guarda de ruta por rol ────────────────────────────────────────────────────
 function RutaProtegida({ children, rolRequerido }) {
@@ -25,6 +26,9 @@ function App() {
 
         {/* Login — público */}
         <Route path="/login" element={<Login />} />
+
+        {/* Visor de diagrama — público (apuntado por el QR del PDF) */}
+        <Route path="/diagrama/:manualId/:procIdx" element={<VistaDiagrama />} />
 
         {/* Dashboard — solo administrador */}
         <Route

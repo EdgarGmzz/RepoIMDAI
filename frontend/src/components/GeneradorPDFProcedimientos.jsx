@@ -5,6 +5,16 @@
 import { useRef, useState, useEffect } from 'react'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import QRCode from 'qrcode'
+import DiagramaFlujo from './DiagramaFlujo'
+
+// Base URL pública usada en el QR. En dev cae a window.location.origin
+// (localhost:5173). En prod se configura VITE_PUBLIC_BASE_URL.
+const baseUrlPublica = () => {
+  const env = (import.meta.env && import.meta.env.VITE_PUBLIC_BASE_URL) || ''
+  const fallback = typeof window !== 'undefined' ? window.location.origin : ''
+  return (env || fallback).replace(/\/$/, '')
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ESTILOS (copiados del Manual de Organización, sin cambios estéticos)
@@ -271,6 +281,7 @@ function adaptarDatos(datos) {
   })
 
   return {
+    id_manual: d.id_manual ?? null,   // necesario para construir la URL del QR
     codigo: d.codigo || '',
     version: d.version || '01',
     fecha_elaboracion: d.fecha_elaboracion || '',
@@ -305,40 +316,56 @@ function adaptarDatos(datos) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// HEADER DE PÁGINA (idéntico al de organización)
+// HEADER DE PÁGINA — usa la misma imagen oficial que las portadas
+// (PortadaProcedimientos.jpg recortada al header zone) con el texto
+// posicionado para alinearse con la flecha morada y las dos líneas paralelas.
+//
+// IMPORTANTE: la altura total (140 px) es exactamente la misma que la tabla
+// anterior (table 120 + marginBottom 20), para que el contenido del cuerpo
+// de cada página no se mueva un solo píxel.
 // ═══════════════════════════════════════════════════════════════════════════
 function HeaderPagina({ datos, numeroPagina, totalPaginas }) {
+  // El header escapa el padding lateral (56) y superior (48) de la página
+  // con marginLeft/marginRight/marginTop negativos, así la imagen se ve
+  // EXACTAMENTE como en las portadas (full width = 816 px, mismas líneas
+  // a las mismas coordenadas) y el texto cae con las posiciones idénticas
+  // (top:27 para CÓDIGO, top:116 para PÁGINA — 2.6 % y 11 % de 1056).
+  // La altura total efectiva sigue siendo 188 px (= 48 padding + 140 antes)
+  // para que el cuerpo de la página NO se mueva ni un píxel.
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 20 }}>
-      <tbody>
-        <tr>
-          <td style={{ width: '42%', padding: '0 0 8px 0', verticalAlign: 'middle' }}>
-            <img src="/LogoMunicipio.png" alt="Municipio de Benito Juárez"
-              style={{ height: 100, width: 'auto', display: 'block' }} crossOrigin="anonymous" />
-          </td>
-          <td style={{ width: '58%', padding: '0 0 8px 12px', verticalAlign: 'top' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <img src="/LogoIMDAI.png" alt="IMDAI"
-                style={{ height: 110, width: 'auto', display: 'block', flexShrink: 0, marginTop: 2 }}
-                crossOrigin="anonymous" />
-              <div style={{ flex: 1, fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '11pt', lineHeight: 1.6 }}>
-                <span style={{ fontWeight: 800 }}>CÓDIGO:</span> {datos.codigo || '—'}<br />
-                <span style={{ fontWeight: 800 }}>FECHA</span><br />
-                <span style={{ fontWeight: 800 }}>DE EMISIÓN:</span> {fmtFecha(datos.fecha_elaboracion || datos.fecha_emision)}<br />
-                <span style={{ fontWeight: 800 }}>VERSIÓN:</span> {datos.version || '01'}
-                <div style={{
-                  borderTop: '1.5px solid #000', borderBottom: '1.5px solid #000',
-                  paddingTop: 3, paddingBottom: 3, marginTop: 4,
-                  marginLeft: '-112px', paddingLeft: '112px',
-                }}>
-                  <span style={{ fontWeight: 800 }}>PÁGINA:</span> {numeroPagina} DE {totalPaginas}
-                </div>
-              </div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div className="pdf-header" style={{
+      position: 'relative',
+      width: 'calc(100% + 112px)',
+      marginLeft: -56,
+      marginRight: -56,
+      marginTop: -48,
+      marginBottom: 0,
+      height: 188,
+      background: 'url(/PortadaProcedimientos.jpg) top center / 100% auto no-repeat',
+    }}>
+      {/* CÓDIGO / FECHA / VERSIÓN: arriba de la línea superior */}
+      <div style={{
+        position: 'absolute',
+        top: 27, left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1.4, color: '#000',
+      }}>
+        <div><span style={{ fontWeight: 800 }}>CÓDIGO:</span> {datos.codigo || '—'}</div>
+        <div><span style={{ fontWeight: 800 }}>FECHA</span></div>
+        <div><span style={{ fontWeight: 800 }}>DE EMISIÓN:</span> {fmtFecha(datos.fecha_elaboracion || datos.fecha_emision)}</div>
+        <div><span style={{ fontWeight: 800 }}>VERSIÓN:</span> {datos.version || '01'}</div>
+      </div>
+
+      {/* PÁGINA: entre las dos líneas paralelas de la imagen */}
+      <div style={{
+        position: 'absolute',
+        top: 116, left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1, color: '#000',
+      }}>
+        <span style={{ fontWeight: 800 }}>PÁGINA:</span> {numeroPagina} DE {totalPaginas}
+      </div>
+    </div>
   )
 }
 
@@ -379,85 +406,151 @@ function crearMapa(D) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ── Portada ──
+// Imagen de portada como fondo y encima los textos absolute-positioned para
+// que calcen con las líneas decorativas de la imagen del encabezado.
 function PaginaPortada({ datos, total }) {
   return (
-    <div className="pdf-pagina" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      <HeaderPagina datos={datos} numeroPagina={1} totalPaginas={total} />
-      <div className="pdf-portada-titulo">
-        <h1>MANUAL DE<br/><strong>PROCEDIMIENTOS</strong></h1>
-      </div>
-      <div className="pdf-portada-dep">{datos.dependencia || ''}</div>
+    <div className="pdf-pagina" style={{
+      padding: 0, position: 'relative',
+      background: 'url(/PortadaProcedimientos.jpg) center / cover no-repeat #fff',
+    }}>
+      {/* Bloque CÓDIGO / FECHA / VERSIÓN: encima de la línea superior */}
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        display: 'flex', justifyContent: 'center'
+        position: 'absolute',
+        top: '2.6%', left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1.45, color: '#000',
       }}>
-        <img src="/LogoPortada.png" alt="Logo Portada"
-          style={{ width: 'auto', maxWidth: '85%', height: 'auto', display: 'block' }}
-          crossOrigin="anonymous" />
+        <div><span style={{ fontWeight: 800 }}>CÓDIGO:</span> {datos.codigo || '—'}</div>
+        <div><span style={{ fontWeight: 800 }}>FECHA</span></div>
+        <div><span style={{ fontWeight: 800 }}>DE EMISIÓN:</span> {fmtFecha(datos.fecha_elaboracion || datos.fecha_emision)}</div>
+        <div><span style={{ fontWeight: 800 }}>VERSIÓN:</span> {datos.version || '01'}</div>
+      </div>
+
+      {/* PÁGINA: entre las dos líneas paralelas de la imagen */}
+      <div style={{
+        position: 'absolute',
+        top: '11%', left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1, color: '#000',
+      }}>
+        <span style={{ fontWeight: 800 }}>PÁGINA:</span> 1 DE {total}
+      </div>
+
+      {/* Título y subtítulo centrados en el espacio en blanco entre header y MP */}
+      <div style={{
+        position: 'absolute',
+        top: '22%', left: '8%', right: '8%',
+        textAlign: 'center',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+      }}>
+        <div style={{ fontSize: '42pt', fontWeight: 'normal', letterSpacing: 2, lineHeight: 1.1 }}>MANUAL DE</div>
+        <div style={{ fontSize: '42pt', fontWeight: 900, letterSpacing: 2, lineHeight: 1.1 }}>PROCEDIMIENTOS</div>
+        <div style={{
+          fontSize: '14pt', marginTop: 28, letterSpacing: 3,
+          textTransform: 'uppercase', fontWeight: 500,
+        }}>
+          INSTITUTO MUNICIPAL DE DESARROLLO ADMINISTRATIVO Y URBANO
+        </div>
       </div>
     </div>
   )
 }
 
-// ── Carátula de firmas (idéntica a organización) ──
+// ── Carátula de firmas ──
+// Usa CaratulaProcedimientos.jpg como fondo a página completa: la imagen ya
+// trae el encabezado y el cuadro ELABORÓ/REVISÓ/AUTORIZÓ/VALIDÓ. Encima sólo
+// se posicionan los textos: meta info, título, dependencia, nombres y cargos
+// en sus respectivas columnas del cuadro.
 function PaginaCaratula({ datos, total }) {
+  // Cada columna del cuadro de firmas ocupa ~22% del ancho de la página
+  // (cuadro va de x≈6% a x≈94%, dividido en 4 columnas iguales).
+  const celdas = [
+    { nombre: datos.elaboro_nombre, cargo: datos.elaboro_cargo },
+    { nombre: datos.reviso_nombre, cargo: datos.reviso_cargo },
+    { nombre: datos.autorizo_nombre, cargo: datos.autorizo_cargo },
+    { nombre: datos.valido_nombre, cargo: datos.valido_cargo },
+  ]
+  // Posiciones exactas de las 4 columnas medidas directamente sobre la
+  // imagen CaratulaProcedimientos.jpg (los divisores caen en x = 6.78 %,
+  // 27.84 %, 49.84 %, 71.84 % y 92.43 % de la página). Las columnas no son
+  // del mismo ancho — la primera y la última son ~21 % y las del medio 22 %.
+  const cols = [
+    { left: '6.78%',  width: '21.06%' },
+    { left: '27.84%', width: '22.00%' },
+    { left: '49.84%', width: '22.00%' },
+    { left: '71.84%', width: '20.59%' },
+  ]
+
   return (
-    <div className="pdf-pagina">
-      <HeaderPagina datos={datos} numeroPagina={2} totalPaginas={total} />
-      <div style={{ textAlign: 'center', marginBottom: 30 }}>
+    <div className="pdf-pagina" style={{
+      padding: 0, position: 'relative',
+      background: 'url(/CaratulaProcedimientos.jpg) center / cover no-repeat #fff',
+    }}>
+      {/* CÓDIGO / FECHA / VERSIÓN: encima de la línea superior, a la derecha de la flecha */}
+      <div style={{
+        position: 'absolute',
+        top: '2.6%', left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1.45, color: '#000',
+      }}>
+        <div><span style={{ fontWeight: 800 }}>CÓDIGO:</span> {datos.codigo || '—'}</div>
+        <div><span style={{ fontWeight: 800 }}>FECHA</span></div>
+        <div><span style={{ fontWeight: 800 }}>DE EMISIÓN:</span> {fmtFecha(datos.fecha_elaboracion || datos.fecha_emision)}</div>
+        <div><span style={{ fontWeight: 800 }}>VERSIÓN:</span> {datos.version || '01'}</div>
+      </div>
+
+      {/* PÁGINA: entre las dos líneas paralelas de la imagen */}
+      <div style={{
+        position: 'absolute',
+        top: '11%', left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1, color: '#000',
+      }}>
+        <span style={{ fontWeight: 800 }}>PÁGINA:</span> 2 DE {total}
+      </div>
+
+      {/* Título centrado en el espacio en blanco entre header y cuadro */}
+      <div style={{
+        position: 'absolute',
+        top: '24%', left: '8%', right: '8%',
+        textAlign: 'center',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+      }}>
         <div style={{ fontSize: '24pt', fontWeight: 'normal', letterSpacing: 2 }}>MANUAL DE</div>
         <div style={{ fontSize: '30pt', fontWeight: 900, letterSpacing: 2 }}>PROCEDIMIENTOS</div>
         <div style={{ fontSize: '14pt', marginTop: 16, letterSpacing: 3, textTransform: 'uppercase' }}>
-          {datos.dependencia || ''}
+          INSTITUTO MUNICIPAL DE DESARROLLO ADMINISTRATIVO Y URBANO
         </div>
       </div>
 
-      <table style={{
-        width: '100%', borderCollapse: 'separate', borderSpacing: 0,
-        border: '3px solid #000', borderRadius: 12, overflow: 'hidden',
-        fontFamily: 'Montserrat, Arial, sans-serif', marginTop: 20
-      }}>
-        <thead>
-          <tr>
-            {['ELABORÓ','REVISÓ','AUTORIZÓ','VALIDÓ'].map((h, i) => (
-              <th key={i} style={{
-                width: '25%', padding: '16px 10px', textAlign: 'center',
-                fontWeight: 800, fontSize: '13pt', color: '#7a1020',
-                borderBottom: 'none', borderRight: 'none', background: 'white'
-              }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            {[datos.elaboro_nombre, datos.reviso_nombre, datos.autorizo_nombre, datos.valido_nombre].map((nombre, i) => (
-              <td key={i} style={{
-                padding: '20px 14px', textAlign: 'center', verticalAlign: 'top',
-                fontStyle: 'italic', fontWeight: 500, fontSize: '10.5pt',
-                borderRight: 'none', borderBottom: 'none', minHeight: 80
-              }}>{nombre || ' '}</td>
-            ))}
-          </tr>
-          <tr>
-            {[null, null, null, null].map((_, i) => (
-              <td key={i} style={{ height: 100, borderRight: 'none', borderBottom: 'none' }}></td>
-            ))}
-          </tr>
-          <tr>
-            {[datos.elaboro_cargo, datos.reviso_cargo, datos.autorizo_cargo, datos.valido_cargo].map((cargo, i) => (
-              <td key={i} style={{
-                padding: '16px 14px', textAlign: 'center', verticalAlign: 'middle',
-                fontWeight: 500, fontSize: '10.5pt', borderRight: 'none',
-              }}>{cargo || ' '}</td>
-            ))}
-          </tr>
-          <tr>
-            {[null, null, null, null].map((_, i) => (
-              <td key={i} style={{ height: 80, borderRight: 'none' }}></td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
+      {/* Nombres (italic) y cargos dentro de cada columna del cuadro de
+          firmas que ya viene en la imagen de fondo. Coordenadas medidas
+          directamente sobre la imagen: el cuadro va de y=50.85 % a y=92.27 %
+          de la página, y los headers ELABORÓ/REVISÓ/AUTORIZÓ/VALIDÓ están
+          en y=50-55 %. Los nombres van inmediatamente debajo (y=57 %) y
+          los cargos cerca del pie del cuadro (y=84 %), dejando un espacio
+          vacío al fondo. */}
+      {celdas.map((c, i) => (
+        <div key={i}>
+          <div style={{
+            position: 'absolute',
+            top: '57%', left: cols[i].left, width: cols[i].width,
+            textAlign: 'center',
+            fontFamily: 'Montserrat, Arial, sans-serif',
+            fontStyle: 'italic', fontSize: '10pt', fontWeight: 500, color: '#000',
+            padding: '0 8px', boxSizing: 'border-box',
+          }}>{c.nombre || ' '}</div>
+          <div style={{
+            position: 'absolute',
+            top: '84%', left: cols[i].left, width: cols[i].width,
+            textAlign: 'center',
+            fontFamily: 'Montserrat, Arial, sans-serif',
+            fontSize: '10pt', fontWeight: 500, color: '#000',
+            padding: '0 8px', boxSizing: 'border-box',
+          }}>{c.cargo || ' '}</div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -534,35 +627,51 @@ function PaginaIndice({ datos, total, mapa }) {
 // ── Portada Capítulo I ──
 function PaginaPortadaCapI({ datos, total, paginaInicio }) {
   return (
-    <div className="pdf-pagina" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
-      <div style={{ textAlign: 'center', marginTop: 80 }}>
-        <div style={{
-          fontFamily: 'Montserrat, Arial, sans-serif',
-          fontWeight: 400, fontSize: '42pt', letterSpacing: 2, lineHeight: 1.1
-        }}>CAPÍTULO 1</div>
-        <div style={{
-          fontFamily: 'Montserrat, Arial, sans-serif',
-          fontWeight: 800, fontSize: '42pt', letterSpacing: 2, lineHeight: 1.1
-        }}>DE GENERALES</div>
+    <div className="pdf-pagina" style={{
+      padding: 0, position: 'relative',
+      background: 'url(/PortadaProcedimientos.jpg) center / cover no-repeat #fff',
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: '2.6%', left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1.45, color: '#000',
+      }}>
+        <div><span style={{ fontWeight: 800 }}>CÓDIGO:</span> {datos.codigo || '—'}</div>
+        <div><span style={{ fontWeight: 800 }}>FECHA</span></div>
+        <div><span style={{ fontWeight: 800 }}>DE EMISIÓN:</span> {fmtFecha(datos.fecha_elaboracion || datos.fecha_emision)}</div>
+        <div><span style={{ fontWeight: 800 }}>VERSIÓN:</span> {datos.version || '01'}</div>
       </div>
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        display: 'flex', justifyContent: 'center'
+        position: 'absolute',
+        top: '11%', left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1, color: '#000',
       }}>
-        <img src="/LogoPortada.png" alt="Logo Portada"
-          style={{ width: 'auto', maxWidth: '85%', height: 'auto', display: 'block' }}
-          crossOrigin="anonymous" />
+        <span style={{ fontWeight: 800 }}>PÁGINA:</span> {paginaInicio} DE {total}
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        top: '32%', left: '8%', right: '8%',
+        textAlign: 'center',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+      }}>
+        <div style={{ fontWeight: 400, fontSize: '42pt', letterSpacing: 2, lineHeight: 1.1 }}>CAPÍTULO 1</div>
+        <div style={{ fontWeight: 800, fontSize: '42pt', letterSpacing: 2, lineHeight: 1.1 }}>DE GENERALES</div>
       </div>
     </div>
   )
 }
 
 // ── Capítulo I parte 1 (definiciones de secciones) ──
-function PaginaCapI_1({ datos, total, paginaInicio }) {
+// Esta hoja NO lleva encabezado. Se sustituye HeaderPagina por un espaciador
+// transparente de 140px (misma altura que el header) para que el título y
+// las secciones de abajo no se muevan ni un píxel.
+function PaginaCapI_1({ datos, total: _total, paginaInicio: _paginaInicio }) {
   return (
     <div className="pdf-pagina">
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <div style={{ height: 140 }} aria-hidden="true" />
       <div className="pdf-cap-titulo">03. CAPÍTULO I DE GENERALES</div>
 
       <div className="pdf-seccion">
@@ -618,10 +727,12 @@ function PaginaCapI_1({ datos, total, paginaInicio }) {
 }
 
 // ── Capítulo I parte 2 ──
-function PaginaCapI_2({ datos, total, paginaInicio }) {
+// Esta hoja TAMPOCO lleva encabezado. Mismo enfoque que PaginaCapI_1:
+// espaciador de 140px en lugar del HeaderPagina para conservar layout.
+function PaginaCapI_2({ datos, total: _total, paginaInicio: _paginaInicio }) {
   return (
     <div className="pdf-pagina">
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
+      <div style={{ height: 140 }} aria-hidden="true" />
       <div className="pdf-cap-titulo">03. CAPÍTULO I DE GENERALES</div>
 
       <div className="pdf-seccion">
@@ -675,10 +786,14 @@ function PaginaCapI_2({ datos, total, paginaInicio }) {
 }
 
 // ── 3.1 Introducción ──
+// Layout en columna flex para que el bloque de firma (línea + nombre + cargo)
+// quede siempre cerca del final de la página, empujado por un spacer flex:1.
+// La firma se renderiza siempre — si los campos están vacíos, la línea sola
+// queda visible para que se firme a mano.
 function PaginaIntroduccion({ datos, total, paginaInicio }) {
   const parrafos = extraerParrafos(datos.introduccion)
   return (
-    <div className="pdf-pagina">
+    <div className="pdf-pagina" style={{ display: 'flex', flexDirection: 'column' }}>
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
       <div className="pdf-cap-titulo">3.1 INTRODUCCIÓN</div>
       {parrafos.length > 0
@@ -687,13 +802,17 @@ function PaginaIntroduccion({ datos, total, paginaInicio }) {
           ))
         : <div className="pdf-intro-texto">—</div>
       }
-      {(datos.superior_nombre || datos.superior_cargo) && (
-        <div style={{ marginTop: 60, textAlign: 'center', fontFamily: 'Montserrat, Arial, sans-serif' }}>
-          <div style={{ width: 260, borderBottom: '1.5px solid #000', margin: '0 auto 8px auto' }} />
-          <div style={{ fontWeight: 800, fontSize: '10pt', textTransform: 'uppercase' }}>{datos.superior_nombre}</div>
-          <div style={{ fontWeight: 800, fontSize: '10pt', textTransform: 'uppercase' }}>{datos.superior_cargo}</div>
+      {/* Spacer flex:1 — empuja la firma hacia el pie de la página */}
+      <div style={{ flex: 1, minHeight: 60 }} />
+      <div style={{ textAlign: 'center', fontFamily: 'Montserrat, Arial, sans-serif', marginBottom: 16 }}>
+        <div style={{ width: 260, borderBottom: '1.5px solid #000', margin: '0 auto 8px auto' }} />
+        <div style={{ fontWeight: 800, fontSize: '10pt', textTransform: 'uppercase', minHeight: '1.2em' }}>
+          {datos.superior_nombre || ' '}
         </div>
-      )}
+        <div style={{ fontWeight: 800, fontSize: '10pt', textTransform: 'uppercase', minHeight: '1.2em' }}>
+          {datos.superior_cargo || ' '}
+        </div>
+      </div>
     </div>
   )
 }
@@ -883,16 +1002,38 @@ function PaginaMarcoConceptual({ datos, total, paginaInicio }) {
 // ── Portada Capítulo II ──
 function PaginaPortadaCapII({ datos, total, paginaInicio }) {
   return (
-    <div className="pdf-pagina" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
-      <div style={{ textAlign: 'center', marginTop: 80 }}>
-        <div style={{ fontFamily: 'Montserrat, Arial, sans-serif', fontWeight: 400, fontSize: '42pt', letterSpacing: 2, lineHeight: 1.1 }}>CAPÍTULO 2</div>
-        <div style={{ fontFamily: 'Montserrat, Arial, sans-serif', fontWeight: 800, fontSize: '42pt', letterSpacing: 2, lineHeight: 1.1 }}>DE PROCEDIMIENTOS</div>
+    <div className="pdf-pagina" style={{
+      padding: 0, position: 'relative',
+      background: 'url(/PortadaProcedimientos.jpg) center / cover no-repeat #fff',
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: '2.6%', left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1.45, color: '#000',
+      }}>
+        <div><span style={{ fontWeight: 800 }}>CÓDIGO:</span> {datos.codigo || '—'}</div>
+        <div><span style={{ fontWeight: 800 }}>FECHA</span></div>
+        <div><span style={{ fontWeight: 800 }}>DE EMISIÓN:</span> {fmtFecha(datos.fecha_elaboracion || datos.fecha_emision)}</div>
+        <div><span style={{ fontWeight: 800 }}>VERSIÓN:</span> {datos.version || '01'}</div>
       </div>
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
-        <img src="/LogoPortada.png" alt="Logo Portada"
-          style={{ width: 'auto', maxWidth: '85%', height: 'auto', display: 'block' }}
-          crossOrigin="anonymous" />
+      <div style={{
+        position: 'absolute',
+        top: '11%', left: '61%', right: '2%',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        fontSize: '10pt', lineHeight: 1, color: '#000',
+      }}>
+        <span style={{ fontWeight: 800 }}>PÁGINA:</span> {paginaInicio} DE {total}
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        top: '32%', left: '8%', right: '8%',
+        textAlign: 'center',
+        fontFamily: 'Montserrat, Arial, sans-serif',
+      }}>
+        <div style={{ fontWeight: 400, fontSize: '42pt', letterSpacing: 2, lineHeight: 1.1 }}>CAPÍTULO 2</div>
+        <div style={{ fontWeight: 800, fontSize: '42pt', letterSpacing: 2, lineHeight: 1.1 }}>DE PROCEDIMIENTOS</div>
       </div>
     </div>
   )
@@ -971,53 +1112,49 @@ function ProcPortada({ datos, proc, total, paginaInicio }) {
         </tbody>
       </table>
 
-      {/* Tabla de firmas del procedimiento con la misma estética de la carátula */}
-      <table style={{
-        width: '100%', borderCollapse: 'separate', borderSpacing: 0,
-        border: '3px solid #000', borderRadius: 12, overflow: 'hidden',
-        fontFamily: 'Montserrat, Arial, sans-serif', marginTop: 24
+      {/* Cuadro de firmas como imagen — reemplaza la tabla bordada que
+          armábamos a mano. La imagen ya trae los headers ELABORÓ / REVISÓ /
+          AUTORIZÓ / VALIDÓ y las divisiones de columnas dibujadas. Encima
+          posicionamos los nombres y cargos como overlay absoluto. */}
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        marginTop: 24,
+        fontFamily: 'Montserrat, Arial, sans-serif',
       }}>
-        <thead>
-          <tr>
-            {['ELABORÓ','REVISÓ','AUTORIZÓ','VALIDÓ'].map((h, i) => (
-              <th key={i} style={{
-                width: '25%', padding: '14px 10px', textAlign: 'center',
-                fontWeight: 800, fontSize: '12pt', color: '#7a1020',
-                borderBottom: 'none', borderRight: 'none', background: 'white'
-              }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            {[proc.elaboro_nombre, proc.reviso_nombre, proc.autorizo_nombre, proc.valido_nombre].map((nombre, i) => (
-              <td key={i} style={{
-                padding: '18px 12px', textAlign: 'center', verticalAlign: 'top',
-                fontStyle: 'italic', fontWeight: 500, fontSize: '10pt',
-                borderRight: 'none', borderBottom: 'none', minHeight: 70
-              }}>{nombre || ' '}</td>
-            ))}
-          </tr>
-          <tr>
-            {[null, null, null, null].map((_, i) => (
-              <td key={i} style={{ height: 80, borderRight: 'none', borderBottom: 'none' }}></td>
-            ))}
-          </tr>
-          <tr>
-            {[proc.elaboro_cargo, proc.reviso_cargo, proc.autorizo_cargo, proc.valido_cargo].map((cargo, i) => (
-              <td key={i} style={{
-                padding: '14px 12px', textAlign: 'center', verticalAlign: 'middle',
-                fontWeight: 500, fontSize: '10pt', borderRight: 'none',
-              }}>{cargo || ' '}</td>
-            ))}
-          </tr>
-          <tr>
-            {[null, null, null, null].map((_, i) => (
-              <td key={i} style={{ height: 60, borderRight: 'none' }}></td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
+        <img
+          src="/CuadroFirmasMP_tight.png"
+          alt="Cuadro de firmas"
+          crossOrigin="anonymous"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        />
+
+        {/* Posiciones exactas de las 4 columnas medidas sobre la imagen
+            CuadroFirmasMP_tight.png (divisores en x = 0.9 %, 24.96 %,
+            50.13 %, 75.36 % y 98.92 %). Las columnas externas son ~24 %
+            y las del medio ~25 %. */}
+        {[
+          { col: { left: '0.9%',   width: '24.06%' }, nombre: proc.elaboro_nombre, cargo: proc.elaboro_cargo },
+          { col: { left: '24.96%', width: '25.17%' }, nombre: proc.reviso_nombre,  cargo: proc.reviso_cargo  },
+          { col: { left: '50.13%', width: '25.23%' }, nombre: proc.autorizo_nombre, cargo: proc.autorizo_cargo },
+          { col: { left: '75.36%', width: '23.56%' }, nombre: proc.valido_nombre,  cargo: proc.valido_cargo  },
+        ].map((c, i) => (
+          <div key={i}>
+            <div style={{
+              position: 'absolute',
+              top: '22%', left: c.col.left, width: c.col.width,
+              textAlign: 'center', padding: '0 8px', boxSizing: 'border-box',
+              fontStyle: 'italic', fontWeight: 500, fontSize: '10pt', color: '#000',
+            }}>{c.nombre || ' '}</div>
+            <div style={{
+              position: 'absolute',
+              top: '78%', left: c.col.left, width: c.col.width,
+              textAlign: 'center', padding: '0 8px', boxSizing: 'border-box',
+              fontWeight: 500, fontSize: '10pt', color: '#000',
+            }}>{c.cargo || ' '}</div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -1146,7 +1283,37 @@ function ProcActividades({ datos, proc, total, paginaInicio }) {
   )
 }
 
-function ProcDiagrama({ datos, proc, total, paginaInicio }) {
+function ProcDiagrama({ datos, proc, total, paginaInicio, procIdx }) {
+  const actividades = Array.isArray(proc.actividades) ? proc.actividades : []
+  const tieneActividades = actividades.length > 0
+  const [qrDataUrl, setQrDataUrl] = useState('')
+  const [medida, setMedida] = useState({ w: 0, h: 0, escala: 1 })
+  const svgWrapperRef = useRef(null)
+  const visorUrl = `${baseUrlPublica()}/diagrama/${datos.id_manual ?? ''}/${procIdx ?? 0}`
+
+  // Generar QR cuando cambia la URL del visor
+  useEffect(() => {
+    if (!tieneActividades) return
+    QRCode.toDataURL(visorUrl, { width: 220, margin: 1, errorCorrectionLevel: 'M' })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(''))
+  }, [visorUrl, tieneActividades])
+
+  // Medir el SVG natural para escalarlo al área disponible (660 × 480)
+  useEffect(() => {
+    if (!tieneActividades || !svgWrapperRef.current) return
+    const svg = svgWrapperRef.current.querySelector('svg')
+    if (!svg) return
+    const wAttr = svg.getAttribute('width')
+    const hAttr = svg.getAttribute('height')
+    const naturalW = wAttr ? parseFloat(wAttr) : svg.getBoundingClientRect().width
+    const naturalH = hAttr ? parseFloat(hAttr) : svg.getBoundingClientRect().height
+    if (!naturalW || !naturalH) return
+    const dispW = 660, dispH = 480
+    const e = Math.min(1, dispW / naturalW, dispH / naturalH)
+    setMedida({ w: naturalW, h: naturalH, escala: Number.isFinite(e) && e > 0 ? e : 1 })
+  }, [tieneActividades, actividades])
+
   return (
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
@@ -1156,7 +1323,7 @@ function ProcDiagrama({ datos, proc, total, paginaInicio }) {
         <div className="pdf-proc-bloque-titulo">9.0 DIAGRAMA DE FLUJO</div>
         <div style={{
           border: '1px solid #000', padding: 10, marginTop: 8,
-          minHeight: 620, display: 'flex', flexDirection: 'column',
+          display: 'flex', flexDirection: 'column',
         }}>
           <div style={{
             background: '#7F7F7F', color: 'white', padding: '8px 12px',
@@ -1175,12 +1342,78 @@ function ProcDiagrama({ datos, proc, total, paginaInicio }) {
             <span><strong>EMISIÓN:</strong> {fmtFecha(proc.fecha_emision)}</span>
             <span><strong>REVISIÓN:</strong> {proc.version || '01'}</span>
           </div>
-          <div style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#666', fontSize: '10pt', textAlign: 'center', fontStyle: 'italic',
-          }}>
-            (Diagrama de flujo del procedimiento — consultar en el visor interactivo del manual)
-          </div>
+
+          {tieneActividades ? (
+            <>
+              {/* Vista previa escalada del diagrama: dos divs anidados — el
+                  externo recibe ancho/alto YA escalados para que ocupe sólo
+                  el espacio visible; el interno conserva el tamaño natural y
+                  aplica transform: scale, así el SVG se ve completo. */}
+              <div style={{
+                display: 'flex', justifyContent: 'center', alignItems: 'flex-start',
+                width: '100%', overflow: 'hidden', marginBottom: 14,
+                minHeight: 200,
+              }}>
+                <div style={{
+                  width: medida.w ? medida.w * medida.escala : 'auto',
+                  height: medida.h ? medida.h * medida.escala : 'auto',
+                  overflow: 'hidden',
+                }}>
+                  <div
+                    ref={svgWrapperRef}
+                    style={{
+                      width: medida.w || 'auto',
+                      height: medida.h || 'auto',
+                      transform: `scale(${medida.escala})`,
+                      transformOrigin: 'top left',
+                    }}
+                  >
+                    <DiagramaFlujo actividades={actividades} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Aviso + QR + URL */}
+              <div style={{
+                borderTop: '1px dashed #888', paddingTop: 12, marginTop: 'auto',
+                display: 'flex', alignItems: 'center', gap: 16,
+              }}>
+                {qrDataUrl ? (
+                  <img
+                    src={qrDataUrl}
+                    alt="QR del diagrama"
+                    style={{ width: 110, height: 110, display: 'block', flexShrink: 0 }}
+                    crossOrigin="anonymous"
+                  />
+                ) : (
+                  <div style={{ width: 110, height: 110, background: '#eee', flexShrink: 0 }} />
+                )}
+                <div style={{ fontSize: '9pt', lineHeight: 1.45, flex: 1 }}>
+                  <div style={{ fontWeight: 800, fontSize: '10pt', marginBottom: 4, textTransform: 'uppercase' }}>
+                    Ver diagrama completo
+                  </div>
+                  <div style={{ marginBottom: 6 }}>
+                    Escanea el código QR con la cámara de tu celular o ingresa la
+                    siguiente dirección desde tu navegador para visualizar el
+                    diagrama de flujo a tamaño completo, con zoom y desplazamiento:
+                  </div>
+                  <div style={{
+                    fontFamily: 'Consolas, Monaco, monospace',
+                    fontSize: '8.5pt', wordBreak: 'break-all', color: '#1d4ed8',
+                  }}>
+                    {visorUrl}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div style={{
+              minHeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#666', fontSize: '10pt', textAlign: 'center', fontStyle: 'italic',
+            }}>
+              (Sin actividades capturadas para este procedimiento)
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1241,6 +1474,210 @@ export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
     document.fonts.ready.then(() => setFuenteLista(true))
     return () => { try { document.head.removeChild(link) } catch { /* ignore */ } }
   }, [])
+
+  // ─────────────────────────────────────────────────────────────────────
+  // PAGINACIÓN VISUAL DEL PREVIEW
+  // Cuando una .pdf-pagina rebasa los 1056px (alto de carta), la recortamos
+  // y creamos hojas de continuación con su propio HeaderPagina clonado, para
+  // que el preview se vea como hojas carta separadas — igual que el PDF
+  // descargado. Antes de generar el PDF se desactiva todo (las continuaciones
+  // se eliminan y se quita el recorte) para que html2canvas capture cada
+  // página completa y el slicer corte donde toca.
+  // ─────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!fuenteLista || !docRef.current || generando) return
+
+    const SHEET_H = 1056
+    // Tolerancia para considerar "overflow real": si la página rebasa por
+    // menos de 30 px (≈ 1-2 líneas), la dejamos respirar — no vale la pena
+    // crear una hoja casi vacía.
+    const TOL = 30
+    // Mínimo de contenido nuevo que justifica una hoja de continuación
+    // (≈ 5 líneas). Si la última hoja tendría menos que esto, mejor dejamos
+    // que la página original rebase un poco que mostrar una hoja casi vacía.
+    const MIN_NUEVO_CONTENIDO = 80
+    const docEl = docRef.current
+    let raf1 = 0
+    let raf2 = 0
+    let observer = null
+    let aplicando = false
+    let cancelado = false
+
+    const limpiar = () => {
+      if (!docEl) return
+      docEl.querySelectorAll('.pdf-pagina-continuacion').forEach((n) => n.remove())
+      docEl.querySelectorAll('.pdf-pagina[data-paginado="1"]').forEach((p) => {
+        p.style.maxHeight = ''
+        p.style.overflow = ''
+        delete p.dataset.paginado
+      })
+    }
+
+    const paginar = () => {
+      if (!docEl || aplicando) return
+      aplicando = true
+      try {
+        limpiar()
+
+        const paginas = Array.from(docEl.querySelectorAll('.pdf-pagina'))
+          .filter((p) => !p.classList.contains('pdf-pagina-continuacion'))
+
+        paginas.forEach((pagina) => {
+          const altura = pagina.scrollHeight
+          if (altura <= SHEET_H + TOL) return
+
+          // Header = primer .pdf-header hijo directo (encabezado de imagen)
+          const header = pagina.querySelector(':scope > .pdf-header')
+          const headerH = header
+            ? Math.ceil(header.getBoundingClientRect().height)
+            : 0
+          // Offset donde arranca el contenido bajo el header:
+          // padding-top (48) + alto del header + 0 (header ya incluye su gap)
+          const headerOffset = headerH > 0 ? 48 + headerH : 0
+          const usable = Math.max(1, SHEET_H - headerOffset)
+
+          // Cantidad de continuaciones: si la última tiene muy poco contenido
+          // nuevo (menos que MIN_NUEVO_CONTENIDO), no la creamos — es mejor
+          // dejar que la página original rebase ligeramente que mostrar una
+          // hoja casi vacía con sólo 1 línea.
+          const overflow = altura - SHEET_H
+          let numCont = Math.ceil(overflow / usable)
+          const ultimaContenido = overflow - (numCont - 1) * usable
+          if (numCont > 0 && ultimaContenido < MIN_NUEVO_CONTENIDO) {
+            numCont -= 1
+          }
+          if (numCont <= 0) return
+
+          const hojas = 1 + numCont
+
+          // Recortar la página original a una hoja
+          pagina.style.maxHeight = SHEET_H + 'px'
+          pagina.style.overflow = 'hidden'
+          pagina.dataset.paginado = '1'
+
+          let anchor = pagina
+          for (let i = 1; i < hojas; i++) {
+            const cont = document.createElement('div')
+            cont.className = 'pdf-pagina pdf-pagina-continuacion'
+            cont.style.maxHeight = SHEET_H + 'px'
+            cont.style.minHeight = SHEET_H + 'px'
+            cont.style.overflow = 'hidden'
+            cont.style.position = 'relative'
+            cont.style.padding = '0'  // padding ya está en el clon
+
+            // Clon de la página completa, desplazado i*usable px hacia arriba
+            const desplaza = i * usable
+            const clone = pagina.cloneNode(true)
+            clone.removeAttribute('data-paginado')
+            clone.style.maxHeight = ''
+            clone.style.overflow = 'visible'
+            clone.style.boxShadow = 'none'
+            clone.style.position = 'absolute'
+            clone.style.top = `-${desplaza}px`
+            clone.style.left = '0'
+            clone.style.right = '0'
+            clone.style.width = '100%'
+            cont.appendChild(clone)
+
+            // Header nuevo encima de la hoja de continuación.
+            // El wrap se extiende desde y=0 hasta y=48+headerH con fondo
+            // blanco — así el padding-top de la página y la franja detrás
+            // del header tapan cualquier resto del clon que asome encima.
+            if (header) {
+              const wrap = document.createElement('div')
+              wrap.style.position = 'absolute'
+              wrap.style.top = '0'
+              wrap.style.left = '0'
+              wrap.style.right = '0'
+              wrap.style.padding = '48px 56px 0 56px'
+              wrap.style.boxSizing = 'border-box'
+              wrap.style.background = '#fff'
+              wrap.style.zIndex = '5'
+              wrap.style.pointerEvents = 'none'
+              wrap.appendChild(header.cloneNode(true))
+              cont.appendChild(wrap)
+            }
+
+            pagina.parentNode.insertBefore(cont, anchor.nextSibling)
+            anchor = cont
+          }
+        })
+
+        // ── Renumerar todas las hojas (originales + continuaciones) ─────
+        // Recorremos en orden DOM y reescribimos cada texto "PÁGINA: X DE Y"
+        // con el índice secuencial real. Las hojas sin span PÁGINA (portadas
+        // de capítulo sin encabezado) se saltan, pero el contador sigue
+        // avanzando para que la siguiente hoja con header vea el número
+        // correcto.
+        const todasLasHojas = Array.from(
+          docEl.querySelectorAll('.pdf-pagina, .pdf-pagina-horizontal')
+        )
+        const totalReal = todasLasHojas.length
+        todasLasHojas.forEach((hoja, idx) => {
+          const numero = idx + 1
+          // Buscar todos los <span> que dicen exactamente "PÁGINA:" y
+          // reemplazar TODO lo que sigue dentro del mismo padre por un único
+          // text node con " X DE Y". Necesario porque React renderiza la
+          // expresión `{numeroPagina} DE {totalPaginas}` como múltiples text
+          // nodes separados — actualizar sólo el primero deja basura como
+          // "PÁGINA: 24 DE 4312 DE 21".
+          hoja.querySelectorAll('span').forEach((span) => {
+            if (span.textContent.trim() !== 'PÁGINA:') return
+            const parent = span.parentNode
+            while (span.nextSibling) parent.removeChild(span.nextSibling)
+            parent.appendChild(document.createTextNode(` ${numero} DE ${totalReal}`))
+          })
+        })
+      } finally {
+        aplicando = false
+      }
+    }
+
+    // Esperar a que TODAS las imágenes (header, portada, QR, cuadro firmas)
+    // terminen de cargar antes de paginar — si medimos antes, las alturas
+    // naturales son cero y los cortes salen mal.
+    const esperarImagenes = () => {
+      const imgs = Array.from(docEl.querySelectorAll('img'))
+      const pendientes = imgs.filter((img) => !img.complete || img.naturalWidth === 0)
+      if (pendientes.length === 0) return Promise.resolve()
+      return Promise.all(
+        pendientes.map((img) => new Promise((resolve) => {
+          const fin = () => {
+            img.removeEventListener('load', fin)
+            img.removeEventListener('error', fin)
+            resolve()
+          }
+          img.addEventListener('load', fin)
+          img.addEventListener('error', fin)
+        }))
+      )
+    }
+
+    esperarImagenes().then(() => {
+      if (cancelado || !docEl) return
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(paginar)
+      })
+    })
+
+    if (typeof ResizeObserver !== 'undefined') {
+      let pendiente = 0
+      observer = new ResizeObserver(() => {
+        if (aplicando) return
+        if (pendiente) cancelAnimationFrame(pendiente)
+        pendiente = requestAnimationFrame(paginar)
+      })
+      observer.observe(docEl)
+    }
+
+    return () => {
+      cancelado = true
+      if (raf1) cancelAnimationFrame(raf1)
+      if (raf2) cancelAnimationFrame(raf2)
+      if (observer) observer.disconnect()
+      limpiar()
+    }
+  }, [fuenteLista, generando, datos])
 
   const mapa = crearMapa(D)
   const totalPaginas = mapa.total
@@ -1305,8 +1742,27 @@ export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
     }
 
     try {
+      // Antes de capturar, deshacer la paginación visual del preview:
+      // remover hojas de continuación y quitar el clip de las originales
+      // para que html2canvas vea cada página COMPLETA y el slicer corte.
+      const docEl = docRef.current
+      if (docEl) {
+        docEl.querySelectorAll('.pdf-pagina-continuacion').forEach((n) => n.remove())
+        docEl.querySelectorAll('.pdf-pagina[data-paginado="1"]').forEach((p) => {
+          p.style.maxHeight = ''
+          p.style.overflow = ''
+          delete p.dataset.paginado
+        })
+        // Esperar un frame para que el layout vuelva a fluir
+        await new Promise((r) => requestAnimationFrame(r))
+      }
+
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' })
-      const paginas = docRef.current.querySelectorAll('.pdf-pagina, .pdf-pagina-horizontal')
+      // Filtrar las continuaciones por seguridad (ya las quitamos arriba pero
+      // si algún render tardío las re-agregó, no las queremos en el PDF).
+      const paginas = Array.from(
+        docRef.current.querySelectorAll('.pdf-pagina, .pdf-pagina-horizontal')
+      ).filter((p) => !p.classList.contains('pdf-pagina-continuacion'))
       let agregarNueva = false
 
       for (let i = 0; i < paginas.length; i++) {
@@ -1442,7 +1898,7 @@ export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
               <ProcPortada       datos={D} proc={proc} total={totalPaginas} paginaInicio={mapa.primerProc + i * 4}     />
               <ProcInfo          datos={D} proc={proc} total={totalPaginas} paginaInicio={mapa.primerProc + i * 4 + 1} />
               <ProcActividades   datos={D} proc={proc} total={totalPaginas} paginaInicio={mapa.primerProc + i * 4 + 2} />
-              <ProcDiagrama      datos={D} proc={proc} total={totalPaginas} paginaInicio={mapa.primerProc + i * 4 + 3} />
+              <ProcDiagrama      datos={D} proc={proc} total={totalPaginas} paginaInicio={mapa.primerProc + i * 4 + 3} procIdx={i} />
             </div>
           ))}
           <PaginaCambios datos={D} total={totalPaginas} paginaInicio={mapa.cambios} />
