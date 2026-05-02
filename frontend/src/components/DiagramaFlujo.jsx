@@ -45,7 +45,12 @@ function textoLineas(texto, maxChars = 25) {
   return lineas.length ? lineas : ['']
 }
 
+import { useRef } from 'react'
+
+let _uid = 0
+
 export default function DiagramaFlujo({ actividades }) {
+  const uid = useRef(`df${++_uid}`).current
   if (!actividades || actividades.length === 0) return null
 
   const PASO_COL_W  = 28
@@ -137,7 +142,7 @@ export default function DiagramaFlujo({ actividades }) {
       <svg width={svgW} height={svgH} style={{ display: 'block', background: '#fafafa' }}>
         <defs>
           {/* Marcador principal (gris) */}
-          <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <marker id={`${uid}-arr`} markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
             <polygon points="0 0, 8 3, 0 6" fill="#64748b" />
           </marker>
           {/* ClipPath por nodo para garantizar que el texto no se salga */}
@@ -147,14 +152,14 @@ export default function DiagramaFlujo({ actividades }) {
             if (tipo === 'decision') {
               const dHH = decHHFor(i)
               return (
-                <clipPath key={`clip-${i}`} id={`clip-${i}`}>
+                <clipPath key={`${uid}-clip-${i}`} id={`${uid}-clip-${i}`}>
                   <rect x={cx - DEC_HW + 6} y={cy - dHH + 4} width={(DEC_HW - 6) * 2} height={dHH * 2 - 8} />
                 </clipPath>
               )
             }
             const nh = nodeHFor(i)
             return (
-              <clipPath key={`clip-${i}`} id={`clip-${i}`}>
+              <clipPath key={`${uid}-clip-${i}`} id={`${uid}-clip-${i}`}>
                 <rect x={cx - NODE_W / 2 + 4} y={cy - nh / 2 + 4} width={NODE_W - 8} height={nh - 8} />
               </clipPath>
             )
@@ -166,7 +171,7 @@ export default function DiagramaFlujo({ actividades }) {
             if (k === -1) return null
             const color = COLORES_NO[k % COLORES_NO.length]
             return (
-              <marker key={i} id={`arr-no-${i}`} markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <marker key={i} id={`${uid}-arr-no-${i}`} markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
                 <polygon points="0 0, 8 3, 0 6" fill={color} />
               </marker>
             )
@@ -211,7 +216,7 @@ export default function DiagramaFlujo({ actividades }) {
         {/* INICIO → primer paso */}
         {actividades.length > 0 && (
           <path d={pathLShape(nodeCX(0), inicioY + OVAL_RY * 2, nodeCX(0), nodeTopY(0) - 2)}
-            fill="none" stroke="#64748b" strokeWidth={1.5} markerEnd="url(#arr)" />
+            fill="none" stroke="#64748b" strokeWidth={1.5} markerEnd={`url(#${uid}-arr)`} />
         )}
 
         {/* Nodos */}
@@ -229,7 +234,7 @@ export default function DiagramaFlujo({ actividades }) {
             return (
               <g key={i}>
                 <polygon points={pts} fill={c.bg} stroke={c.stroke} strokeWidth={2} />
-                <g clipPath={`url(#clip-${i})`}>
+                <g clipPath={`url(#${uid}-clip-${i})`}>
                   {lineas.map((l, li) => (
                     <text key={li} x={cx} y={cy + (li - (lineas.length - 1) / 2) * LINE_H + 4}
                       textAnchor="middle" fontSize={9} fill={c.texto}>{l}</text>
@@ -254,7 +259,7 @@ export default function DiagramaFlujo({ actividades }) {
                   <line x1={nx + NODE_W - 12} y1={ny + 12} x2={nx + NODE_W} y2={ny + 12} stroke={c.stroke} strokeWidth={1} opacity={0.5} />
                 </>
               )}
-              <g clipPath={`url(#clip-${i})`}>
+              <g clipPath={`url(#${uid}-clip-${i})`}>
                 {lineas.map((l, li) => (
                   <text key={li} x={cx} y={cy + (li - (lineas.length - 1) / 2) * LINE_H + 4}
                     textAnchor="middle" fontSize={9} fill={c.texto}>{l}</text>
@@ -271,7 +276,7 @@ export default function DiagramaFlujo({ actividades }) {
           return (
             <g key={i}>
               <path d={pathLShape(nodeCX(i), nodeBottomY(i), nodeCX(i + 1), nodeTopY(i + 1) - 2)}
-                fill="none" stroke="#64748b" strokeWidth={1.5} markerEnd="url(#arr)" />
+                fill="none" stroke="#64748b" strokeWidth={1.5} markerEnd={`url(#${uid}-arr)`} />
               {esDec && (
                 <text x={nodeCX(i) + 4} y={nodeBottomY(i) + 12} fontSize={9} fill="#16a34a" fontWeight="700">Sí</text>
               )}
@@ -282,7 +287,7 @@ export default function DiagramaFlujo({ actividades }) {
         {/* Último paso → FIN */}
         {actividades.length > 0 && (
           <path d={pathLShape(nodeCX(actividades.length - 1), nodeBottomY(actividades.length - 1), nodeCX(actividades.length - 1), finY)}
-            fill="none" stroke="#64748b" strokeWidth={1.5} markerEnd="url(#arr)" />
+            fill="none" stroke="#64748b" strokeWidth={1.5} markerEnd={`url(#${uid}-arr)`} />
         )}
 
         {/* FIN — alineado al carril del último paso */}
@@ -310,7 +315,7 @@ export default function DiagramaFlujo({ actividades }) {
           return (
             <g key={`no-${i}`}>
               <path d={path} fill="none" stroke={color} strokeWidth={1.5}
-                strokeDasharray="5,3" markerEnd={`url(#arr-no-${i})`} />
+                strokeDasharray="5,3" markerEnd={`url(#${uid}-arr-no-${i})`} />
               {/* Etiqueta "No → P.X" junto al rombo, con fondo coloreado */}
               <rect x={salX + 3} y={salY - 16} width={44} height={14} rx={3} fill={color} opacity={0.15} />
               <text x={salX + 6} y={salY - 5} fontSize={8} fill={color} fontWeight="700">

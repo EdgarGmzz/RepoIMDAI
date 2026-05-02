@@ -37,6 +37,9 @@ const datosVacios = {
   objetivo_general: '',
   mision: '',
   vision: '',
+  principios: [],
+  valores: [],
+  politicas_operacion: [],
   marco_conceptual: [],
   procedimientos: [],
 }
@@ -54,9 +57,7 @@ const toDateStr = (val) => {
   return ''
 }
 
-const validarFormulario = (datos) => {
-  const usuario = JSON.parse(localStorage.getItem('usuario'))
-  const esAdmin = usuario?.rol === 'administrador'
+const validarFormulario = (datos, esAdmin) => {
   const errores = []
 
   // ── Paso 1: Datos Generales ──────────────────────────────────────────────
@@ -107,6 +108,10 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
   const [error, setError] = useState('')
   const [erroresValidacion, setErroresValidacion] = useState([])
   const token = localStorage.getItem('token')
+  const [esAdmin] = useState(() => {
+    const u = JSON.parse(localStorage.getItem('usuario') || '{}')
+    return u?.rol === 'administrador'
+  })
 
   const modoEdicion = !!manualEditar
   const [datos, setDatos] = useState(datosVacios)
@@ -152,6 +157,12 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
             nombre: n.nombre || '',
             fecha:  toDateStr(n.fecha),
             medio:  n.medio  || '',
+          })),
+          principios:        (d.principios        || []),
+          valores:           (d.valores           || []),
+          politicas_operacion: (d.politicas_operacion || []).map(p => ({
+            area:       p.area        || '',
+            descripcion: p.descripcion || '',
           })),
           marco_conceptual: (d.marco_conceptual || []).map(c => ({
             termino:   c.termino   || '',
@@ -199,7 +210,7 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
   const anterior   = () => setPasoActual(p => Math.max(p - 1, 1))
 
  const guardar = async () => {
-    const errores = validarFormulario(datos)
+    const errores = validarFormulario(datos, esAdmin)
     if (errores.length > 0) {
       setErroresValidacion(errores)
       return

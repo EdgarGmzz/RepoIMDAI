@@ -15,6 +15,30 @@ export default function Paso2CapituloI({ datos, actualizar }) {
     actualizar({ marco_normativo: datos.marco_normativo.filter((_, i) => i !== index) })
   }
 
+  const agregarPrincipio = () => actualizar({ principios: [...(datos.principios || []), ''] })
+  const actualizarPrincipio = (index, valor) => {
+    const nuevos = [...(datos.principios || [])]
+    nuevos[index] = valor
+    actualizar({ principios: nuevos })
+  }
+  const eliminarPrincipio = (index) => actualizar({ principios: (datos.principios || []).filter((_, i) => i !== index) })
+
+  const agregarValor = () => actualizar({ valores: [...(datos.valores || []), ''] })
+  const actualizarValor = (index, valor) => {
+    const nuevos = [...(datos.valores || [])]
+    nuevos[index] = valor
+    actualizar({ valores: nuevos })
+  }
+  const eliminarValor = (index) => actualizar({ valores: (datos.valores || []).filter((_, i) => i !== index) })
+
+  const agregarPolitica = () => actualizar({ politicas_operacion: [...(datos.politicas_operacion || []), { area: '', descripcion: '' }] })
+  const actualizarPolitica = (index, campo, valor) => {
+    const nuevas = [...(datos.politicas_operacion || [])]
+    nuevas[index] = { ...nuevas[index], [campo]: valor }
+    actualizar({ politicas_operacion: nuevas })
+  }
+  const eliminarPolitica = (index) => actualizar({ politicas_operacion: (datos.politicas_operacion || []).filter((_, i) => i !== index) })
+
   const agregarConcepto = () => {
     actualizar({
       marco_conceptual: [...datos.marco_conceptual, { termino: '', definicion: '' }]
@@ -132,6 +156,75 @@ export default function Paso2CapituloI({ datos, actualizar }) {
           onChange={e => actualizar({ vision: e.target.value })}
           rows={3}
         />
+      </div>
+
+      {/* Principios y Valores Institucionales */}
+      <div className="campo-grupo">
+        <div className="campo-header">
+          <label>3.8 Principios y Valores Institucionales</label>
+        </div>
+
+        <p style={{ margin: '4px 0 8px', fontSize: '0.85rem', color: '#555' }}>Principios</p>
+        {(datos.principios || []).length === 0 && (
+          <p className="campo-vacio">No hay principios agregados. Haz clic en + Agregar.</p>
+        )}
+        {(datos.principios || []).map((p, i) => (
+          <div key={i} className="item-fila">
+            <span className="item-num">{i + 1}</span>
+            <input
+              placeholder="Describe el principio institucional..."
+              value={p}
+              onChange={e => actualizarPrincipio(i, e.target.value)}
+            />
+            <button className="btn-eliminar" onClick={() => eliminarPrincipio(i)}>✕</button>
+          </div>
+        ))}
+        <button className="btn-agregar" style={{ marginTop: 6 }} onClick={agregarPrincipio}>+ Agregar principio</button>
+
+        <p style={{ margin: '12px 0 8px', fontSize: '0.85rem', color: '#555' }}>Valores</p>
+        {(datos.valores || []).length === 0 && (
+          <p className="campo-vacio">No hay valores agregados. Haz clic en + Agregar.</p>
+        )}
+        {(datos.valores || []).map((v, i) => (
+          <div key={i} className="item-fila">
+            <span className="item-num">{i + 1}</span>
+            <input
+              placeholder="Describe el valor institucional..."
+              value={v}
+              onChange={e => actualizarValor(i, e.target.value)}
+            />
+            <button className="btn-eliminar" onClick={() => eliminarValor(i)}>✕</button>
+          </div>
+        ))}
+        <button className="btn-agregar" style={{ marginTop: 6 }} onClick={agregarValor}>+ Agregar valor</button>
+      </div>
+
+      {/* Políticas de Operación */}
+      <div className="campo-grupo">
+        <div className="campo-header">
+          <label>3.9 Políticas de Operación</label>
+          <button className="btn-agregar" onClick={agregarPolitica}>+ Agregar</button>
+        </div>
+        {(datos.politicas_operacion || []).length === 0 && (
+          <p className="campo-vacio">No hay políticas agregadas. Haz clic en + Agregar.</p>
+        )}
+        {(datos.politicas_operacion || []).map((pol, i) => (
+          <div key={i} className="item-fila">
+            <span className="item-num">{i + 1}</span>
+            <input
+              placeholder="Área"
+              value={pol.area}
+              onChange={e => actualizarPolitica(i, 'area', e.target.value)}
+              style={{ flex: '0 0 180px' }}
+            />
+            <input
+              placeholder="Descripción de la política"
+              value={pol.descripcion}
+              onChange={e => actualizarPolitica(i, 'descripcion', e.target.value)}
+            />
+            <button className="btn-eliminar" onClick={() => eliminarPolitica(i)}>✕</button>
+          </div>
+        ))}
       </div>
 
       {/* Marco Conceptual */}
