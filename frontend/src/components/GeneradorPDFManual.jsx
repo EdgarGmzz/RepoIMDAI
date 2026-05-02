@@ -13,7 +13,7 @@ const estilos = `
     font-size: 10pt;
     color: #000;
     background: transparent;
-    width: 816px;
+    width: 11in;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -21,8 +21,8 @@ const estilos = `
     padding: 8px 0 32px 0;
   }
   .pdf-pagina {
-    width: 816px;
-    min-height: 1056px;
+    width: 8.5in;
+    height: 11in;
     padding: 48px 56px 48px 56px;
     background: white;
     position: relative;
@@ -30,10 +30,11 @@ const estilos = `
     font-weight: 500;
     box-shadow: 0 4px 24px rgba(0,0,0,0.35);
     flex-shrink: 0;
+    overflow: hidden;
   }
   .pdf-pagina-horizontal {
-    width: 1056px;
-    min-height: 816px;
+    width: 11in;
+    height: 8.5in;
     padding: 40px 48px;
     background: white;
     position: relative;
@@ -41,6 +42,7 @@ const estilos = `
     font-weight: 500;
     box-shadow: 0 4px 24px rgba(0,0,0,0.35);
     flex-shrink: 0;
+    overflow: hidden;
   }
   /* ── Header ── */
   .pdf-header {
@@ -246,6 +248,12 @@ const estilos = `
     text-transform: uppercase;
     letter-spacing: .5px;
   }
+  .pdf-inv-tabla .personas-cargo-header {
+    width: 120px;
+    font-size: 8pt;
+    line-height: 1.12;
+    padding: 6px 8px;
+  }
   .pdf-inv-tabla td {
     border: 1px solid #000;
     padding: 5px 10px;
@@ -257,6 +265,10 @@ const estilos = `
     font-weight: bold;
     text-align: center;
   }
+  .pdf-inv-titulo {
+    margin-top: -13px;
+    margin-bottom: 10px;
+  }
 
   /* ── Descripción de puesto ── */
   .pdf-puesto-header {
@@ -264,123 +276,192 @@ const estilos = `
     font-weight: 800;
     font-family: 'Montserrat', Arial, sans-serif;
     text-transform: uppercase;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
+    line-height: 1.12;
   }
   .pdf-info-puesto-tabla {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 14px;
-    font-size: 9.5pt;
+    font-size: 10pt;
+    table-layout: fixed;
   }
   .pdf-info-puesto-tabla .header-gris {
-    background: #7F7F7F;
+    background: #9a9a9a;
     color: white;
     text-align: center;
-    font-weight: bold;
-    font-size: 9pt;
+    font-weight: 800;
+    font-size: 10pt;
     text-transform: uppercase;
-    letter-spacing: .5px;
-    padding: 7px;
-    border: 1px solid #000;
+    letter-spacing: 0;
+    padding: 4px 8px;
+    border: 1.9px solid #000;
+    vertical-align: middle;
   }
   .pdf-info-puesto-tabla td {
-    border: 1px solid #000;
-    padding: 6px 10px;
-    vertical-align: top;
+    border: 1.9px solid #000;
+    padding: 3px 8px;
+    vertical-align: middle;
+    line-height: 1.15;
   }
   .pdf-info-puesto-tabla .label-cell {
-    background: #f0f0f0;
-    font-weight: bold;
-    width: 30%;
-    font-size: 9pt;
+    background: #9a9a9a;
+    color: white;
+    font-weight: 800;
+    font-size: 10pt;
     text-transform: uppercase;
+    text-align: center;
+  }
+  .pdf-info-puesto-tabla .puesto-num-cell {
+    width: 58px;
+    text-align: center;
+    font-weight: 800;
+    background: #fff;
+    color: #000;
+    font-size: 10pt;
+  }
+  .pdf-info-puesto-tabla .sub-num-cell {
+    width: 150px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .pdf-info-puesto-tabla .sub-nombre-cell {
+    padding-left: 0;
+  }
+  .pdf-subordinados-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 10pt;
+  }
+  .pdf-subordinados-tabla td {
+    border: 1.9px solid #000;
+    padding: 3px 8px;
+    vertical-align: middle;
+    line-height: 1.15;
   }
   .pdf-objetivo-box {
     border: 1px solid #000;
-    padding: 10px;
+    padding: 12px 13px 12px 13px;
     margin-bottom: 14px;
-    font-size: 9.5pt;
-    line-height: 1.6;
+    font-size: 10.5pt;
+    line-height: 1.42;
   }
   .pdf-objetivo-titulo {
     background: #7F7F7F;
     color: white;
     text-align: center;
-    font-weight: bold;
-    font-size: 9pt;
+    font-weight: 800;
+    font-size: 10pt;
     text-transform: uppercase;
     padding: 6px;
-    letter-spacing: .5px;
-    margin-bottom: 8px;
+    letter-spacing: 0;
+    margin-bottom: 10px;
   }
   .pdf-objetivo-subtitulo {
     text-align: center;
     font-style: italic;
-    font-size: 8.5pt;
-    color: #555;
-    margin-bottom: 8px;
+    font-size: 9pt;
+    color: #333;
+    margin-bottom: 12px;
   }
   .pdf-funciones-tabla {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 14px;
-    font-size: 9.5pt;
+    font-size: 11pt;
+    table-layout: fixed;
   }
   .pdf-funciones-tabla .header-gris {
-    background: #7F7F7F;
+    background: #9a9a9a;
     color: white;
     text-align: center;
-    font-weight: bold;
+    font-weight: 800;
     text-transform: uppercase;
-    padding: 7px;
+    padding: 5px 8px;
     border: 1px solid #000;
-    font-size: 9pt;
-    letter-spacing: .5px;
+    font-size: 11pt;
+    letter-spacing: 0;
   }
   .pdf-funciones-tabla .subheader {
-    background: #d0d0d0;
-    font-weight: bold;
-    font-size: 9pt;
+    background: #9a9a9a;
+    color: white;
+    font-weight: 800;
+    font-size: 11pt;
     text-transform: uppercase;
-    padding: 5px 10px;
+    padding: 4px 2px;
     border: 1px solid #000;
   }
   .pdf-funciones-tabla td {
     border: 1px solid #000;
-    padding: 5px 10px;
+    padding: 2px 4px;
     vertical-align: middle;
+    line-height: 1.12;
   }
   .pdf-funciones-tabla .num-cell {
     text-align: center;
-    width: 40px;
-    font-weight: bold;
+    width: 145px;
+    font-weight: 500;
+    font-size: 11pt;
+  }
+  .pdf-funciones-tabla .texto-cell {
+    font-size: 11pt;
+    text-align: justify;
+    text-justify: inter-word;
+    text-align-last: left;
   }
   .pdf-perfil-tabla {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 14px;
     font-size: 9.5pt;
+    table-layout: fixed;
   }
   .pdf-perfil-tabla .header-gris {
-    background: #7F7F7F;
+    background: #9a9a9a;
     color: white;
     text-align: center;
-    font-weight: bold;
+    font-weight: 800;
     text-transform: uppercase;
-    padding: 7px;
+    padding: 5px 8px;
     border: 1px solid #000;
-    font-size: 9pt;
-    letter-spacing: .5px;
+    font-size: 12pt;
+    letter-spacing: 0;
   }
   .pdf-perfil-tabla td {
     border: 1px solid #000;
-    padding: 6px 10px;
-    vertical-align: top;
+    padding: 4px 10px;
+    vertical-align: middle;
+    line-height: 1.08;
   }
   .pdf-perfil-tabla .label-bold {
-    font-weight: bold;
-    background: #f0f0f0;
-    font-size: 9pt;
+    font-weight: 800;
+    color: #595959;
+    background: #fff;
+    font-size: 9.5pt;
+  }
+  .pdf-perfil-tabla .num-gris {
+    background: #9a9a9a;
+    color: white;
+    text-align: center;
+    font-weight: 800;
+    font-size: 10pt;
+    width: 42px;
+  }
+  .pdf-perfil-tabla .perfil-opcion {
+    font-weight: 800;
+    color: #595959;
+    font-size: 9.5pt;
+  }
+  .pdf-perfil-tabla .perfil-marca {
+    text-align: center;
+    color: #595959;
+    font-weight: 500;
+    width: 36px;
+  }
+  .pdf-perfil-tabla .perfil-descripcion {
+    font-size: 9.5pt;
+    color: #000;
   }
   .pdf-escolaridad-grid {
     display: grid;
@@ -584,23 +665,28 @@ const renderTextoPolitica = (texto) => {
 
   return valor.map((linea, i) => {
     const match = linea.match(/^(Horario|Ubicaci[oó]n|Telefono|Tel[eé]fono|Correo)\s*:\s*(.*)$/i)
+    let texto = linea
 
-    if (!match) {
-      return (
-        <div key={i} style={{ marginBottom: 2, textAlign: 'justify', textJustify: 'inter-word', textAlignLast: 'left', width: '100%' }}>
-          {linea}
-        </div>
-      )
+    if (match) {
+      let etiqueta = match[1].toUpperCase()
+      if (etiqueta === 'TELEFONO') etiqueta = 'TELÉFONO'
+      if (etiqueta === 'UBICACION') etiqueta = 'UBICACIÓN'
+      texto = `${etiqueta}: ${match[2]}`
     }
 
-    let etiqueta = match[1].toUpperCase()
-    if (etiqueta === 'TELEFONO') etiqueta = 'TELÉFONO'
-    if (etiqueta === 'UBICACION') etiqueta = 'UBICACIÓN'
-
     return (
-      <div key={i} style={{ marginBottom: 2, textAlign: 'justify', textJustify: 'inter-word', textAlignLast: 'left', width: '100%' }}>
-        <span>{etiqueta}: </span>
-        <span>{match[2]}</span>
+      <div
+        key={i}
+        style={{
+          margin: 0,
+          padding: 0,
+          lineHeight: 1.08,
+          textAlign: 'justify',
+          textJustify: 'inter-word',
+          textAlignLast: 'left',
+        }}
+      >
+        {texto}
       </div>
     )
   })
@@ -618,14 +704,72 @@ const estimarPesoPolitica = (politica = {}) => {
   return area.length * 2 + descripcion.length
 }
 
-const paginarPoliticas = (politicas = [], maxPesoPorPagina = 1800) => {
-  if (!politicas.length) return [[]]
+const dividirTextoPlano = (texto, maxChars = 850) => {
+  const valor = String(texto || '').trim()
+  if (!valor) return ['']
+  if (valor.length <= maxChars) return [valor]
+
+  const segmentos = dividirTextoEnSegmentos(valor, maxChars)
+  if (segmentos.length > 0) return segmentos.map((segmento) => segmento.texto)
+
+  const partes = []
+  for (let i = 0; i < valor.length; i += maxChars) {
+    partes.push(valor.slice(i, i + maxChars))
+  }
+  return partes
+}
+
+const paginarPrincipiosValores = (principios = [], valores = [], maxPesoPorPagina = 3100) => {
+  const entradas = [
+    ...principios.map((texto) => ({ tipo: 'PRINCIPIOS', texto })),
+    ...valores.map((texto) => ({ tipo: 'VALORES', texto })),
+  ].filter((entrada) => String(entrada.texto || '').trim())
+
+  if (!entradas.length) return [[]]
 
   const paginas = []
   let actual = []
   let pesoActual = 0
 
-  politicas.forEach((politica) => {
+  entradas.forEach((entrada) => {
+    const peso = String(entrada.texto || '').length + (actual.some((item) => item.tipo === entrada.tipo) ? 80 : 180)
+
+    if (actual.length > 0 && pesoActual + peso > maxPesoPorPagina) {
+      paginas.push(actual)
+      actual = [entrada]
+      pesoActual = peso
+      return
+    }
+
+    actual.push(entrada)
+    pesoActual += peso
+  })
+
+  if (actual.length > 0) paginas.push(actual)
+  return paginas
+}
+
+const paginarPoliticas = (politicas = [], maxPesoPorPagina = 1250) => {
+  if (!politicas.length) return [[]]
+
+  const entradas = []
+  politicas.forEach((politica, index) => {
+    const segmentos = dividirTextoPlano(politica.descripcion, 850)
+    segmentos.forEach((segmento, segmentoIndex) => {
+      entradas.push({
+        area: politica.area,
+        descripcion: segmento,
+        indiceOriginal: index,
+        esContinuacion: segmentoIndex > 0,
+      })
+    })
+  })
+
+  const paginas = []
+  let actual = []
+  let pesoActual = 0
+
+  entradas.forEach((politica) => {
     const peso = estimarPesoPolitica(politica)
 
     if (actual.length > 0 && pesoActual + peso > maxPesoPorPagina) {
@@ -732,12 +876,119 @@ const paginarSegmentos = (segmentos, maxCharsPorPagina = 3200) => {
   return paginas
 }
 
+const paginarInventario = (inventario = [], maxFilasPorPagina = 22) => {
+  if (!inventario.length) return [[]]
+
+  const paginas = []
+  for (let i = 0; i < inventario.length; i += maxFilasPorPagina) {
+    paginas.push(inventario.slice(i, i + maxFilasPorPagina))
+  }
+
+  return paginas
+}
+
+const paginarSubordinadosPuesto = (puesto = {}) => {
+  const directos = (puesto.subordinados_directos || []).map((item) => ({ ...item, tipo: 'directo' }))
+  const indirectos = (puesto.subordinados_indirectos || []).map((item) => ({ ...item, tipo: 'indirecto' }))
+  const filas = [...directos, ...indirectos]
+
+  if (!filas.length) return [[{ tipo: 'directo', num_personas: '—', nombre_puesto: 'N/A' }]]
+
+  const primeraPagina = filas.slice(0, 14)
+  const restantes = filas.slice(14)
+  const paginas = [primeraPagina]
+
+  for (let i = 0; i < restantes.length; i += 24) {
+    paginas.push(restantes.slice(i, i + 24))
+  }
+
+  return paginas
+}
+
+const crearEntradasFuncionesPuesto = (puesto = {}) => {
+  const institucionales = puesto.funciones_institucionales?.length > 0
+    ? puesto.funciones_institucionales
+    : ['N/A']
+  const propias = puesto.funciones_propias?.length > 0
+    ? puesto.funciones_propias
+    : ['N/A']
+
+  return [
+    ...institucionales.flatMap((texto, index) =>
+      dividirTextoPlano(texto, 900).map((segmento, parte) => ({
+        tipo: 'institucional',
+        texto: segmento,
+        numero: index + 1,
+        parte,
+      }))
+    ),
+    ...propias.flatMap((texto, index) =>
+      dividirTextoPlano(texto, 900).map((segmento, parte) => ({
+        tipo: 'propia',
+        texto: segmento,
+        numero: index + 1,
+        parte,
+      }))
+    ),
+  ]
+}
+
+const paginarFuncionesPuesto = (puesto = {}, maxPesoPorPagina = 2400) => {
+  const entradas = crearEntradasFuncionesPuesto(puesto)
+  const paginas = []
+  let actual = []
+  let pesoActual = 0
+
+  entradas.forEach((entrada) => {
+    const peso = String(entrada.texto || '').length + (actual.some((item) => item.tipo === entrada.tipo) ? 40 : 120)
+
+    if (actual.length > 0 && pesoActual + peso > maxPesoPorPagina) {
+      paginas.push(actual)
+      actual = [entrada]
+      pesoActual = peso
+      return
+    }
+
+    actual.push(entrada)
+    pesoActual += peso
+  })
+
+  if (actual.length > 0) paginas.push(actual)
+  return paginas.length > 0 ? paginas : [[]]
+}
+
+const contarPaginasPuesto = (puesto = {}) => {
+  const paginasSubordinados = paginarSubordinadosPuesto(puesto).length
+  const paginasFunciones = paginarFuncionesPuesto(puesto).length
+  return paginasSubordinados + paginasFunciones + 3
+}
+
+const normalizarTextoInventario = (texto = '') =>
+  String(texto)
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+
+const filtrarInventarioPDF = (inventario = [], dependencia = '') => {
+  const dependenciaNormalizada = normalizarTextoInventario(dependencia)
+
+  return inventario.filter((puesto) => {
+    const nombreNormalizado = normalizarTextoInventario(puesto?.nombre_puesto)
+    return nombreNormalizado && nombreNormalizado !== dependenciaNormalizada
+  })
+}
+
 const crearMapaPaginas = ({
   puestos = [],
+  paginasPuestos = null,
   paginasAntecedentes = 1,
   paginaValoresSeparada = false,
+  paginasPrincipiosValores = 1,
   paginasPoliticas = 1,
   paginasOrganigramasEspecificos = 1,
+  paginasInventario = 1,
 }) => {
   const portada = 1
   const caratula = 2
@@ -752,14 +1003,15 @@ const crearMapaPaginas = ({
   const objetivoMisionVision = atribuciones + 1
   const principiosValores = objetivoMisionVision + 1
   const valores = paginaValoresSeparada ? principiosValores + 1 : null
-  const politicas = (valores || principiosValores) + 1
+  const politicas = (valores || principiosValores) + paginasPrincipiosValores
   const marcoConceptual = politicas + paginasPoliticas
   const portadaCapituloII = marcoConceptual + 1
   const organigramaGeneral = portadaCapituloII + 1
   const organigramasEspecificos = organigramaGeneral + 1
   const inventario = organigramasEspecificos + paginasOrganigramasEspecificos
-  const primerPuesto = inventario + 1
-  const cambios = primerPuesto + puestos.length
+  const primerPuesto = inventario + paginasInventario
+  const totalPaginasPuestos = paginasPuestos || puestos.reduce((total, puesto) => total + contarPaginasPuesto(puesto), 0)
+  const cambios = primerPuesto + totalPaginasPuestos
 
   return {
     portada,
@@ -987,7 +1239,12 @@ function PaginaIndice({ datos, total, mapaPaginas }) {
     { num: '4.3',  label: 'Inventario de Puestos', pag: mapaPaginas.inventario, nivel: 2 },
     { num: '4.4',  label: 'Descripción de Puestos', pag: mapaPaginas.primerPuesto, nivel: 2 },
     ...(datos.puestos || []).map((p, i) => ({
-      num: `4.4.${i + 1}`, label: `Descripción de puesto ${p.nombre_puesto || ''}`, pag: mapaPaginas.primerPuesto + i, nivel: 2
+      num: `4.4.${i + 1}`,
+      label: `Descripción de puesto ${p.nombre_puesto || ''}`,
+      pag: mapaPaginas.primerPuesto + (datos.puestos || [])
+        .slice(0, i)
+        .reduce((totalPuesto, puestoPrevio) => totalPuesto + contarPaginasPuesto(puestoPrevio), 0),
+      nivel: 2
     })),
     { num: '4.5',  label: 'Sección de Cambios', pag: mapaPaginas.cambios, nivel: 2 },
   ]
@@ -1508,11 +1765,19 @@ function PaginaObjetivoMisionVision({ datos, total, paginaInicio }) {
 }
 
 // ── PÁGINA: 3.8 Principios y Valores Institucionales ─────────────────────────
-function PaginaPrincipiosValores({ datos, total, paginaInicio }) {
-  const bloques = [
-    { titulo: 'PRINCIPIOS', items: datos.principios || [] },
-    { titulo: 'VALORES', items: datos.valores || [] },
+function PaginaPrincipiosValores({ datos, total, paginaInicio, entradas = null }) {
+  const entradasPagina = entradas || [
+    ...(datos.principios || []).map((texto) => ({ tipo: 'PRINCIPIOS', texto })),
+    ...(datos.valores || []).map((texto) => ({ tipo: 'VALORES', texto })),
   ]
+  const grupos = entradasPagina.reduce((acum, entrada) => {
+    if (!acum[entrada.tipo]) acum[entrada.tipo] = []
+    acum[entrada.tipo].push(entrada.texto)
+    return acum
+  }, {})
+  const bloques = ['PRINCIPIOS', 'VALORES']
+    .filter((titulo) => grupos[titulo]?.length > 0)
+    .map((titulo) => ({ titulo, items: grupos[titulo] }))
 
   return (
     <div className="pdf-pagina">
@@ -1520,10 +1785,10 @@ function PaginaPrincipiosValores({ datos, total, paginaInicio }) {
 
       <div className="pdf-cap-titulo">3.8 PRINCIPIOS Y VALORES INSTITUCIONALES</div>
 
-      {(datos.principios?.length > 0 || datos.valores?.length > 0) ? (
-        <div style={{ marginTop: 18 }}>
+      {bloques.length > 0 ? (
+        <div style={{ marginTop: 12 }}>
           {bloques.map((bloque, i) => (
-            <div key={bloque.titulo} style={{ marginBottom: i === bloques.length - 1 ? 0 : 28 }}>
+            <div key={bloque.titulo} style={{ marginBottom: i === bloques.length - 1 ? 0 : 18 }}>
               <div style={{
                 width: 'calc(50% + 56px)',
                 borderTop: '3px solid #000',
@@ -1545,7 +1810,7 @@ function PaginaPrincipiosValores({ datos, total, paginaInicio }) {
               <div style={{
                 width: 'calc(50% + 56px)',
                 borderTop: '3px solid #000',
-                marginBottom: 16,
+                marginBottom: 10,
                 marginLeft: '-56px',
               }} />
 
@@ -1591,29 +1856,42 @@ function PaginaPoliticasOperacion({ datos, total, paginaInicio, politicas = null
 
       {politicasPagina.length > 0 ? (
         politicasPagina.map((pol, i) => (
-          <div key={i} style={{ marginBottom: 20 }}>
+          <div key={i} style={{ marginBottom: 22, color: '#595959' }}>
             {pol.area ? (
               <>
-                <div style={{
-                  fontWeight: 800,
-                  fontSize: '11pt',
-                  marginBottom: 2,
-                  fontFamily: 'Montserrat, Arial, sans-serif',
-                  color: '#262626',
-                  marginLeft: '1cm',
-                  textTransform: 'uppercase',
-                }}>
-                  {`${String.fromCharCode(65 + indiceBase + i)}. ${pol.area}`}
-                </div>
+                {!pol.esContinuacion && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 10,
+                    fontFamily: 'Montserrat, Arial, sans-serif',
+                    fontWeight: 800,
+                    fontSize: '11pt',
+                    lineHeight: 1.1,
+                    marginLeft: '0.8cm',
+                    marginBottom: 2,
+                    color: '#595959',
+                    textTransform: 'uppercase',
+                  }}>
+                    <span style={{ width: 18, flexShrink: 0 }}>
+                      {`${String.fromCharCode(65 + (pol.indiceOriginal ?? indiceBase + i))}.`}
+                    </span>
+                    <span>{pol.area}</span>
+                  </div>
+                )}
                 <div style={{
                   marginBottom: 8,
-                  color: '#262626',
-                  paddingLeft: '3cm',
+                  color: '#595959',
+                  paddingLeft: '2.35cm',
+                  width: '14cm',
+                  maxWidth: '14cm',
                   fontFamily: 'Montserrat, Arial, sans-serif',
                   fontWeight: 500,
                   fontSize: '11pt',
                   lineHeight: 1.08,
-                  textAlign: 'left',
+                  textAlign: 'justify',
+                  textJustify: 'inter-word',
+                  textAlignLast: 'left',
                 }}>
                   {renderTextoPolitica(pol.descripcion)}
                 </div>
@@ -1622,7 +1900,7 @@ function PaginaPoliticasOperacion({ datos, total, paginaInicio, politicas = null
               <div style={{
                 marginLeft: '1cm',
                 marginBottom: 8,
-                color: '#262626',
+                color: '#595959',
                 fontFamily: 'Montserrat, Arial, sans-serif',
                 fontWeight: 500,
                 fontSize: '11pt',
@@ -1747,38 +2025,55 @@ function PaginaOrganigramaEspecifico({ datos, total, paginaInicio, organigrama =
 }
 
 // ── Página Inventario de Puestos ──────────────────────────────────────────────
-function PaginaInventario({ datos, total, paginaInicio }) {
-  const totalPersonas = (datos.inventario_puestos || []).reduce(
+function PaginaInventario({
+  datos,
+  total,
+  paginaInicio,
+  inventarioPagina = [],
+  inventarioCompleto = [],
+  indiceBase = 0,
+  mostrarTotal = true,
+}) {
+  const totalPersonas = inventarioCompleto.reduce(
     (s, p) => s + (parseInt(p.num_personas) || 0), 0
   )
   return (
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
-      <div className="pdf-cap-titulo">04. CAPÍTULO II DE ORGANIZACIÓN</div>
-      <div className="pdf-seccion-titulo" style={{ marginBottom: 12 }}>4.3 INVENTARIO DE PUESTOS</div>
+      <div className="pdf-cap-titulo pdf-inv-titulo">4.3 INVENTARIO DE PUESTOS</div>
       <table className="pdf-inv-tabla">
         <thead>
           <tr>
             <th style={{ width: 50 }}>NÚM.</th>
-            <th>PUESTO / TITULAR DE LA DEPENDENCIA O CARGO</th>
-            <th style={{ width: 150 }}>NO. DE PERSONAS EN EL CARGO</th>
+            <th>
+              <div>PUESTO</div>
+              <div>TITULAR DE LA DEPENDENCIA, UNIDAD ADMINISTRATIVA O ENTIDAD MUNICIPAL.</div>
+            </th>
+            <th className="personas-cargo-header">
+              <div>NO. DE</div>
+              <div>PERSONAS</div>
+              <div>EN EL</div>
+              <div>CARGO</div>
+            </th>
           </tr>
           <tr>
             <td colSpan={3} style={{ background: '#7F7F7F', height: 8, padding: 0, border: '1px solid #000' }}></td>
           </tr>
         </thead>
         <tbody>
-          {(datos.inventario_puestos || []).map((p, i) => (
+          {inventarioPagina.map((p, i) => (
             <tr key={i}>
-              <td style={{ textAlign: 'center', fontWeight: '600' }}>{i + 1}</td>
+              <td style={{ textAlign: 'center', fontWeight: '600' }}>{indiceBase + i + 1}</td>
               <td>{p.nombre_puesto}</td>
               <td style={{ textAlign: 'center' }}>{p.num_personas}</td>
             </tr>
           ))}
-          <tr className="total-row">
-            <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold', padding: '7px 10px', border: '1px solid #000' }}>TOTAL</td>
-            <td style={{ textAlign: 'center', fontWeight: 'bold', border: '1px solid #000' }}>{totalPersonas}</td>
-          </tr>
+          {mostrarTotal && (
+            <tr className="total-row">
+              <td colSpan={2} style={{ textAlign: 'right', fontWeight: 'bold', padding: '7px 10px', border: '1px solid #000' }}>TOTAL</td>
+              <td style={{ textAlign: 'center', fontWeight: 'bold', border: '1px solid #000' }}>{totalPersonas}</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
@@ -1795,74 +2090,192 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
     { val: '5', label: 'Carrera profesional\nterminada' },
     { val: '6', label: 'Postgrado' },
   ]
+  const nombrePuestoTitulo = puesto.nombre_puesto?.toUpperCase() || 'PUESTO'
+  const prefijoPerfil = nombrePuestoTitulo.startsWith('DIRECCIÓN') ? 'DE LA' : 'DE'
+  const jefeInmediatoTexto = puesto.jefe_inmediato || puesto.jefe_firma_cargo || puesto.jefe_firma_nombre || '—'
+  const paginasSubordinados = paginarSubordinadosPuesto(puesto)
+  const paginasFunciones = paginarFuncionesPuesto(puesto)
+  const totalSubordinados = (puesto.subordinados_directos || []).reduce((s, x) => s + (parseInt(x.num_personas) || 0), 0) +
+    (puesto.subordinados_indirectos || []).reduce((s, x) => s + (parseInt(x.num_personas) || 0), 0)
+  const renderSubordinadosTabla = (filas, mostrarEncabezados = true, mostrarTotal = false) => {
+    let seccionActual = ''
+
+    return (
+      <table className="pdf-subordinados-tabla">
+        <colgroup>
+          <col style={{ width: 150 }} />
+          <col />
+        </colgroup>
+        <tbody>
+          {filas.map((s, i) => {
+            const mostrarSeccion = s.tipo !== seccionActual
+            seccionActual = s.tipo
+            return (
+              <>
+                {mostrarEncabezados && mostrarSeccion && (
+                  <tr key={`sec-${s.tipo}-${i}`}>
+                    <td colSpan={2} className="header-gris">
+                      {s.tipo === 'indirecto' ? 'SUBORDINADOS INDIRECTOS' : 'SUBORDINADOS DIRECTOS'}
+                    </td>
+                  </tr>
+                )}
+                {mostrarEncabezados && mostrarSeccion && (
+                  <tr key={`head-${s.tipo}-${i}`}>
+                    <td className="label-cell sub-num-cell">NÚMERO DE<br />PERSONAS</td>
+                    <td className="label-cell">NOMBRE DEL PUESTO</td>
+                  </tr>
+                )}
+                <tr key={`row-${i}`}>
+                  <td className="sub-num-cell" style={{ textAlign: 'center', verticalAlign: 'middle' }}>{s.num_personas}</td>
+                  <td className="sub-nombre-cell">{s.nombre_puesto}</td>
+                </tr>
+              </>
+            )
+          })}
+          {mostrarTotal && (
+            <tr>
+              <td className="sub-num-cell" style={{ textAlign: 'center', verticalAlign: 'middle' }}>{totalSubordinados}</td>
+              <td className="label-cell" style={{ background: '#7F7F7F', color: 'white', fontWeight: 'bold', textAlign: 'left' }}>TOTAL</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    )
+  }
+  const renderFuncionesTabla = (entradas, mostrarEncabezadoPrincipal = true, tipoPrevio = '') => {
+    let seccionActual = tipoPrevio
+
+    return (
+      <table className="pdf-funciones-tabla">
+        <colgroup>
+          <col style={{ width: 145 }} />
+          <col />
+        </colgroup>
+        <tbody>
+          {mostrarEncabezadoPrincipal && (
+            <tr>
+              <td colSpan={2} className="header-gris">DESCRIPCIÓN ANALÍTICA DE FUNCIONES</td>
+            </tr>
+          )}
+          {entradas.map((entrada, i) => {
+            const mostrarSeccion = entrada.tipo !== seccionActual
+            seccionActual = entrada.tipo
+
+            return (
+              <>
+                {mostrarSeccion && (
+                  <tr key={`func-sec-${entrada.tipo}-${i}`}>
+                    <td colSpan={2} className="subheader">
+                      {entrada.tipo === 'institucional' ? 'FUNCIONES INSTITUCIONALES' : 'FUNCIONES PROPIAS DEL PUESTO'}
+                    </td>
+                  </tr>
+                )}
+                <tr key={`func-row-${i}`}>
+                  <td className="num-cell">{entrada.parte === 0 ? entrada.numero : ''}</td>
+                  <td className="texto-cell">{entrada.texto}</td>
+                </tr>
+              </>
+            )
+          })}
+        </tbody>
+      </table>
+    )
+  }
 
   return (
+    <>
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
 
       <div className="pdf-puesto-header">
-        4.4.{index + 1} DESCRIPCIÓN Y PERFIL DE {puesto.nombre_puesto?.toUpperCase() || 'PUESTO'}
+        4.4.{index + 1} DESCRIPCIÓN Y PERFIL {prefijoPerfil} {nombrePuestoTitulo}
       </div>
 
       {/* Tabla info general */}
       <table className="pdf-info-puesto-tabla">
+        <colgroup>
+          <col style={{ width: 58 }} />
+          <col style={{ width: 215 }} />
+          <col />
+          <col style={{ width: 1 }} />
+        </colgroup>
         <tbody>
           <tr>
             <td colSpan={4} className="header-gris">INFORMACIÓN GENERAL DEL PUESTO</td>
           </tr>
           <tr>
-            <td style={{ width: 60, textAlign: 'center', fontWeight: 'bold', background: '#7F7F7F', color: 'white', fontSize: '10pt' }} rowSpan={2}>
+            <td className="puesto-num-cell" rowSpan={2}>
               4.4.{index + 1}
             </td>
-            <td className="label-cell" style={{ width: '25%' }}>NOMBRE DEL PUESTO</td>
+            <td className="label-cell">NOMBRE DEL PUESTO</td>
             <td colSpan={2}>{puesto.nombre_puesto}</td>
           </tr>
           <tr>
             <td className="label-cell">JEFE INMEDIATO</td>
-            <td colSpan={2}>{puesto.jefe_inmediato || '—'}</td>
+            <td colSpan={2}>{jefeInmediatoTexto}</td>
           </tr>
           <tr>
-            <td colSpan={4} className="header-gris">SUBORDINADOS DIRECTOS</td>
-          </tr>
-          <tr>
-            <td colSpan={2} className="label-cell" style={{ textAlign: 'center' }}>NÚMERO DE PERSONAS</td>
-            <td colSpan={2} className="label-cell" style={{ textAlign: 'center' }}>NOMBRE DEL PUESTO</td>
-          </tr>
-          {(puesto.subordinados_directos?.length > 0) ? puesto.subordinados_directos.map((s, i) => (
-            <tr key={i}>
-              <td colSpan={2} style={{ textAlign: 'center' }}>{s.num_personas}</td>
-              <td colSpan={2}>{s.nombre_puesto}</td>
-            </tr>
-          )) : (
-            <tr><td colSpan={2} style={{ textAlign: 'center' }}>—</td><td colSpan={2}>N/A</td></tr>
-          )}
-          <tr>
-            <td colSpan={4} className="header-gris">SUBORDINADOS INDIRECTOS</td>
-          </tr>
-          {(puesto.subordinados_indirectos?.length > 0) ? puesto.subordinados_indirectos.map((s, i) => (
-            <tr key={i}>
-              <td colSpan={2} style={{ textAlign: 'center' }}>{s.num_personas}</td>
-              <td colSpan={2}>{s.nombre_puesto}</td>
-            </tr>
-          )) : (
-            <tr><td colSpan={2} style={{ textAlign: 'center' }}>—</td><td colSpan={2}>N/A</td></tr>
-          )}
-          {/* Total */}
-          <tr>
-            <td colSpan={2} style={{ textAlign: 'center', background: '#7F7F7F', color: 'white', fontWeight: 'bold', border: '1px solid #000', padding: '6px' }}>
-              {(puesto.subordinados_directos || []).reduce((s, x) => s + (parseInt(x.num_personas) || 0), 0) +
-               (puesto.subordinados_indirectos || []).reduce((s, x) => s + (parseInt(x.num_personas) || 0), 0)}
+            <td colSpan={4} style={{ padding: 0, border: 0 }}>
+              {renderSubordinadosTabla(paginasSubordinados[0], true, paginasSubordinados.length === 1)}
             </td>
-            <td colSpan={2} style={{ background: '#7F7F7F', color: 'white', fontWeight: 'bold', border: '1px solid #000', padding: '6px' }}>TOTAL</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+      {paginasSubordinados.slice(1).map((filas, pageIndex) => (
+        <div className="pdf-pagina" key={`puesto-subordinados-${index}-${pageIndex}`}>
+          <HeaderPagina datos={datos} numeroPagina={paginaInicio + pageIndex + 1} totalPaginas={total} />
+          {renderSubordinadosTabla(filas, false, pageIndex === paginasSubordinados.length - 2)}
+        </div>
+      ))}
+
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio + paginasSubordinados.length} totalPaginas={total} />
+      <div className="pdf-puesto-header">
+        4.4.{index + 1} DESCRIPCIÓN Y PERFIL {prefijoPerfil} {nombrePuestoTitulo}
+      </div>
 
       {/* Objetivo */}
-      <div className="pdf-objetivo-box">
-        <div className="pdf-objetivo-titulo">OBJETIVO GENERAL DEL PUESTO</div>
-        <div className="pdf-objetivo-subtitulo">(Anote brevemente el objetivo o razón por la cual existe)</div>
-        <div style={{ fontSize: '9.5pt', lineHeight: 1.6 }}>{puesto.objetivo_puesto || '—'}</div>
+      <div style={{
+        border: '1px solid #000',
+        padding: '0 0px 0px',
+        marginBottom: 14,
+        fontFamily: 'Montserrat, Arial, sans-serif',
+        color: '#000',
+      }}>
+        <div style={{
+          background: '#7F7F7F',
+          color: '#fff',
+          textAlign: 'center',
+          fontWeight: 800,
+          fontSize: '10pt',
+          textTransform: 'uppercase',
+          padding: '4px 8px 3px',
+          marginBottom: 4,
+          lineHeight: 1.05,
+          borderBottom: '1px solid #000',
+        }}>
+          <div>OBJETIVO GENERAL DEL PUESTO</div>
+          <div style={{
+            fontStyle: 'normal',
+            fontSize: '8.5pt',
+            textTransform: 'none',
+            lineHeight: 1.05,
+          }}>
+            (Anote brevemente el objetivo o razón por la cual existe)
+          </div>
+        </div>
+        <div style={{
+          fontSize: '10.5pt',
+          lineHeight: 1.42,
+          textAlign: 'justify',
+          textJustify: 'inter-word',
+          textAlignLast: 'left',
+          padding: '2px 8px 0 8px',
+        }}>
+          {puesto.objetivo_puesto || '—'}
+        </div>
       </div>
 
       {/* Ubicación en el organigrama */}
@@ -1876,7 +2289,7 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '9pt' }}>
                 {/* Jefe Inmediato */}
                 <div style={{ border: '1px solid #000', padding: '6px 20px', minWidth: 180, textAlign: 'center', background: '#f0f0f0', fontWeight: 'bold' }}>
-                  {puesto.jefe_inmediato || '—'}
+                  {jefeInmediatoTexto}
                 </div>
                 {/* Línea vertical */}
                 <div style={{ width: 1, height: 20, background: '#000' }} />
@@ -1904,82 +2317,105 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
         </tbody>
       </table>
 
-      {/* Funciones */}
-      <table className="pdf-funciones-tabla">
-        <tbody>
-          <tr>
-            <td colSpan={2} className="header-gris">DESCRIPCIÓN ANALÍTICA DE FUNCIONES</td>
-          </tr>
-          <tr>
-            <td colSpan={2} className="subheader">FUNCIONES INSTITUCIONALES</td>
-          </tr>
-          {(puesto.funciones_institucionales?.length > 0) ? puesto.funciones_institucionales.map((f, i) => (
-            <tr key={i}>
-              <td className="num-cell">{i + 1}.</td>
-              <td>{f}</td>
-            </tr>
-          )) : (
-            <tr><td className="num-cell">1.</td><td>N/A</td></tr>
-          )}
-          <tr>
-            <td colSpan={2} className="subheader">FUNCIONES PROPIAS DEL PUESTO</td>
-          </tr>
-          {(puesto.funciones_propias?.length > 0) ? puesto.funciones_propias.map((f, i) => (
-            <tr key={i}>
-              <td className="num-cell">{i + 1}.</td>
-              <td>{f}</td>
-            </tr>
-          )) : (
-            <tr><td className="num-cell">1.</td><td>N/A</td></tr>
-          )}
-        </tbody>
-      </table>
+    </div>
+
+    {paginasFunciones.map((entradas, pageIndex) => (
+      <div className="pdf-pagina" key={`puesto-funciones-${index}-${pageIndex}`}>
+        <HeaderPagina datos={datos} numeroPagina={paginaInicio + paginasSubordinados.length + pageIndex + 1} totalPaginas={total} />
+        <div className="pdf-puesto-header">
+          4.4.{index + 1} DESCRIPCIÓN Y PERFIL {prefijoPerfil} {nombrePuestoTitulo}
+        </div>
+        {renderFuncionesTabla(
+          entradas,
+          pageIndex === 0,
+          pageIndex > 0 ? paginasFunciones[pageIndex - 1]?.at(-1)?.tipo : ''
+        )}
+      </div>
+    ))}
+
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio + paginasSubordinados.length + paginasFunciones.length + 1} totalPaginas={total} />
+      <div className="pdf-puesto-header">
+        4.4.{index + 1} DESCRIPCIÓN Y PERFIL {prefijoPerfil} {nombrePuestoTitulo}
+      </div>
 
       {/* Perfil */}
       <table className="pdf-perfil-tabla">
+        <colgroup>
+          <col style={{ width: 52 }} />
+          <col style={{ width: 112 }} />
+          <col style={{ width: 34 }} />
+          <col style={{ width: 46 }} />
+          <col style={{ width: 126 }} />
+          <col style={{ width: 34 }} />
+          <col style={{ width: 46 }} />
+          <col style={{ width: 158 }} />
+          <col style={{ width: 34 }} />
+          <col />
+        </colgroup>
         <tbody>
           <tr>
             <td colSpan={10} className="header-gris">PERFIL DEL PUESTO</td>
           </tr>
           <tr>
-            <td colSpan={10} className="label-bold" style={{ padding: '6px 10px', fontSize: '9pt' }}>
-              ESCOLARIDAD: Marque con una (X) el último grado de estudios requerido para desarrollar el puesto
+            <td colSpan={3} className="label-bold">ESCOLARIDAD:</td>
+            <td colSpan={7} className="perfil-descripcion">
+              Marque con una (X) el último grado de estudios requerido para desarrollar el puesto
             </td>
           </tr>
           <tr>
-            {ESCOLARIDAD_OPTS_TABLA.map((opt, i) => (
-              <td key={i} style={{ textAlign: 'center', border: '1px solid #000', padding: '4px 6px', fontSize: '8pt', width: `${100/6}%` }}>
-                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{i + 1}.</div>
-                <div style={{ marginBottom: 4 }}>{opt.label}</div>
-                <div className="pdf-check-box">{puesto.escolaridad === opt.val ? 'X' : ''}</div>
-              </td>
-            ))}
+            <td className="num-gris">1.</td>
+            <td className="perfil-opcion">Primaria</td>
+            <td className="perfil-marca">{puesto.escolaridad === '1' ? 'X' : '-'}</td>
+            <td className="num-gris">2.</td>
+            <td className="perfil-opcion">Secundaria</td>
+            <td className="perfil-marca">{puesto.escolaridad === '2' ? 'X' : '-'}</td>
+            <td className="num-gris">3.</td>
+            <td className="perfil-opcion">Preparatoria o<br />Técnica</td>
+            <td className="perfil-marca">{puesto.escolaridad === '3' ? 'X' : '-'}</td>
+            <td />
           </tr>
           <tr>
-            <td colSpan={4} className="label-bold">Licenciatura o carreras afines.</td>
-            <td colSpan={6}>{puesto.carreras_afines || 'N/A'}</td>
+            <td className="num-gris">4.</td>
+            <td className="perfil-opcion">Carrera Profesional<br />no terminada<br />(2 años)</td>
+            <td className="perfil-marca">{puesto.escolaridad === '4' ? 'X' : '-'}</td>
+            <td className="num-gris">5.</td>
+            <td className="perfil-opcion">Carrera profesional<br />terminada</td>
+            <td className="perfil-marca">{puesto.escolaridad === '5' ? 'X' : '-'}</td>
+            <td className="num-gris">6.</td>
+            <td className="perfil-opcion">Postgrado</td>
+            <td className="perfil-marca">{puesto.escolaridad === '6' ? 'X' : '-'}</td>
+            <td />
           </tr>
           <tr>
-            <td colSpan={4} className="label-bold">Área de especialidad requerida (Conocimiento Técnico).</td>
-            <td colSpan={6}>{puesto.especialidad || 'N/A'}</td>
+            <td className="num-gris">7.</td>
+            <td colSpan={2} className="label-bold">Licenciatura o carreras afines.</td>
+            <td colSpan={7} className="perfil-descripcion">{puesto.carreras_afines || 'N/A'}</td>
+          </tr>
+          <tr>
+            <td className="num-gris">8.</td>
+            <td colSpan={2} className="label-bold">Área de especialidad requerida (Conocimiento Técnico).</td>
+            <td colSpan={7} className="perfil-descripcion">{puesto.especialidad || 'N/A'}</td>
           </tr>
           {/* Conocimiento específico */}
           <tr>
+            <td className="num-gris" rowSpan={3}>9</td>
             <td colSpan={2} className="label-bold" rowSpan={3}>Conocimiento Específico.</td>
-            <td colSpan={2} style={{ fontSize: '9pt', fontWeight: 'bold' }}>Idioma o Lengua:</td>
-            <td colSpan={6}>{puesto.idiomas?.join(', ') || 'Español.'}</td>
+            <td colSpan={3} className="label-bold">Idioma o Lengua:</td>
+            <td colSpan={4} className="perfil-descripcion">{puesto.idiomas?.join(', ') || 'Español.'}</td>
           </tr>
           <tr>
-            <td colSpan={2} style={{ fontSize: '9pt', fontWeight: 'bold' }}>Manejo de Programas Informáticos:</td>
-            <td colSpan={6}>{puesto.programas_informaticos?.join(', ') || 'N/A'}</td>
+            <td colSpan={3} className="label-bold">Manejo de Programas Informáticos:</td>
+            <td colSpan={4} className="perfil-descripcion">{puesto.programas_informaticos?.join(', ') || 'N/A'}</td>
           </tr>
           <tr>
-            <td colSpan={2} style={{ fontSize: '9pt', fontWeight: 'bold' }}>Manejo de Equipo Especializado y/o Herramientas</td>
-            <td colSpan={6}>{puesto.equipo_herramientas?.join(', ') || 'No aplica.'}</td>
+            <td colSpan={3} className="label-bold">Manejo de Equipo Especializado y/o Herramientas</td>
+            <td colSpan={4} className="perfil-descripcion">{puesto.equipo_herramientas?.join(', ') || 'N/A'}</td>
           </tr>
           <tr>
-            <td colSpan={4} className="label-bold">10. Experiencia:</td>
-            <td colSpan={6}>{puesto.experiencia || 'N/A'}</td>
+            <td className="num-gris">10.</td>
+            <td colSpan={2} className="label-bold">Experiencia:</td>
+            <td colSpan={7} className="perfil-descripcion">{puesto.experiencia || 'N/A'}</td>
           </tr>
           {/* Competencias Laborales — dentro de la misma tabla de Perfil */}
           <tr>
@@ -2010,6 +2446,13 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div className="pdf-pagina">
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio + paginasSubordinados.length + paginasFunciones.length + 2} totalPaginas={total} />
+      <div className="pdf-puesto-header">
+        4.4.{index + 1} DESCRIPCIÓN Y PERFIL {prefijoPerfil} {nombrePuestoTitulo}
+      </div>
 
       {/* Responsabilidad */}
       <table className="pdf-perfil-tabla" style={{ marginTop: 0 }}>
@@ -2141,6 +2584,7 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
         </tbody>
       </table>
     </div>
+    </>
   )
 }
 
@@ -2202,18 +2646,27 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
   const puestos = datos.puestos || []
   const segmentosAntecedentes = dividirTextoEnSegmentos(datos.antecedentes, 2400)
   const paginasAntecedentes = paginarSegmentos(segmentosAntecedentes, 2800)
+  const paginasPrincipiosValores = paginarPrincipiosValores(datos.principios || [], datos.valores || [])
   const paginasPoliticas = paginarPoliticas(datos.politicas_operacion || [])
+  const inventarioPDF = filtrarInventarioPDF(datos.inventario_puestos || [], datos.dependencia)
+  const paginasInventario = paginarInventario(inventarioPDF)
+  const paginasPorPuesto = puestos.map((puesto) => contarPaginasPuesto(puesto))
   const organigramasEspecificos = datos.organigramas_especificos?.length > 0
     ? datos.organigramas_especificos
     : [null]
   const totalPaginasAntecedentes = paginasAntecedentes.length || 1
+  const totalPaginasPrincipiosValores = paginasPrincipiosValores.length || 1
   const totalPaginasPoliticas = paginasPoliticas.length || 1
+  const totalPaginasInventario = paginasInventario.length || 1
   const mapaPaginas = crearMapaPaginas({
     puestos,
     paginasAntecedentes: totalPaginasAntecedentes,
     paginaValoresSeparada: false,
+    paginasPrincipiosValores: totalPaginasPrincipiosValores,
     paginasPoliticas: totalPaginasPoliticas,
     paginasOrganigramasEspecificos: organigramasEspecificos.length,
+    paginasInventario: totalPaginasInventario,
+    paginasPuestos: paginasPorPuesto.reduce((total, paginas) => total + paginas, 0),
   })
   const totalPaginas = mapaPaginas.total
 
@@ -2223,22 +2676,59 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
     try {
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' })
       const paginas = docRef.current.querySelectorAll('.pdf-pagina, .pdf-pagina-horizontal')
+      let paginasPdfAgregadas = 0
 
       for (let i = 0; i < paginas.length; i++) {
         setProgreso(`Procesando página ${i + 1} de ${paginas.length}...`)
-        const orientation = paginas[i].dataset.pageOrientation === 'landscape' ? 'landscape' : 'portrait'
-        const canvas = await html2canvas(paginas[i], {
+        const pagina = paginas[i]
+        const orientation = pagina.dataset.pageOrientation === 'landscape' ? 'landscape' : 'portrait'
+        const altoCartaCss = pagina.clientHeight
+        const altoContenidoCss = Math.max(pagina.scrollHeight, altoCartaCss)
+        const requiereCorte = altoContenidoCss > altoCartaCss + 2
+        const estiloPrevio = {
+          height: pagina.style.height,
+          minHeight: pagina.style.minHeight,
+          overflow: pagina.style.overflow,
+        }
+
+        if (requiereCorte) {
+          pagina.style.height = 'auto'
+          pagina.style.minHeight = `${altoCartaCss}px`
+          pagina.style.overflow = 'visible'
+        }
+
+        const canvas = await html2canvas(pagina, {
           scale: 2,
           useCORS: true,
           backgroundColor: '#ffffff',
           logging: false,
         })
-        const imgData = canvas.toDataURL('image/jpeg', 0.95)
-        if (i > 0) pdf.addPage('letter', orientation)
+
+        if (requiereCorte) {
+          pagina.style.height = estiloPrevio.height
+          pagina.style.minHeight = estiloPrevio.minHeight
+          pagina.style.overflow = estiloPrevio.overflow
+        }
+
         const pdfW = pdf.internal.pageSize.getWidth()
         const pdfH = pdf.internal.pageSize.getHeight()
+        const altoCorteCanvas = Math.round(altoCartaCss * (canvas.width / pagina.clientWidth))
+        const totalCortes = Math.max(1, Math.ceil(canvas.height / altoCorteCanvas))
 
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
+        for (let corte = 0; corte < totalCortes; corte++) {
+          const y = corte * altoCorteCanvas
+          const altoCorte = Math.min(altoCorteCanvas, canvas.height - y)
+          const canvasCorte = document.createElement('canvas')
+          canvasCorte.width = canvas.width
+          canvasCorte.height = altoCorte
+          const ctx = canvasCorte.getContext('2d')
+          ctx.drawImage(canvas, 0, y, canvas.width, altoCorte, 0, 0, canvas.width, altoCorte)
+
+          const imgData = canvasCorte.toDataURL('image/jpeg', 0.95)
+          if (paginasPdfAgregadas > 0) pdf.addPage('letter', orientation)
+          pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
+          paginasPdfAgregadas += 1
+        }
       }
 
       setProgreso('Guardando archivo...')
@@ -2326,7 +2816,15 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
         <PaginaMarcoNormativo datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.marcoNormativo} />
         <PaginaAtribuciones datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.atribuciones} />
         <PaginaObjetivoMisionVision datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.objetivoMisionVision} />
-        <PaginaPrincipiosValores datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.principiosValores} />
+        {paginasPrincipiosValores.map((entradasPagina, i) => (
+          <PaginaPrincipiosValores
+            key={`principios-valores-${i}`}
+            datos={datos}
+            total={totalPaginas}
+            paginaInicio={mapaPaginas.principiosValores + i}
+            entradas={entradasPagina}
+          />
+        ))}
         {paginasPoliticas.map((politicasPagina, i) => (
           <PaginaPoliticasOperacion
             key={`politicas-${i}`}
@@ -2350,7 +2848,18 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
             paginaInicio={mapaPaginas.organigramasEspecificos + i}
           />
         ))}
-        <PaginaInventario datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.inventario} />
+        {paginasInventario.map((inventarioPagina, i) => (
+          <PaginaInventario
+            key={`inventario-${i}`}
+            datos={datos}
+            total={totalPaginas}
+            paginaInicio={mapaPaginas.inventario + i}
+            inventarioPagina={inventarioPagina}
+            inventarioCompleto={inventarioPDF}
+            indiceBase={paginasInventario.slice(0, i).reduce((acum, pagina) => acum + pagina.length, 0)}
+            mostrarTotal={i === paginasInventario.length - 1}
+          />
+        ))}
         {puestos.map((puesto, i) => (
           <PaginaPuesto
             key={i}
@@ -2358,7 +2867,7 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
             puesto={puesto}
             index={i}
             total={totalPaginas}
-            paginaInicio={mapaPaginas.primerPuesto + i}
+            paginaInicio={mapaPaginas.primerPuesto + paginasPorPuesto.slice(0, i).reduce((total, paginas) => total + paginas, 0)}
           />
         ))}
         <PaginaCambios datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.cambios} />

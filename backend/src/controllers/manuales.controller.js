@@ -115,7 +115,14 @@ const getManualById = async (req, res) => {
     // Inventario de puestos
     const inventarioRes = await pool.query(
       `SELECT nombre_puesto, numero_personas AS num_personas
-       FROM puestos WHERE id_manual = $1 ORDER BY id_puesto`, [id]
+       FROM puestos p
+       WHERE p.id_manual = $1
+         AND NOT EXISTS (
+           SELECT 1
+           FROM descripcion_puesto dp
+           WHERE dp.id_puesto = p.id_puesto
+         )
+       ORDER BY p.id_puesto`, [id]
     )
 
     // Descripción de puestos — solo filas con descripción (evita duplicar con inventario)
@@ -153,7 +160,7 @@ const getManualById = async (req, res) => {
         )
         return {
           nombre_puesto:             p.nombre_puesto,
-          jefe_inmediato:            p.jefe_inmediato            || '',
+          jefe_inmediato:            p.jefe_inmediato            || p.jefe_firma_cargo || p.jefe_firma_nombre || '',
           objetivo_puesto:           p.objetivo                  || '',
           autoridad:                 p.autoridad ? [p.autoridad] : [],
           indicador_desempeno:       p.indicador_desempeno ? [p.indicador_desempeno] : [],
