@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import { API_BASE } from '../config.js'
 
 // ── Estilos del documento PDF ─────────────────────────────────────────────────
 const estilos = `
@@ -695,7 +696,7 @@ const renderTextoPolitica = (texto) => {
 const normalizarRutaOrganigrama = (ruta) => {
   if (!ruta) return ''
   if (/^https?:\/\//i.test(ruta)) return ruta
-  return `http://localhost:3000${ruta}`
+  return `${API_BASE}${ruta}`
 }
 
 const estimarPesoPolitica = (politica = {}) => {

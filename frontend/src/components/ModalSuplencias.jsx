@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { API_BASE } from '../config.js'
 
 export default function ModalSuplencias({ onCerrar }) {
   const token = localStorage.getItem('token')
@@ -14,8 +15,8 @@ export default function ModalSuplencias({ onCerrar }) {
 
   useEffect(() => {
     Promise.all([
-      axios.get('http://localhost:3000/suplencias',          { headers }),
-      axios.get('http://localhost:3000/suplencias/usuarios', { headers }),
+      axios.get(`${API_BASE}/suplencias`,          { headers }),
+      axios.get(`${API_BASE}/suplencias/usuarios`, { headers }),
     ]).then(([sRes, uRes]) => {
       setSuplencias(sRes.data)
       setUsuarios(uRes.data)
@@ -23,7 +24,7 @@ export default function ModalSuplencias({ onCerrar }) {
   }, [])
 
   const fetchSuplencias = async () => {
-    const res = await axios.get('http://localhost:3000/suplencias', { headers })
+    const res = await axios.get(`${API_BASE}/suplencias`, { headers })
     setSuplencias(res.data)
   }
 
@@ -39,7 +40,7 @@ export default function ModalSuplencias({ onCerrar }) {
     }
     setGuardando(true)
     try {
-      await axios.post('http://localhost:3000/suplencias', {
+      await axios.post(`${API_BASE}/suplencias`, {
         sujeto_obligado: parseInt(form.sujeto_obligado),
         suplente:        parseInt(form.suplente),
         motivo:          form.motivo || null,
@@ -55,7 +56,7 @@ export default function ModalSuplencias({ onCerrar }) {
 
   const handleDesactivar = async (id) => {
     try {
-      await axios.patch(`http://localhost:3000/suplencias/${id}/desactivar`, {}, { headers })
+      await axios.patch(`${API_BASE}/suplencias/${id}/desactivar`, {}, { headers })
       await fetchSuplencias()
     } catch {
       alert('Error al desactivar la suplencia')

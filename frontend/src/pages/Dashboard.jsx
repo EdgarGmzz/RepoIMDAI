@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { API_BASE } from '../config.js'
 import WizardManual from '../components/WizardManual'
 import VisorManual from '../components/VisorManual'
 import WizardOrganizacion from '../components/WizardOrganizacion'
@@ -49,7 +50,7 @@ export default function Dashboard() {
 
   const fetchManuales = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/manuales', {
+      const res = await axios.get(`${API_BASE}/manuales`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setManuales(res.data)
@@ -60,7 +61,7 @@ export default function Dashboard() {
 
   const fetchActividad = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/manuales/actividad', {
+      const res = await axios.get(`${API_BASE}/manuales/actividad`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setActividad(res.data)
@@ -89,7 +90,7 @@ export default function Dashboard() {
   const cambiarEstado = async (id_manual, nuevoEstado, comentario = null, seccion = null) => {
     try {
       await axios.patch(
-        `http://localhost:3000/manuales/${id_manual}/estado`,
+        `${API_BASE}/manuales/${id_manual}/estado`,
         { estado: nuevoEstado, comentario, seccion },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -112,7 +113,7 @@ export default function Dashboard() {
     setGuardandoCodigo(true)
     try {
       await axios.patch(
-        `http://localhost:3000/manuales/${manualCodigo.id_manual}/codigo`,
+        `${API_BASE}/manuales/${manualCodigo.id_manual}/codigo`,
         { codigo: inputCodigo.trim(), version: inputVersion },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -156,7 +157,7 @@ export default function Dashboard() {
 
   const eliminarSeleccionados = async () => {
     try {
-      await axios.delete('http://localhost:3000/manuales', {
+      await axios.delete(`${API_BASE}/manuales`, {
         headers: { Authorization: `Bearer ${token}` },
         data: { ids: seleccionados }
       })
@@ -174,7 +175,7 @@ export default function Dashboard() {
     setLoadingHistorial(true)
     setModalHistorialOpen(true)
     try {
-      const res = await axios.get(`http://localhost:3000/manuales/${manual.id_manual}/historial`, {
+      const res = await axios.get(`${API_BASE}/manuales/${manual.id_manual}/historial`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setHistorialData(res.data)

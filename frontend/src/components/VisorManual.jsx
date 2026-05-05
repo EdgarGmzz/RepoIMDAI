@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { API_BASE } from '../config.js'
 import GeneradorPDFManual from './GeneradorPDFManual'
 import GeneradorPDFProcedimientos from './GeneradorPDFProcedimientos'
 import DiagramaFlujo from './DiagramaFlujo'
@@ -495,7 +496,7 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
     const fetchDetalle = async () => {
       setCargando(true)
       try {
-        const res = await axios.get(`http://localhost:3000/manuales/${manual.id_manual}`, {
+        const res = await axios.get(`${API_BASE}/manuales/${manual.id_manual}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setDatosExtra(res.data)
@@ -517,7 +518,7 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
     setGuardando(true)
     try {
       await axios.patch(
-        `http://localhost:3000/manuales/${manual.id_manual}/codigo`,
+        `${API_BASE}/manuales/${manual.id_manual}/codigo`,
         { codigo: editCodigo.trim(), version: editVersion },
         { headers: { Authorization: `Bearer ${token}` } }
       )

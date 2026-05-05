@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
+import { API_BASE } from '../config.js'
 import OrgPaso1DatosGenerales from './org-pasos/OrgPaso1DatosGenerales'
 import OrgPaso2CapituloI from './org-pasos/OrgPaso2CapituloI'
 import OrgPaso3Organizacion from './org-pasos/OrgPaso3Organizacion'
@@ -89,7 +90,7 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
     const fetchDetalle = async () => {
       setCargando(true)
       try {
-        const res = await axios.get(`http://localhost:3000/manuales/${manualEditar.id_manual}`, {
+        const res = await axios.get(`${API_BASE}/manuales/${manualEditar.id_manual}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const d = res.data
@@ -213,7 +214,7 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
       const fd = new FormData()
       fd.append('archivo', datos.organigrama_general)
       fd.append('tipo', 'general')
-      await axios.post(`http://localhost:3000/manuales/${id_manual}/organigrama`, fd, { headers })
+      await axios.post(`${API_BASE}/manuales/${id_manual}/organigrama`, fd, { headers })
     }
 
     for (const org of datos.organigramas_especificos) {
@@ -222,7 +223,7 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
         const fd = new FormData()
         fd.append('archivo', org.archivo)
         fd.append('tipo', org.nombre?.trim() || `especifico_${i + 1}`)
-        await axios.post(`http://localhost:3000/manuales/${id_manual}/organigrama`, fd, { headers })
+        await axios.post(`${API_BASE}/manuales/${id_manual}/organigrama`, fd, { headers })
       }
     }
   }
@@ -237,13 +238,13 @@ export default function WizardOrganizacion({ onCancelar, onGuardado, manualEdita
 
       if (modoEdicion) {
         await axios.put(
-          `http://localhost:3000/manuales/${manualEditar.id_manual}`,
+          `${API_BASE}/manuales/${manualEditar.id_manual}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         id_manual = manualEditar.id_manual
       } else {
-        const res = await axios.post('http://localhost:3000/manuales', payload, {
+        const res = await axios.post(`${API_BASE}/manuales`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         })
         id_manual = res.data.manual.id_manual

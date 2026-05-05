@@ -7,7 +7,7 @@ import { useParams } from 'react-router-dom'
 import axios from 'axios'
 import DiagramaFlujo from '../components/DiagramaFlujo'
 
-const API_BASE = 'http://localhost:3000'
+import { API_BASE } from '../config.js'
 
 export default function VistaDiagrama() {
   const { manualId, procIdx } = useParams()

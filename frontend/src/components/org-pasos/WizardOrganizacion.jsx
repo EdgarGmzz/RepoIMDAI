@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { API_BASE } from '../../config.js'
 import OrgPaso1DatosGenerales from './org-pasos/OrgPaso1DatosGenerales'
 import OrgPaso2CapituloI from './org-pasos/OrgPaso2CapituloI'
 import OrgPaso3Organizacion from './org-pasos/OrgPaso3Organizacion'
@@ -71,7 +72,7 @@ export default function WizardOrganizacion({ onCancelar, onGuardado }) {
     setGuardando(true)
     setError('')
     try {
-      await axios.post('http://localhost:3000/manuales', {
+      await axios.post(`${API_BASE}/manuales`, {
         tipo_manual: 'organizacion',
         codigo: datos.codigo,
         dependencia: datos.dependencia,

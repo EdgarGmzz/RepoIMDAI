@@ -39,6 +39,12 @@ app.get('/test', async (req, res) => {
   }
 })
 
+const distPath = path.join(__dirname, '../../frontend/dist')
+app.use(express.static(distPath))
+app.get('/{*splat}', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'))
+})
+
 app.listen(process.env.PORT, () => {
   console.log(`Servidor corriendo en puerto ${process.env.PORT}`)
 })

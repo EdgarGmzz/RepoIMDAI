@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { API_BASE } from '../config.js'
 import Paso1DatosGenerales from './pasos/Paso1DatosGenerales'
 import Paso2CapituloI from './pasos/Paso2CapituloI'
 import Paso3Inventario from './pasos/Paso3Inventario'
@@ -121,7 +122,7 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
     const fetchDetalle = async () => {
       setCargando(true)
       try {
-        const res = await axios.get(`http://localhost:3000/manuales/${manualEditar.id_manual}`, {
+        const res = await axios.get(`${API_BASE}/manuales/${manualEditar.id_manual}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const d = res.data
@@ -221,13 +222,13 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
     try {
       if (modoEdicion) {
         await axios.put(
-          `http://localhost:3000/manuales/${manualEditar.id_manual}`,
+          `${API_BASE}/manuales/${manualEditar.id_manual}`,
           datos,
           { headers: { Authorization: `Bearer ${token}` } }
         )
       } else {
         console.log('mandando al backend:', datos.titular, datos.cargo_titular) // ← aquí
-        await axios.post('http://localhost:3000/manuales', datos, {
+        await axios.post(`${API_BASE}/manuales`, datos, {
           headers: { Authorization: `Bearer ${token}` }
         })
       }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { API_BASE } from '../config.js'
 import WizardManual from '../components/WizardManual'
 import WizardOrganizacion from '../components/WizardOrganizacion'
 import { validarOrganizacion } from '../utils/validarOrganizacion'
@@ -31,7 +32,7 @@ export default function MisManuales() {
 
 const eliminarSeleccionados = async () => {
   try {
-    await axios.delete('http://localhost:3000/manuales', {
+    await axios.delete(`${API_BASE}/manuales`, {
       headers: { Authorization: `Bearer ${token}` },
       data: { ids: seleccionados }
     })
@@ -51,7 +52,7 @@ const eliminarSeleccionados = async () => {
 
   const fetchManuales = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/manuales', {
+      const res = await axios.get(`${API_BASE}/manuales`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setManuales(res.data)
@@ -92,7 +93,7 @@ const eliminarSeleccionados = async () => {
     setLoadingObs(true)
     setModalObsOpen(true)
     try {
-      const res = await axios.get(`http://localhost:3000/manuales/${m.id_manual}/observaciones`, {
+      const res = await axios.get(`${API_BASE}/manuales/${m.id_manual}/observaciones`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setObservaciones(res.data)
@@ -108,7 +109,7 @@ const eliminarSeleccionados = async () => {
     try {
       // Validar completitud solo para manuales de organización
       if (m.tipo_manual === 'organizacion') {
-        const detalleRes = await axios.get(`http://localhost:3000/manuales/${m.id_manual}`, {
+        const detalleRes = await axios.get(`${API_BASE}/manuales/${m.id_manual}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const errores = validarOrganizacion(detalleRes.data)
@@ -120,7 +121,7 @@ const eliminarSeleccionados = async () => {
       }
 
       await axios.patch(
-        `http://localhost:3000/manuales/${m.id_manual}/estado`,
+        `${API_BASE}/manuales/${m.id_manual}/estado`,
         { estado: 'en_revision' },
         { headers: { Authorization: `Bearer ${token}` } }
       )
