@@ -22,7 +22,15 @@ const baseUrlPublica = () => {
 const estilos = `
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;800&display=swap');
 
-  .pdf-doc * { box-sizing: border-box; margin: 0; padding: 0; }
+  .pdf-doc * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    /* Forzar el corte de palabras larguísimas sin espacios para que no
+       se desborden del ancho de la página. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
   .pdf-doc {
     font-family: 'Montserrat', Arial, sans-serif;
     font-weight: 500;
@@ -1580,21 +1588,35 @@ export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
             cont.appendChild(clone)
 
             // Header nuevo encima de la hoja de continuación.
-            // El wrap se extiende desde y=0 hasta y=48+headerH con fondo
-            // blanco — así el padding-top de la página y la franja detrás
-            // del header tapan cualquier resto del clon que asome encima.
+            // Wrap con ALTURA EXPLÍCITA (= headerOffset) y overflow hidden,
+            // así garantiza tapar la banda redundante del clon que asoma
+            // por arriba (clone y=desplaza..desplaza+headerOffset) — esa
+            // banda es contenido que ya se vio en la hoja anterior.
+            // Reseteo los márgenes negativos del header clonado para que
+            // dentro del wrap se posicione bien con position:absolute.
             if (header) {
               const wrap = document.createElement('div')
               wrap.style.position = 'absolute'
               wrap.style.top = '0'
               wrap.style.left = '0'
               wrap.style.right = '0'
-              wrap.style.padding = '48px 56px 0 56px'
-              wrap.style.boxSizing = 'border-box'
+              wrap.style.height = headerOffset + 'px'
               wrap.style.background = '#fff'
+              wrap.style.overflow = 'hidden'
               wrap.style.zIndex = '5'
               wrap.style.pointerEvents = 'none'
-              wrap.appendChild(header.cloneNode(true))
+
+              const headerClone = header.cloneNode(true)
+              headerClone.style.position = 'absolute'
+              headerClone.style.top = '0'
+              headerClone.style.left = '0'
+              headerClone.style.right = '0'
+              headerClone.style.width = '100%'
+              headerClone.style.marginLeft = '0'
+              headerClone.style.marginRight = '0'
+              headerClone.style.marginTop = '0'
+              headerClone.style.marginBottom = '0'
+              wrap.appendChild(headerClone)
               cont.appendChild(wrap)
             }
 
