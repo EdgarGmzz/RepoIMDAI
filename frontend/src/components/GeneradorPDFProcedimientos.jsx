@@ -172,9 +172,11 @@ const estilos = `
   /* ── Encabezado de procedimiento (recuadro superior) ── */
   .pdf-proc-encabezado {
     width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 9.5pt;
+    table-layout: fixed;
   }
   .pdf-proc-encabezado td {
     border: 1px solid #000; padding: 8px 10px; vertical-align: middle;
+    word-wrap: break-word; overflow-wrap: break-word;
   }
   .pdf-proc-encabezado .header-gris {
     background: #7F7F7F; color: white; text-align: center;
@@ -214,14 +216,16 @@ const estilos = `
   /* ── Tabla de cambios ── */
   .pdf-cambios-tabla {
     width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 9.5pt;
+    table-layout: fixed;
   }
   .pdf-cambios-tabla th {
     background: #D9D9D9; color: #000; padding: 7px 8px; text-align: center;
     border: 1px solid #000; font-size: 9pt; font-weight: bold;
-    text-transform: uppercase;
+    text-transform: uppercase; word-wrap: break-word; overflow-wrap: break-word;
   }
   .pdf-cambios-tabla td {
     border: 1px solid #000; padding: 5px 8px; text-align: center;
+    word-wrap: break-word; overflow-wrap: break-word;
   }
 `
 
@@ -1465,6 +1469,7 @@ function PaginaCambios({ datos, total, paginaInicio }) {
 // ═══════════════════════════════════════════════════════════════════════════
 export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
   const docRef = useRef(null)
+  const generandoRef = useRef(false)
   const [generando, setGenerando] = useState(false)
   const [progreso, setProgreso] = useState('')
   const [fuenteLista, setFuenteLista] = useState(false)
@@ -1493,7 +1498,7 @@ export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
   // página completa y el slicer corte donde toca.
   // ─────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!fuenteLista || !docRef.current || generando) return
+    if (!fuenteLista || !docRef.current) return
 
     const SHEET_H = 1056
     // Tolerancia para considerar "overflow real": si la página rebasa por
@@ -1685,7 +1690,7 @@ export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
     if (typeof ResizeObserver !== 'undefined') {
       let pendiente = 0
       observer = new ResizeObserver(() => {
-        if (aplicando) return
+        if (aplicando || generandoRef.current) return
         if (pendiente) cancelAnimationFrame(pendiente)
         pendiente = requestAnimationFrame(paginar)
       })
@@ -1697,9 +1702,9 @@ export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
       if (raf1) cancelAnimationFrame(raf1)
       if (raf2) cancelAnimationFrame(raf2)
       if (observer) observer.disconnect()
-      limpiar()
+      if (!generandoRef.current) limpiar()
     }
-  }, [fuenteLista, generando, datos])
+  }, [fuenteLista, datos])
 
   const mapa = crearMapa(D)
   const totalPaginas = mapa.total
@@ -1710,132 +1715,69 @@ export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
          referencias: '', registros: '' }]
 
   const generarPDF = async () => {
+    generandoRef.current = true
     setGenerando(true)
     setProgreso('Preparando documento...')
 
-    // ── Busca la MEJOR línea de corte: escanea hacia arriba desde targetY
-    //    dentro de una ventana y elige la franja blanca más ancha encontrada
-    //    (bordes de sección > espacios entre párrafos > espacios entre líneas).
-    //    Si no hay nada razonable, regresa targetY (corte duro).
-    const esFilaBlanca = (ctx, ancho, y) => {
-      let pixeles
-      try {
-        pixeles = ctx.getImageData(0, y, ancho, 1).data
-      } catch {
-        return null  // canvas manchado por CORS
-      }
-      // Muestreo cada 4 px (step 16 bytes). Umbral tolerante (≥235).
-      for (let x = 0; x < pixeles.length; x += 16) {
-        const r = pixeles[x], g = pixeles[x + 1], b = pixeles[x + 2]
-        if (r < 235 || g < 235 || b < 235) return false
-      }
-      return true
-    }
-
-    const encontrarCorteSeguro = (ctx, ancho, targetY, maxBuscarArriba) => {
-      const limiteArriba = Math.max(0, targetY - maxBuscarArriba)
-      // Detectar todas las rachas blancas en la ventana
-      let rachaIni = -1
-      let mejor = null    // { y: centro_racha, len: longitud }
-      for (let y = targetY; y >= limiteArriba; y--) {
-        const blanca = esFilaBlanca(ctx, ancho, y)
-        if (blanca === null) return targetY
-        if (blanca) {
-          if (rachaIni === -1) rachaIni = y
-        }
-        if (!blanca || y === limiteArriba) {
-          if (rachaIni !== -1) {
-            const fin = blanca ? y : y + 1
-            const len = rachaIni - fin + 1
-            if (len >= 3) {
-              // Score: privilegia rachas largas pero penaliza distancia
-              const centro = Math.floor((rachaIni + fin) / 2)
-              const distancia = targetY - centro
-              const score = len * 4 - distancia * 0.15
-              if (mejor === null || score > mejor.score) {
-                mejor = { y: centro, score, len }
-              }
-            }
-            rachaIni = -1
-          }
-        }
-      }
-      return mejor ? mejor.y : targetY
-    }
-
     try {
-      // Antes de capturar, deshacer la paginación visual del preview:
-      // remover hojas de continuación y quitar el clip de las originales
-      // para que html2canvas vea cada página COMPLETA y el slicer corte.
       const docEl = docRef.current
-      if (docEl) {
-        docEl.querySelectorAll('.pdf-pagina-continuacion').forEach((n) => n.remove())
-        docEl.querySelectorAll('.pdf-pagina[data-paginado="1"]').forEach((p) => {
-          p.style.maxHeight = ''
-          p.style.overflow = ''
-          delete p.dataset.paginado
-        })
-        // Esperar un frame para que el layout vuelva a fluir
-        await new Promise((r) => requestAnimationFrame(r))
-      }
-
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' })
-      // Filtrar las continuaciones por seguridad (ya las quitamos arriba pero
-      // si algún render tardío las re-agregó, no las queremos en el PDF).
+
+      // La paginación del preview ya calculó los cortes correctos.
+      // Capturamos cada elemento de página (originales + continuaciones)
+      // directamente — cada uno ya está recortado a 1056 px, sin slicing.
       const paginas = Array.from(
-        docRef.current.querySelectorAll('.pdf-pagina, .pdf-pagina-horizontal')
-      ).filter((p) => !p.classList.contains('pdf-pagina-continuacion'))
+        docEl.querySelectorAll('.pdf-pagina, .pdf-pagina-horizontal')
+      ).filter(p => !(p.parentElement && p.parentElement.classList.contains('pdf-pagina-continuacion')))
+
+      console.log('=== GENERANDO PDF ===')
+      console.log('Total páginas capturadas:', paginas.length)
+      console.log('Continuaciones:', paginas.filter(p => p.classList.contains('pdf-pagina-continuacion')).length)
+      console.log('Originales paginadas (data-paginado):', paginas.filter(p => p.dataset.paginado === '1').length)
+      paginas.forEach((p, i) => {
+        console.log(`  Página ${i + 1}: scrollHeight=${p.scrollHeight} maxHeight=${p.style.maxHeight} esContinuacion=${p.classList.contains('pdf-pagina-continuacion')}`)
+      })
+
       let agregarNueva = false
 
       for (let i = 0; i < paginas.length; i++) {
         setProgreso(`Procesando página ${i + 1} de ${paginas.length}...`)
-        const orientation = paginas[i].dataset.pageOrientation === 'landscape' ? 'landscape' : 'portrait'
+        const p = paginas[i]
+        const esHorizontal = p.classList.contains('pdf-pagina-horizontal')
+        const orientation = esHorizontal ? 'landscape' : 'portrait'
+        const SHEET_H = esHorizontal ? 816 : 1056
+        const SHEET_W = esHorizontal ? 1056 : 816
 
-        const canvas = await html2canvas(paginas[i], {
-          scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+        // Forzar recorte exacto antes de capturar. Las páginas paginadas y
+        // las continuaciones ya lo tienen; las páginas que caben sin paginar
+        // lo reciben aquí para que cualquier desborde menor quede limpio.
+        const prevMaxH = p.style.maxHeight
+        const prevOverflow = p.style.overflow
+        p.style.maxHeight = SHEET_H + 'px'
+        p.style.overflow = 'hidden'
+
+        await new Promise((r) => requestAnimationFrame(r))
+
+        const canvas = await html2canvas(p, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          width: SHEET_W,
+          height: SHEET_H,
         })
-        const imgW = canvas.width
-        const imgH = canvas.height
-        const ctxFuente = canvas.getContext('2d')
 
-        // Proporción altura/ancho de carta (portrait 11/8.5, landscape 8.5/11)
-        const ratioPag = orientation === 'landscape' ? (8.5 / 11) : (11 / 8.5)
-        const slicePxH = Math.floor(imgW * ratioPag)
-        // Ventana de búsqueda más amplia (25 % de la página) para no cortar tablas
-        const maxAjuste = Math.floor(slicePxH * 0.25)
+        p.style.maxHeight = prevMaxH
+        p.style.overflow = prevOverflow
 
-        let renderizado = 0
-        while (renderizado < imgH) {
-          let sliceH = Math.min(slicePxH, imgH - renderizado)
+        if (agregarNueva) pdf.addPage('letter', orientation)
+        agregarNueva = true
 
-          // Si aún queda contenido después de esta rebanada, buscar corte seguro
-          if (renderizado + sliceH < imgH) {
-            const corteSeguro = encontrarCorteSeguro(
-              ctxFuente, imgW, renderizado + sliceH, maxAjuste
-            )
-            const nuevaAltura = corteSeguro - renderizado
-            // Aceptamos el ajuste si deja al menos 55 % de la página con contenido
-            if (nuevaAltura > slicePxH * 0.55) sliceH = nuevaAltura
-          }
-
-          // Sub-canvas con la rebanada actual
-          const sub = document.createElement('canvas')
-          sub.width = imgW
-          sub.height = sliceH
-          sub.getContext('2d').drawImage(
-            canvas, 0, renderizado, imgW, sliceH, 0, 0, imgW, sliceH
-          )
-
-          if (agregarNueva) pdf.addPage('letter', orientation)
-          agregarNueva = true
-
-          const pageW = pdf.internal.pageSize.getWidth()
-          const imgHPt = (sliceH / imgW) * pageW
-          pdf.addImage(sub.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageW, imgHPt)
-
-          renderizado += sliceH
-        }
+        const pageW = pdf.internal.pageSize.getWidth()
+        const pageH = pdf.internal.pageSize.getHeight()
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pageW, pageH)
       }
+
       setProgreso('Guardando archivo...')
       const nombreArchivo = `Manual_Procedimientos_${(D.dependencia || 'dependencia').replace(/\s+/g, '_')}_${D.codigo || 'v1'}.pdf`
       pdf.save(nombreArchivo)
@@ -1845,6 +1787,7 @@ export default function GeneradorPDFProcedimientos({ datos, onCerrar }) {
       console.error(err)
       setProgreso('Error al generar el PDF. Intenta de nuevo.')
     } finally {
+      generandoRef.current = false
       setGenerando(false)
     }
   }
