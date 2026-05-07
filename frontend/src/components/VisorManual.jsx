@@ -282,12 +282,9 @@ function VisorOrganizacion({ datos }) {
         </Seccion>
       )}
 
-      {d.cambios?.length > 0 && (
-        <Seccion numero="4.5" titulo="Sección de Cambios">
-          <TablaSimple
-            columnas={['Rev. Anterior', 'Rev. Actual', 'Razón de Modificación', 'Fecha']}
-            filas={d.cambios.map(c => [c.revision_anterior, c.revision_actual, c.razon, c.fecha])}
-          />
+      {d.ultimo_cambio && (
+        <Seccion numero="4.5" titulo="Último Cambio o Actualización">
+          <Campo valor={d.ultimo_cambio} multilinea />
         </Seccion>
       )}
     </div>
@@ -492,6 +489,11 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
   const [guardando, setGuardando]     = useState(false)
   const [guardado, setGuardado]       = useState(false)
 
+  const [modalObsOpen, setModalObsOpen] = useState(false)
+  const [textoObs, setTextoObs]         = useState('')
+  const [seccionObs, setSeccionObs]     = useState('General')
+  const [enviandoObs, setEnviandoObs]   = useState(false)
+
   useEffect(() => {
     const fetchDetalle = async () => {
       setCargando(true)
@@ -523,12 +525,32 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setGuardado(true)
+      setDatosExtra(prev => prev ? { ...prev, codigo: editCodigo.trim(), version: editVersion } : prev)
       setTimeout(() => setGuardado(false), 2500)
       if (onActualizado) onActualizado()
     } catch {
       alert('Error al guardar el código')
     } finally {
       setGuardando(false)
+    }
+  }
+
+  const enviarObs = async () => {
+    if (!textoObs.trim() || enviandoObs) return
+    setEnviandoObs(true)
+    try {
+      await axios.patch(
+        `${API_BASE}/manuales/${manual.id_manual}/estado`,
+        { estado: 'observaciones', comentario: textoObs.trim(), seccion: seccionObs },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setModalObsOpen(false)
+      if (onActualizado) onActualizado()
+      onCerrar()
+    } catch {
+      alert('Error al enviar las observaciones')
+    } finally {
+      setEnviandoObs(false)
     }
   }
 
@@ -621,6 +643,25 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
                     >
                       {guardado ? '✓ Guardado' : guardando ? '...' : 'Guardar'}
                     </button>
+                    <button
+                      onClick={() => { setTextoObs(''); setSeccionObs('General'); setModalObsOpen(true) }}
+                      style={{
+                        padding: '5px 12px', borderRadius: '7px',
+                        border: '1.5px solid #fed7aa', background: 'white',
+                        color: '#d97706', fontFamily: 'Poppins, sans-serif',
+                        fontSize: '.75rem', fontWeight: '600', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '5px',
+                        transition: 'all .2s'
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.background = '#fffbeb'; e.currentTarget.style.borderColor = '#d97706' }}
+                      onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#fed7aa' }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                      Observaciones
+                    </button>
                   </div>
                   <div style={{ fontSize: '.74rem', color: '#b06070' }}>
                     {esOrg ? 'Manual de Organización' : 'Manual de Procedimientos'} · {manual.dependencia}
@@ -629,7 +670,7 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
               ) : (
                 <>
                   <div style={{ fontSize: '1rem', fontWeight: '700', color: '#1a0a0f', letterSpacing: '-.2px' }}>
-                    {manual.codigo || 'Sin código'} — {esOrg ? 'Manual de Organización' : 'Manual de Procedimientos'}
+                    {datosExtra?.codigo || manual.codigo || 'Sin código'} — {esOrg ? 'Manual de Organización' : 'Manual de Procedimientos'}
                   </div>
                   <div style={{ fontSize: '.74rem', color: '#b06070', marginTop: '2px' }}>
                     {manual.dependencia} · Creado por {manual.creado_por_nombre}
@@ -745,6 +786,109 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
           onCerrar={() => setVerPDF(false)}
         />
       )
+    )}
+
+    {/* Modal Observaciones */}
+    {modalObsOpen && (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 500,
+        background: 'rgba(26,10,15,.5)', backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }} onClick={() => setModalObsOpen(false)}>
+        <div style={{
+          background: 'white', borderRadius: '16px', padding: '28px',
+          width: '92%', maxWidth: '500px',
+          boxShadow: '0 30px 60px rgba(26,10,15,.25)'
+        }} onClick={e => e.stopPropagation()}>
+          <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: '700', color: '#1a0a0f' }}>
+            Enviar Observaciones
+          </h3>
+          <p style={{ margin: '0 0 20px', fontSize: '.78rem', color: '#b06070' }}>
+            {manual.codigo || 'Sin código'} — {manual.dependencia}
+          </p>
+
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#7a3a4a', marginBottom: '6px' }}>
+              Sección
+            </label>
+            <select value={seccionObs} onChange={e => setSeccionObs(e.target.value)}
+              style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #ffe4e6', borderRadius: '8px', fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', color: '#1a0a0f', background: 'white', outline: 'none' }}>
+              {esOrg ? (
+                <>
+                  <option>General</option>
+                  <option>Datos Generales</option>
+                  <option>Introducción</option>
+                  <option>Antecedentes</option>
+                  <option>Marco Normativo</option>
+                  <option>Atribuciones</option>
+                  <option>Objetivo General</option>
+                  <option>Misión y Visión</option>
+                  <option>Principios y Valores</option>
+                  <option>Políticas de Operación</option>
+                  <option>Organigrama</option>
+                  <option>Descripción de Puestos</option>
+                  <option>Idiomas / Lenguas Requeridas</option>
+                  <option>Programas Informáticos</option>
+                  <option>Equipo y Herramientas</option>
+                  <option>Horario Laboral</option>
+                  <option>Competencias Laborales</option>
+                  <option>Responsabilidad del Puesto</option>
+                  <option>Autoridad del Puesto</option>
+                </>
+              ) : (
+                <>
+                  <option>General</option>
+                  <option>Datos Generales</option>
+                  <option>Introducción</option>
+                  <option>Antecedentes</option>
+                  <option>Marco Normativo</option>
+                  <option>Atribuciones</option>
+                  <option>Objetivo General</option>
+                  <option>Misión y Visión</option>
+                  <option>Inventario de Procedimientos</option>
+                  <option>Descripción de Procedimientos</option>
+                  <option>Diagrama de Flujo</option>
+                </>
+              )}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '.68rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#7a3a4a', marginBottom: '6px' }}>
+              Observación
+            </label>
+            <textarea
+              value={textoObs}
+              onChange={e => setTextoObs(e.target.value)}
+              rows={5}
+              placeholder="Describe la observación o corrección requerida..."
+              style={{ width: '100%', padding: '10px 12px', border: '1.5px solid #ffe4e6', borderRadius: '8px', fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', color: '#1a0a0f', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => setModalObsOpen(false)}
+              style={{ padding: '9px 20px', borderRadius: '8px', border: '1.5px solid #fecdd3', background: 'white', color: '#7a3a4a', fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', fontWeight: '600', cursor: 'pointer' }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={enviarObs}
+              disabled={!textoObs.trim() || enviandoObs}
+              style={{
+                padding: '9px 20px', borderRadius: '8px', border: 'none',
+                background: textoObs.trim() ? 'linear-gradient(135deg, #d97706, #b45309)' : '#e5e7eb',
+                color: textoObs.trim() ? 'white' : '#9ca3af',
+                fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', fontWeight: '600',
+                cursor: textoObs.trim() ? 'pointer' : 'not-allowed'
+              }}
+            >
+              {enviandoObs ? 'Enviando...' : 'Enviar observaciones'}
+            </button>
+          </div>
+        </div>
+      </div>
     )}
   </>
   )

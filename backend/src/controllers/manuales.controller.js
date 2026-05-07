@@ -281,6 +281,7 @@ const getManualById = async (req, res) => {
       autorizo_cargo:           secciones.autorizo_cargo   || '',
       valido_nombre:            secciones.valido_nombre    || '',
       valido_cargo:             secciones.valido_cargo     || '',
+      ultimo_cambio:            secciones.ultimo_cambio    || '',
       principios,
       valores,
       marco_normativo:          normativoRes.rows,
@@ -340,6 +341,7 @@ const crearManual = async (req, res) => {
   principios, valores, politicas_operacion,
   inventario_puestos, puestos,
   procedimientos,
+  ultimo_cambio,
   // Procedimientos
   titular, cargo_titular,
   // Carátula de autorizaciones (organización)
@@ -382,6 +384,7 @@ const crearManual = async (req, res) => {
   { tipo: 'autorizo_cargo',   contenido: autorizo_cargo },
   { tipo: 'valido_nombre',    contenido: valido_nombre },
   { tipo: 'valido_cargo',     contenido: valido_cargo },
+  { tipo: 'ultimo_cambio',    contenido: ultimo_cambio },
 ]
     for (let i = 0; i < secciones.length; i++) {
       const s = secciones[i]
@@ -631,6 +634,7 @@ const actualizarManual = async (req, res) => {
       reviso_nombre,  reviso_cargo,
       autorizo_nombre, autorizo_cargo,
       valido_nombre,  valido_cargo,
+      ultimo_cambio,
     } = req.body
 
     // 1. Datos base
@@ -672,6 +676,7 @@ const actualizarManual = async (req, res) => {
   { tipo: 'autorizo_cargo',   contenido: autorizo_cargo },
   { tipo: 'valido_nombre',    contenido: valido_nombre },
   { tipo: 'valido_cargo',     contenido: valido_cargo },
+  { tipo: 'ultimo_cambio',    contenido: ultimo_cambio },
 ]
     for (let i = 0; i < secciones.length; i++) {
       const s = secciones[i]
@@ -923,11 +928,30 @@ const cambiarEstado = async (req, res) => {
 
     const { comentario, seccion } = req.body
 
+    // Al re-enviar desde observaciones, marcar obs pendientes como atendidas y construir razon descriptiva
+    let razonCambio = `Cambio de estado: ${manual.estado} → ${estado}`
+    if (manual.estado === 'observaciones' && estado === 'en_revision') {
+      const obsRes = await pool.query(
+        `SELECT COUNT(*) FROM observaciones WHERE id_manual = $1 AND estatus = 'pendiente'`,
+        [id]
+      )
+      const numObs = parseInt(obsRes.rows[0].count)
+      if (numObs > 0) {
+        await pool.query(
+          `UPDATE observaciones SET estatus = 'atendido' WHERE id_manual = $1 AND estatus = 'pendiente'`,
+          [id]
+        )
+        razonCambio = `Cambio de estado: observaciones → en_revision — ${numObs} observación${numObs !== 1 ? 'es' : ''} atendida${numObs !== 1 ? 's' : ''}`
+      } else {
+        razonCambio = `Cambio de estado: observaciones → en_revision`
+      }
+    }
+
     await pool.query('UPDATE manuales SET estado=$1 WHERE id_manual=$2', [estado, id])
     await pool.query(
       `INSERT INTO historial_versiones (id_manual, usuario, version, razon_cambio, en_suplencia_de)
        VALUES ($1,$2,(SELECT version FROM manuales WHERE id_manual=$1),$3,$4)`,
-      [id, id_usuario, `Cambio de estado: ${manual.estado} → ${estado}`, suplenciaDeId]
+      [id, id_usuario, razonCambio, suplenciaDeId]
     )
 
     // Guardar observación si se envió comentario

@@ -43,6 +43,7 @@ const datosVacios = {
   politicas_operacion: [],
   marco_conceptual: [],
   procedimientos: [],
+  ultimo_cambio: '',
 }
 
 // Convierte cualquier valor de fecha a string YYYY-MM-DD para inputs type="date"
@@ -246,7 +247,7 @@ export default function WizardManual({ onCancelar, onGuardado, manualEditar = nu
       case 2: return <Paso2CapituloI      datos={datos} actualizar={actualizar} />
       case 3: return <Paso3Inventario     datos={datos} actualizar={actualizar} />
       case 4: return <Paso4Procedimiento  datos={datos} actualizar={actualizar} />
-      case 5: return <Paso5Revision       datos={datos} />
+      case 5: return <Paso5Revision       datos={datos} actualizar={actualizar} />
       default: return null
     }
   }

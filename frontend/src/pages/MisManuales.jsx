@@ -20,6 +20,8 @@ export default function MisManuales() {
   const [seleccionados, setSeleccionados] = useState([])
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false)
   const [modalIncompleto, setModalIncompleto] = useState({ open: false, campos: [] })
+  const [modalCandado, setModalCandado]       = useState({ open: false, manual: null })
+  const [confirmoCandado, setConfirmoCandado] = useState(false)
   const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem('usuario'))
   const token = localStorage.getItem('token')
@@ -105,6 +107,16 @@ const eliminarSeleccionados = async () => {
   }
 
   const enviarARevision = async (m) => {
+    // Candado: si viene de observaciones, pedir confirmación explícita
+    if (m.estado === 'observaciones') {
+      setConfirmoCandado(false)
+      setModalCandado({ open: true, manual: m })
+      return
+    }
+    await _ejecutarEnvio(m)
+  }
+
+  const _ejecutarEnvio = async (m) => {
     setEnviando(m.id_manual)
     try {
       // Validar completitud solo para manuales de organización
@@ -581,6 +593,73 @@ const eliminarSeleccionados = async () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
               <button className="modal-cancel" onClick={() => setModalIncompleto({ open: false, campos: [] })} style={{ margin: 0 }}>
                 Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Candado: confirmación al reenviar desde observaciones ── */}
+      {modalCandado.open && (
+        <div className="modal-overlay open" onClick={() => setModalCandado({ open: false, manual: null })}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#fff7ed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1rem', color: '#1a0a0f' }}>Verificación requerida</h2>
+                <p style={{ margin: '2px 0 0', fontSize: '.78rem', color: '#b06070' }}>
+                  {modalCandado.manual?.codigo || 'Sin código'} — {modalCandado.manual?.dependencia}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px', fontSize: '.82rem', color: '#9a3412', lineHeight: '1.6' }}>
+              <strong>Advertencia:</strong> Este manual tiene observaciones pendientes del IMDAI. Solo debes reenviarlo a revisión si ya atendiste <em>todas</em> las correcciones solicitadas.
+              <br /><br />
+              Enviar el manual sin haber realizado las correcciones puede derivar en un nuevo rechazo y retrasos en el proceso de validación.
+            </div>
+
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer', padding: '12px 14px', borderRadius: '10px', border: `1.5px solid ${confirmoCandado ? '#bbf7d0' : '#e5e7eb'}`, background: confirmoCandado ? '#f0fdf4' : '#fafafa', transition: 'all .2s', marginBottom: '20px' }}>
+              <input
+                type="checkbox"
+                checked={confirmoCandado}
+                onChange={e => setConfirmoCandado(e.target.checked)}
+                style={{ marginTop: '2px', accentColor: '#059669', width: '16px', height: '16px', flexShrink: 0 }}
+              />
+              <span style={{ fontSize: '.82rem', color: confirmoCandado ? '#14532d' : '#374151', fontWeight: confirmoCandado ? '600' : '400' }}>
+                Confirmo que he atendido todas las observaciones del IMDAI y el manual está listo para revisión.
+              </span>
+            </label>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                className="modal-cancel"
+                onClick={() => setModalCandado({ open: false, manual: null })}
+                style={{ margin: 0 }}
+              >
+                Cancelar
+              </button>
+              <button
+                disabled={!confirmoCandado || enviando === modalCandado.manual?.id_manual}
+                onClick={async () => {
+                  const m = modalCandado.manual
+                  setModalCandado({ open: false, manual: null })
+                  await _ejecutarEnvio(m)
+                }}
+                style={{
+                  padding: '10px 22px', borderRadius: '8px', border: 'none',
+                  background: confirmoCandado ? 'linear-gradient(135deg, #059669, #047857)' : '#e5e7eb',
+                  color: confirmoCandado ? 'white' : '#9ca3af',
+                  fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', fontWeight: '600',
+                  cursor: confirmoCandado ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Reenviar a revisión
               </button>
             </div>
           </div>

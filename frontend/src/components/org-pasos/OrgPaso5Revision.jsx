@@ -1,14 +1,5 @@
 export default function OrgPaso5Revision({ datos, actualizar }) {
 
-  // ── Sección de Cambios ─────────────────────────────────────────────────────
-  const agregarCambio = () =>
-    actualizar({ cambios: [...(datos.cambios || []), { revision_anterior: '', revision_actual: '', razon: '', fecha: '' }] })
-  const actualizarCambio = (i, campo, val) => {
-    const c = [...datos.cambios]; c[i] = { ...c[i], [campo]: val }; actualizar({ cambios: c })
-  }
-  const eliminarCambio = (i) =>
-    actualizar({ cambios: datos.cambios.filter((_, idx) => idx !== i) })
-
   const resumenItem = (label, val) => (
     <div style={{
       padding: '12px 16px', background: '#fdf8f9',
@@ -85,65 +76,35 @@ export default function OrgPaso5Revision({ datos, actualizar }) {
         )}
       </div>
 
-      {/* 4.5 Sección de Cambios */}
+      {/* 4.5 Último Cambio */}
       <div style={{
         padding: '16px 18px', background: 'white', borderRadius: '12px',
         border: '1.5px solid rgba(225,29,72,.08)', boxShadow: '0 2px 10px rgba(190,18,60,.04)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <div>
-            <div style={{ fontSize: '.75rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#be123c' }}>
-              4.5 Sección de Cambios
-            </div>
-            <div style={{ fontSize: '.73rem', color: '#a78a8f', marginTop: '2px' }}>
-              Versiones anteriores y razones de modificación del documento.
-            </div>
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ fontSize: '.75rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#be123c' }}>
+            4.5 Último Cambio o Actualización
           </div>
-          <button className="btn-agregar" onClick={agregarCambio}>+ Agregar Cambio</button>
+          <div style={{ fontSize: '.73rem', color: '#a78a8f', marginTop: '2px' }}>
+            Describe brevemente el cambio más reciente realizado al documento. Este texto aparecerá en el PDF.
+          </div>
         </div>
-
-        {(!datos.cambios || datos.cambios.length === 0) ? (
-          <p className="campo-vacio">Sin cambios registrados. Para una versión inicial, no es obligatorio.</p>
-        ) : (
-          <table className="inv-table">
-            <thead>
-              <tr>
-                <th>Revisión Anterior</th>
-                <th>Revisión Actual</th>
-                <th>Razón de la Última Modificación</th>
-                <th>Fecha de Actualización</th>
-                <th style={{ width: '40px' }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {datos.cambios.map((c, i) => (
-                <tr key={i}>
-                  <td>
-                    <input placeholder="Ej. 01"
-                      value={c.revision_anterior}
-                      onChange={e => actualizarCambio(i, 'revision_anterior', e.target.value)} />
-                  </td>
-                  <td>
-                    <input placeholder="Ej. 02"
-                      value={c.revision_actual}
-                      onChange={e => actualizarCambio(i, 'revision_actual', e.target.value)} />
-                  </td>
-                  <td>
-                    <input placeholder="Causas de modificación. Si no aplica: NO APLICA"
-                      value={c.razon}
-                      onChange={e => actualizarCambio(i, 'razon', e.target.value)} />
-                  </td>
-                  <td>
-                    <input type="date"
-                      value={c.fecha}
-                      onChange={e => actualizarCambio(i, 'fecha', e.target.value)} />
-                  </td>
-                  <td><button className="btn-eliminar" onClick={() => eliminarCambio(i)}>✕</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <textarea
+          value={datos.ultimo_cambio || ''}
+          onChange={e => actualizar({ ultimo_cambio: e.target.value })}
+          rows={4}
+          placeholder="Ej. Se actualizaron las funciones del puesto de Director de Administración y se agregó el organigrama específico del área de Recursos Humanos."
+          style={{
+            width: '100%', padding: '10px 12px',
+            border: '1.5px solid #ffe4e6', borderRadius: '8px',
+            fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', color: '#1a0a0f',
+            resize: 'vertical', outline: 'none', boxSizing: 'border-box',
+            lineHeight: '1.5'
+          }}
+        />
+        <p style={{ fontSize: '.7rem', color: '#c9a0a8', marginTop: '6px' }}>
+          Opcional para la versión inicial. El historial completo de cambios queda disponible para el IMDAI de manera interna.
+        </p>
       </div>
 
       {/* Nota final */}

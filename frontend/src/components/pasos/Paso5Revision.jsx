@@ -1,4 +1,4 @@
-export default function Paso5Revision({ datos }) {
+export default function Paso5Revision({ datos, actualizar }) {
   return (
     <div className="paso-container">
       <h3 className="paso-titulo">Revisión Final</h3>
@@ -64,6 +64,33 @@ export default function Paso5Revision({ datos }) {
             </div>
           ))
         )}
+      </div>
+
+      {/* Último cambio */}
+      <div style={{
+        marginTop: '20px', padding: '16px 18px', background: 'white', borderRadius: '12px',
+        border: '1.5px solid #e0e7ef', boxShadow: '0 2px 8px rgba(0,0,0,.04)'
+      }}>
+        <div style={{ fontSize: '.75rem', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', color: '#2563eb', marginBottom: '6px' }}>
+          Último Cambio o Actualización
+        </div>
+        <div style={{ fontSize: '.73rem', color: '#a78a8f', marginBottom: '10px' }}>
+          Describe brevemente el cambio más reciente realizado al documento. Este texto aparecerá en el PDF.
+        </div>
+        <textarea
+          value={datos.ultimo_cambio || ''}
+          onChange={e => actualizar?.({ ultimo_cambio: e.target.value })}
+          rows={4}
+          placeholder="Ej. Se actualizó el procedimiento de contratación y se agregó el diagrama de flujo del área de adquisiciones."
+          style={{
+            width: '100%', padding: '10px 12px', border: '1.5px solid #bfdbfe', borderRadius: '8px',
+            fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', color: '#1a0a0f',
+            resize: 'vertical', outline: 'none', boxSizing: 'border-box', lineHeight: '1.5'
+          }}
+        />
+        <p style={{ fontSize: '.7rem', color: '#93c5fd', marginTop: '6px' }}>
+          Opcional para la versión inicial. El historial queda disponible para el IMDAI de manera interna.
+        </p>
       </div>
     </div>
   )

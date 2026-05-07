@@ -59,8 +59,8 @@ export default function WizardOrganizacion({ onCancelar, onGuardado }) {
     // Paso 4 — Descripción de Puestos
     puestos: [],                  // ver estructura en OrgPaso4Puestos
 
-    // Paso 5 — Sección de Cambios
-    cambios: [],                  // [{ revision_anterior, revision_actual, razon, fecha }]
+    // Paso 5 — Último cambio
+    ultimo_cambio: '',
   })
 
   const actualizar = (nuevos) => setDatos(prev => ({ ...prev, ...nuevos }))

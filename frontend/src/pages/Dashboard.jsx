@@ -230,10 +230,11 @@ export default function Dashboard() {
   }
 
   const iconoActividad = (razon) => {
-    if (razon?.includes('en_revision'))   return { color: '#3b82f6', bg: '#eff6ff', icon: '→' }
-    if (razon?.includes('validado'))      return { color: '#059669', bg: '#f0fdf4', icon: '✓' }
-    if (razon?.includes('autorizado'))    return { color: '#7c3aed', bg: '#f5f3ff', icon: '★' }
-    if (razon?.includes('observaciones')) return { color: '#d97706', bg: '#fffbeb', icon: '!' }
+    if (razon?.includes('→ validado'))      return { color: '#059669', bg: '#f0fdf4', icon: '✓' }
+    if (razon?.includes('→ autorizado'))    return { color: '#7c3aed', bg: '#f5f3ff', icon: '★' }
+    if (razon?.includes('→ observaciones')) return { color: '#d97706', bg: '#fffbeb', icon: '!' }
+    if (razon?.includes('→ en_revision'))   return { color: '#3b82f6', bg: '#eff6ff', icon: '↩' }
+    if (razon?.includes('en_revision'))     return { color: '#3b82f6', bg: '#eff6ff', icon: '→' }
     return { color: '#6b7280', bg: '#f9fafb', icon: '·' }
   }
 
@@ -633,16 +634,6 @@ export default function Dashboard() {
                             </button>
                           )}
 
-                          {/* Observaciones */}
-                          {m.estado === 'en_revision' && (
-                            <button onClick={() => abrirModalObs(m)} title="Enviar con observaciones"
-                              style={{ height: '32px', padding: '0 10px', borderRadius: '7px', border: '1.5px solid #fed7aa', background: 'white', color: '#d97706', cursor: 'pointer', fontSize: '.72rem', fontFamily: 'Poppins, sans-serif', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px', transition: 'all .2s' }}
-                              onMouseOver={e => { e.currentTarget.style.background = '#fffbeb'; e.currentTarget.style.borderColor = '#d97706' }}
-                              onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#fed7aa' }}>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                              Obs.
-                            </button>
-                          )}
 
 
                         </div>
@@ -825,8 +816,17 @@ export default function Dashboard() {
                     <option>Atribuciones</option>
                     <option>Objetivo General</option>
                     <option>Misión y Visión</option>
+                    <option>Principios y Valores</option>
+                    <option>Políticas de Operación</option>
                     <option>Organigrama</option>
                     <option>Descripción de Puestos</option>
+                    <option>Idiomas / Lenguas Requeridas</option>
+                    <option>Programas Informáticos</option>
+                    <option>Equipo y Herramientas</option>
+                    <option>Horario Laboral</option>
+                    <option>Competencias Laborales</option>
+                    <option>Responsabilidad del Puesto</option>
+                    <option>Autoridad del Puesto</option>
                   </>
                 ) : (
                   <>
