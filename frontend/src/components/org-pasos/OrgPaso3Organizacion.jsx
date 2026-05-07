@@ -59,7 +59,7 @@ export default function OrgPaso3Organizacion({ datos, actualizar }) {
           ) : (
             <>
               <p style={{ color: '#7a3a4a', fontWeight: '600', marginTop: '8px' }}>Haz clic para cargar el organigrama general</p>
-              <p style={{ color: '#a78a8f', fontSize: '.73rem', marginTop: '4px' }}>PNG, JPG, PDF — Máx. 10 MB</p>
+              <p style={{ color: '#a78a8f', fontSize: '.73rem', marginTop: '4px' }}>PNG, JPG o PDF — Máx. 10 MB</p>
             </>
           )}
           <input
@@ -119,7 +119,7 @@ export default function OrgPaso3Organizacion({ datos, actualizar }) {
                   <p style={{ color: '#a78a8f', fontSize: '.72rem', marginTop: '2px' }}>Clic para reemplazar</p>
                 </>
               ) : (
-                <p style={{ color: '#a78a8f', fontSize: '.75rem' }}>Clic para cargar archivo (PNG, JPG, PDF)</p>
+                <p style={{ color: '#a78a8f', fontSize: '.75rem' }}>Clic para cargar archivo (PNG, JPG o PDF)</p>
               )}
               <input
                 id={`org-esp-${i}`}

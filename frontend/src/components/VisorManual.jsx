@@ -480,6 +480,7 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
   const esAdmin = usuario?.rol === 'administrador'
   const puedeGenerarPDF =
     manual.estado === 'borrador' ||
+    manual.estado === 'observaciones' ||
     manual.estado === 'validado' ||
     manual.estado === 'en_revision' ||
     manual.estado === 'autorizado'

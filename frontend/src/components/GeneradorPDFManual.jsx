@@ -1,7 +1,11 @@
-import { useRef, useState, useEffect } from 'react'
+import { Fragment, useRef, useState, useEffect } from 'react'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
+import pdfWorkerSrc from 'pdfjs-dist/legacy/build/pdf.worker.mjs?url'
 import { API_BASE } from '../config.js'
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc
 
 // ── Estilos del documento PDF ─────────────────────────────────────────────────
 const estilos = `
@@ -191,7 +195,7 @@ const estilos = `
     font-size: 8.5pt;
     font-weight: 500;
     font-family: 'Montserrat', Arial, sans-serif;
-    line-height: 1.2;
+    line-height: 1.08;
     text-align: justify;
   }
   .pdf-intro-texto {
@@ -464,6 +468,101 @@ const estilos = `
     font-size: 9.5pt;
     color: #000;
   }
+  .pdf-perfil-tabla .competencias-header {
+    background: #9a9a9a;
+    color: white;
+    text-align: left;
+    font-weight: 800;
+    padding: 3px 10px;
+    border: 1px solid #000;
+    font-size: 12pt;
+  }
+  .pdf-perfil-tabla .competencias-label {
+    font-weight: 800;
+    color: #595959;
+    background: #fff;
+    font-size: 9.5pt;
+  }
+  .pdf-perfil-tabla .competencias-contenido {
+    font-size: 9.5pt;
+    color: #000;
+    padding: 3px 10px;
+    vertical-align: top;
+    line-height: 1.08;
+  }
+  .pdf-perfil-tabla .competencias-categoria {
+    font-weight: 800;
+    color: #595959;
+    margin-bottom: 1px;
+  }
+  .pdf-perfil-tabla .competencias-lista {
+    margin: 0;
+    padding-left: 34px;
+    list-style-position: outside;
+  }
+  .pdf-perfil-tabla .competencias-lista li {
+    margin: 0;
+    padding-left: 6px;
+    line-height: 1.12;
+  }
+  .pdf-responsabilidad-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+    margin-bottom: 0;
+    table-layout: fixed;
+    font-family: 'Montserrat', Arial, sans-serif;
+    font-size: 10.5pt;
+  }
+  .pdf-responsabilidad-tabla td {
+    border: 1px solid #000;
+    padding: 4px 10px;
+    vertical-align: middle;
+    line-height: 1.08;
+  }
+  .pdf-responsabilidad-tabla .header-gris {
+    background: #9a9a9a;
+    color: white;
+    text-align: left;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border: 1px solid #000;
+    font-size: 12pt;
+  }
+  .pdf-responsabilidad-tabla .num-gris {
+    background: #9a9a9a;
+    color: white;
+    text-align: center;
+    font-weight: 800;
+    font-size: 12pt;
+    width: 52px;
+  }
+  .pdf-responsabilidad-tabla .texto-principal {
+    font-size: 12pt;
+    color: #595959;
+  }
+  .pdf-responsabilidad-tabla .texto-principal strong {
+    font-weight: 800;
+  }
+  .pdf-responsabilidad-tabla .nivel-label {
+    color: #595959;
+    font-size: 10.5pt;
+    padding: 4px 4px;
+  }
+  .pdf-responsabilidad-tabla .nivel-marca {
+    background: #9a9a9a;
+    color: white;
+    text-align: center;
+    font-weight: 800;
+    font-size: 10.5pt;
+    padding: 4px;
+  }
+  .pdf-responsabilidad-tabla .item-texto {
+    font-size: 12pt;
+    color: #000;
+    line-height: 1.18;
+  }
   .pdf-escolaridad-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -489,59 +588,98 @@ const estilos = `
   .pdf-firma-tabla {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 14px;
-    font-size: 9.5pt;
+    margin-top: 0;
+    font-size: 12pt;
+    table-layout: fixed;
+    font-family: 'Montserrat', Arial, sans-serif;
   }
   .pdf-firma-tabla .header-gris {
-    background: #7F7F7F;
+    background: #9a9a9a;
     color: white;
     text-align: center;
-    font-weight: bold;
+    font-weight: 800;
     text-transform: uppercase;
-    padding: 7px;
+    padding: 5px 8px;
     border: 1px solid #000;
-    font-size: 9pt;
+    font-size: 11pt;
+    line-height: 1.12;
+    vertical-align: middle;
   }
   .pdf-firma-tabla td {
     border: 1px solid #000;
-    padding: 8px 10px;
+    padding: 0;
     vertical-align: top;
-    min-height: 70px;
     text-align: center;
   }
   .pdf-firma-espacio {
-    height: 50px;
-    border-bottom: 1px solid #000;
-    margin-bottom: 6px;
+    height: 98px;
+  }
+  .pdf-firma-titulo {
+    background: #9a9a9a;
+    color: white;
+    text-align: center;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 6px 8px;
+    border: 1px solid #000;
+    font-size: 11pt;
+  }
+  .pdf-firma-datos {
+    height: 102px;
+    padding: 4px 16px;
+    font-size: 12pt;
+    line-height: 1.35;
+    vertical-align: top;
+  }
+  .pdf-firma-datos strong {
+    font-weight: 800;
+  }
+  .pdf-firma-fecha {
+    padding: 4px 2px;
+    text-align: left;
+    font-size: 11.5pt;
+    line-height: 1.1;
+  }
+  .pdf-firma-fecha strong {
+    font-weight: 800;
   }
   .pdf-compromiso {
     border: 1px solid #000;
-    padding: 10px;
-    margin: 14px 0;
-    font-size: 8.5pt;
-    line-height: 1.5;
+    padding: 4px 10px;
+    margin: 0;
+    font-size: 10.5pt;
+    line-height: 1.1;
     text-align: justify;
+    font-family: 'Montserrat', Arial, sans-serif;
   }
   .pdf-cambios-tabla {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 8px;
-    font-size: 9.5pt;
+    margin-top: 26px;
+    table-layout: fixed;
+    font-family: 'Montserrat', Arial, sans-serif;
+    font-size: 12pt;
   }
   .pdf-cambios-tabla th {
     background: #D9D9D9;
     color: #000000;
-    padding: 7px 8px;
+    padding: 12px 8px 10px;
     text-align: center;
     border: 1px solid #000;
-    font-size: 9pt;
-    font-weight: bold;
+    font-size: 10.5pt;
+    font-weight: 800;
     text-transform: uppercase;
+    line-height: 1.12;
+    vertical-align: middle;
   }
   .pdf-cambios-tabla td {
     border: 1px solid #000;
-    padding: 5px 8px;
+    padding: 12px 10px;
+    height: 84px;
     text-align: center;
+    vertical-align: middle;
+    font-size: 12pt;
+    line-height: 1.25;
   }
 `
 
@@ -566,6 +704,31 @@ const fmtFecha = (str) => {
   }
 
   return '—'
+}
+
+const fmtFechaLarga = (str) => {
+  if (!str) return '—'
+  const s = String(str).trim()
+  const meses = [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+  ]
+
+  const iso = s.match(/(\d{4})-(\d{2})-(\d{2})/)
+  if (iso) {
+    const dia = String(Number(iso[3]))
+    const mes = meses[Number(iso[2]) - 1] || ''
+    return `${dia} de ${mes} ${iso[1]}`
+  }
+
+  const partes = s.match(/(\d{2})\/(\d{2})\/(\d{4})/)
+  if (partes) {
+    const dia = String(Number(partes[1]))
+    const mes = meses[Number(partes[2]) - 1] || ''
+    return `${dia} de ${mes} ${partes[3]}`
+  }
+
+  return fmtFecha(str)
 }
 
 const extraerParrafos = (texto) => {
@@ -699,10 +862,64 @@ const normalizarRutaOrganigrama = (ruta) => {
   return `${API_BASE}${ruta}`
 }
 
-const estimarPesoPolitica = (politica = {}) => {
+const esPdfOrganigrama = (ruta) => /\.pdf(?:[?#].*)?$/i.test(String(ruta || ''))
+
+const renderizarPdfComoImagen = async (src) => {
+  const respuesta = await fetch(src, { mode: 'cors', cache: 'no-store' })
+  if (!respuesta.ok) throw new Error(`No se pudo descargar el PDF (${respuesta.status})`)
+
+  const data = await respuesta.arrayBuffer()
+  const encabezado = new TextDecoder('ascii').decode(new Uint8Array(data.slice(0, 1024)))
+  if (!encabezado.includes('%PDF-')) {
+    const tipo = respuesta.headers.get('content-type') || 'tipo desconocido'
+    throw new Error(`La URL no devolvio un PDF valido (${tipo})`)
+  }
+
+  const pdf = await pdfjsLib.getDocument({
+    data,
+    disableRange: true,
+    disableStream: true,
+  }).promise
+  const page = await pdf.getPage(1)
+  const viewportBase = page.getViewport({ scale: 1 })
+  const scale = Math.min(3, Math.max(1.4, 1500 / viewportBase.width))
+  const viewport = page.getViewport({ scale })
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+  canvas.width = viewport.width
+  canvas.height = viewport.height
+  await page.render({ canvasContext: context, viewport }).promise
+  return canvas.toDataURL('image/png')
+}
+
+const esperarImagenes = async (contenedor) => {
+  const imagenes = Array.from(contenedor?.querySelectorAll('img') || [])
+  await Promise.all(imagenes.map((img) => {
+    if (img.complete) return Promise.resolve()
+    return new Promise((resolve) => {
+      img.onload = resolve
+      img.onerror = resolve
+    })
+  }))
+}
+
+const esperarOrganigramasPdf = async (contenedor, timeoutMs = 15000) => {
+  const inicio = Date.now()
+  while (contenedor?.querySelector('[data-pdf-organigrama="loading"]')) {
+    if (Date.now() - inicio > timeoutMs) break
+    await new Promise((resolve) => setTimeout(resolve, 150))
+  }
+}
+
+const estimarAltoPolitica = (politica = {}) => {
   const area = String(politica.area || '')
   const descripcion = String(politica.descripcion || '')
-  return area.length * 2 + descripcion.length
+  const charsPorLinea = 76
+  const lineasArea = politica.esContinuacion || !area ? 0 : Math.max(1, Math.ceil(area.length / 68))
+  const lineasDescripcion = Math.max(1, Math.ceil(descripcion.length / charsPorLinea))
+  const saltos = (descripcion.match(/\n/g) || []).length
+
+  return (lineasArea * 17) + (lineasDescripcion * 16) + (saltos * 10) + 32
 }
 
 const dividirTextoPlano = (texto, maxChars = 850) => {
@@ -750,7 +967,7 @@ const paginarPrincipiosValores = (principios = [], valores = [], maxPesoPorPagin
   return paginas
 }
 
-const paginarPoliticas = (politicas = [], maxPesoPorPagina = 1250) => {
+const paginarPoliticas = (politicas = [], maxAltoPorPagina = 760) => {
   if (!politicas.length) return [[]]
 
   const entradas = []
@@ -768,20 +985,20 @@ const paginarPoliticas = (politicas = [], maxPesoPorPagina = 1250) => {
 
   const paginas = []
   let actual = []
-  let pesoActual = 0
+  let altoActual = 0
 
   entradas.forEach((politica) => {
-    const peso = estimarPesoPolitica(politica)
+    const alto = estimarAltoPolitica(politica)
 
-    if (actual.length > 0 && pesoActual + peso > maxPesoPorPagina) {
+    if (actual.length > 0 && altoActual + alto > maxAltoPorPagina) {
       paginas.push(actual)
       actual = [politica]
-      pesoActual = peso
+      altoActual = alto
       return
     }
 
     actual.push(politica)
-    pesoActual += peso
+    altoActual += alto
   })
 
   if (actual.length > 0) paginas.push(actual)
@@ -934,14 +1151,16 @@ const crearEntradasFuncionesPuesto = (puesto = {}) => {
   ]
 }
 
-const paginarFuncionesPuesto = (puesto = {}, maxPesoPorPagina = 2400) => {
-  const entradas = crearEntradasFuncionesPuesto(puesto)
+const calcularPesoFuncion = (entrada = {}, actual = []) =>
+  String(entrada.texto || '').length + (actual.some((item) => item.tipo === entrada.tipo) ? 40 : 120)
+
+const paginarEntradasFunciones = (entradas = [], maxPesoPorPagina = 2400) => {
   const paginas = []
   let actual = []
   let pesoActual = 0
 
   entradas.forEach((entrada) => {
-    const peso = String(entrada.texto || '').length + (actual.some((item) => item.tipo === entrada.tipo) ? 40 : 120)
+    const peso = calcularPesoFuncion(entrada, actual)
 
     if (actual.length > 0 && pesoActual + peso > maxPesoPorPagina) {
       paginas.push(actual)
@@ -958,10 +1177,66 @@ const paginarFuncionesPuesto = (puesto = {}, maxPesoPorPagina = 2400) => {
   return paginas.length > 0 ? paginas : [[]]
 }
 
+const paginarFuncionesPuesto = (puesto = {}, maxPesoPorPagina = 2400) =>
+  paginarEntradasFunciones(crearEntradasFuncionesPuesto(puesto), maxPesoPorPagina)
+
+const contarFilasSubordinadosPuesto = (puesto = {}) =>
+  (puesto.subordinados_directos || []).length + (puesto.subordinados_indirectos || []).length
+
+const debeMostrarUbicacionEnPrimeraPagina = (puesto = {}) =>
+  paginarSubordinadosPuesto(puesto).length === 1 && contarFilasSubordinadosPuesto(puesto) <= 8
+
+const dividirFuncionesObjetivo = (puesto = {}) => {
+  const entradas = crearEntradasFuncionesPuesto(puesto)
+  const puedeUsarObjetivo = debeMostrarUbicacionEnPrimeraPagina(puesto)
+
+  if (!puedeUsarObjetivo || entradas.length === 0) {
+    return { funcionesEnObjetivo: [], paginasFunciones: paginarEntradasFunciones(entradas) }
+  }
+
+  const objetivo = String(puesto.objetivo_puesto || '')
+  const maxPesoObjetivo = objetivo.length > 700 ? 950 : 1350
+  const funcionesEnObjetivo = []
+  let pesoActual = 0
+  let index = 0
+
+  for (; index < entradas.length; index++) {
+    const entrada = entradas[index]
+    const peso = calcularPesoFuncion(entrada, funcionesEnObjetivo)
+    if (funcionesEnObjetivo.length > 0 && pesoActual + peso > maxPesoObjetivo) break
+    funcionesEnObjetivo.push(entrada)
+    pesoActual += peso
+  }
+
+  const restantes = entradas.slice(index)
+  return {
+    funcionesEnObjetivo,
+    paginasFunciones: restantes.length ? paginarEntradasFunciones(restantes) : [],
+  }
+}
+
 const contarPaginasPuesto = (puesto = {}) => {
   const paginasSubordinados = paginarSubordinadosPuesto(puesto).length
-  const paginasFunciones = paginarFuncionesPuesto(puesto).length
-  return paginasSubordinados + paginasFunciones + 3
+  const { funcionesEnObjetivo, paginasFunciones } = dividirFuncionesObjetivo(puesto)
+  const paginasFuncionesIndependientes = paginasFunciones.length || (funcionesEnObjetivo.length ? 0 : 1)
+  const paginasCompetencias = paginarFilasCompetencias(puesto)
+  const paginasCompetenciasAdicionales = Math.max(0, paginasCompetencias.length - 1)
+  const ultimaPaginaCompetencias = paginasCompetencias[paginasCompetencias.length - 1] || []
+  const basePerfil = paginasCompetenciasAdicionales > 0 ? 0 : 10.5
+  const limiteCompartido = paginasCompetenciasAdicionales > 0 ? 24 : 15
+  const capacidadResponsabilidad = Math.max(0, limiteCompartido - basePerfil - sumarAltoFilasCompetencias(ultimaPaginaCompetencias))
+  const integraResponsabilidad = capacidadResponsabilidad >= 2
+  const paginasResponsabilidad = paginarEntradasResponsabilidad(
+    puesto,
+    integraResponsabilidad ? capacidadResponsabilidad : 0
+  )
+  const paginasResponsabilidadAdicionales = integraResponsabilidad
+    ? Math.max(0, paginasResponsabilidad.length - 1)
+    : paginasResponsabilidad.length
+  const ultimaPaginaResponsabilidad = paginasResponsabilidad[paginasResponsabilidad.length - 1] || []
+  const firmaCompartePagina = sumarAltoResponsabilidad(ultimaPaginaResponsabilidad) <= 9
+
+  return paginasSubordinados + paginasFuncionesIndependientes + paginasCompetenciasAdicionales + paginasResponsabilidadAdicionales + (firmaCompartePagina ? 2 : 3)
 }
 
 const normalizarTextoInventario = (texto = '') =>
@@ -972,6 +1247,221 @@ const normalizarTextoInventario = (texto = '') =>
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
 
+const limpiarValorPerfil = (valor, fallback = 'N/A') => {
+  const texto = String(valor || '').trim()
+  if (!texto) return fallback
+
+  const normalizado = texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+
+  if (['incognita', 'unknown', 'undefined', 'null'].includes(normalizado)) return fallback
+  return texto
+}
+
+const limpiarListaPerfil = (items = [], fallback = 'N/A') => {
+  const valores = items
+    .map((item) => limpiarValorPerfil(item, ''))
+    .filter(Boolean)
+
+  return valores.length ? valores.join(', ') : fallback
+}
+
+const obtenerListaPerfil = (items = [], fallback = 'N/A') => {
+  const valores = (Array.isArray(items) ? items : String(items || '').split(/\r?\n|,/))
+    .map((item) => limpiarValorPerfil(item, ''))
+    .filter(Boolean)
+
+  return valores.length ? valores : [fallback]
+}
+
+const renderListaPerfil = (items = [], fallback = 'N/A') => {
+  const valores = obtenerListaPerfil(items, fallback)
+  if (valores.length === 1 && valores[0] === fallback) return fallback
+
+  return (
+    <ul className="competencias-lista">
+      {valores.map((valor, i) => (
+        <li key={i}>{valor}</li>
+      ))}
+    </ul>
+  )
+}
+
+const crearFilasCompetencias = (puesto = {}) => [
+  { tipo: 'header' },
+  {
+    tipo: 'habilidad',
+    numero: '11.',
+    etiqueta: 'Habilidades',
+    categoria: 'Directivas:',
+    items: puesto.habilidades_directivas,
+  },
+  {
+    tipo: 'habilidad',
+    numero: '11.',
+    etiqueta: 'Habilidades',
+    categoria: 'Técnicas:',
+    items: puesto.habilidades_tecnicas,
+  },
+  {
+    tipo: 'habilidad',
+    numero: '11.',
+    etiqueta: 'Habilidades',
+    categoria: 'General:',
+    items: puesto.habilidades_generales,
+  },
+  {
+    tipo: 'lista',
+    numero: '12.',
+    etiqueta: 'Actitudes.',
+    items: puesto.actitudes,
+  },
+  {
+    tipo: 'texto',
+    numero: '13.',
+    etiqueta: 'Horario Laboral.',
+    valor: puesto.horario_laboral,
+  },
+]
+
+const estimarAltoFilaCompetencia = (fila = {}) => {
+  if (fila.tipo === 'header') return 1.2
+  if (fila.tipo === 'texto') return 1.4
+
+  const items = obtenerListaPerfil(fila.items)
+  return 1.5 + (items.length * 0.75)
+}
+
+const sumarAltoFilasCompetencias = (filas = []) =>
+  filas.reduce((total, fila) => total + estimarAltoFilaCompetencia(fila), 0)
+
+const paginarFilasCompetencias = (puesto = {}, maxPrimeraPagina = 9.5, maxPagina = 24) => {
+  const filas = crearFilasCompetencias(puesto)
+  const paginas = [[]]
+  let paginaActual = 0
+  let altoActual = 0
+
+  filas.forEach((fila) => {
+    const alto = estimarAltoFilaCompetencia(fila)
+    const limite = paginaActual === 0 ? maxPrimeraPagina : maxPagina
+
+    if (paginas[paginaActual].length > 0 && altoActual + alto > limite) {
+      paginas.push([])
+      paginaActual += 1
+      altoActual = 0
+    }
+
+    paginas[paginaActual].push(fila)
+    altoActual += alto
+  })
+
+  const paginasConContenido = paginas.filter((pagina) => pagina.length > 0)
+  const ultimaPagina = paginasConContenido[paginasConContenido.length - 1]
+  const penultimaPagina = paginasConContenido[paginasConContenido.length - 2]
+
+  if (
+    paginasConContenido.length > 1 &&
+    ultimaPagina.length === 1 &&
+    estimarAltoFilaCompetencia(ultimaPagina[0]) <= 2 &&
+    penultimaPagina
+  ) {
+    penultimaPagina.push(ultimaPagina[0])
+    paginasConContenido.pop()
+  }
+
+  return paginasConContenido
+}
+
+const crearEntradasResponsabilidad = (puesto = {}) => [
+  { tipo: 'header', titulo: 'RESPONSABILIDAD' },
+  { tipo: 'mobiliario' },
+  { tipo: 'informacion', valor: puesto.manejo_informacion, nivel: puesto.nivel_informacion },
+  { tipo: 'presupuesto', valor: puesto.manejo_presupuesto },
+  { tipo: 'nivelPresupuesto', nivel: puesto.nivel_presupuesto },
+  ...(puesto.autoridad?.length > 0
+    ? [
+        { tipo: 'header', titulo: 'AUTORIDAD:' },
+        ...puesto.autoridad.map((valor, i) => ({ tipo: 'item', numero: `${i + 1}.`, valor })),
+      ]
+    : []),
+  ...(puesto.indicador_desempeno?.length > 0
+    ? [
+        { tipo: 'header', titulo: 'INDICADOR DE DESEMPEÑO PROFESIONAL' },
+        ...puesto.indicador_desempeno.map((valor, i) => ({ tipo: 'item', numero: `${i + 1}.`, valor })),
+      ]
+    : []),
+]
+
+const estimarAltoEntradaResponsabilidad = (entrada = {}) => {
+  if (entrada.tipo === 'header') return 1.1
+  if (entrada.tipo === 'mobiliario') return 2.5
+  if (entrada.tipo === 'informacion') return 2.8
+  if (entrada.tipo === 'presupuesto') return 1.8
+  if (entrada.tipo === 'nivelPresupuesto') return 1.2
+  return Math.max(1.2, Math.ceil(String(entrada.valor || '').length / 82) * 1.15)
+}
+
+const paginarEntradasResponsabilidad = (puesto = {}, maxPrimeraPagina = 0, maxPagina = 14) => {
+  const entradas = crearEntradasResponsabilidad(puesto)
+  const paginas = []
+  let actual = []
+  let altoActual = 0
+  let limite = maxPrimeraPagina
+
+  entradas.forEach((entrada) => {
+    const alto = estimarAltoEntradaResponsabilidad(entrada)
+
+    if (limite <= 0 || (actual.length > 0 && altoActual + alto > limite)) {
+      if (actual.length > 0) paginas.push(actual)
+      actual = [entrada]
+      altoActual = alto
+      limite = maxPagina
+      return
+    }
+
+    actual.push(entrada)
+    altoActual += alto
+  })
+
+  if (actual.length > 0) paginas.push(actual)
+
+  for (let i = 1; i < paginas.length; i++) {
+    const primeraEntrada = paginas[i][0]
+    const paginaAnterior = paginas[i - 1]
+
+    if (
+      primeraEntrada?.tipo === 'nivelPresupuesto' &&
+      paginaAnterior?.length > 0
+    ) {
+      paginaAnterior.push(primeraEntrada)
+      paginas[i] = paginas[i].slice(1)
+    }
+  }
+
+  return paginas
+    .filter((pagina) => pagina.length > 0)
+    .map((pagina, index, todas) => {
+      const siguiente = todas[index + 1]
+      if (
+        siguiente?.length === 1 &&
+        estimarAltoEntradaResponsabilidad(siguiente[0]) <= 1.5
+      ) {
+        return [...pagina, siguiente[0]]
+      }
+      return pagina
+    })
+    .filter((pagina, index, todas) => {
+      const anterior = todas[index - 1]
+      return !(pagina.length === 1 && anterior?.at(-1) === pagina[0])
+    })
+}
+
+const sumarAltoResponsabilidad = (entradas = []) =>
+  entradas.reduce((total, entrada) => total + estimarAltoEntradaResponsabilidad(entrada), 0)
+
 const filtrarInventarioPDF = (inventario = [], dependencia = '') => {
   const dependenciaNormalizada = normalizarTextoInventario(dependencia)
 
@@ -979,6 +1469,19 @@ const filtrarInventarioPDF = (inventario = [], dependencia = '') => {
     const nombreNormalizado = normalizarTextoInventario(puesto?.nombre_puesto)
     return nombreNormalizado && nombreNormalizado !== dependenciaNormalizada
   })
+}
+
+const CAMBIOS_POR_PAGINA = 6
+
+const paginarCambios = (cambios = []) => {
+  const filas = Array.isArray(cambios) && cambios.length > 0 ? cambios : [null]
+  const paginas = []
+
+  for (let i = 0; i < filas.length; i += CAMBIOS_POR_PAGINA) {
+    paginas.push(filas.slice(i, i + CAMBIOS_POR_PAGINA))
+  }
+
+  return paginas.length ? paginas : [[null]]
 }
 
 const crearMapaPaginas = ({
@@ -990,6 +1493,7 @@ const crearMapaPaginas = ({
   paginasPoliticas = 1,
   paginasOrganigramasEspecificos = 1,
   paginasInventario = 1,
+  paginasCambios = 1,
 }) => {
   const portada = 1
   const caratula = 2
@@ -1036,7 +1540,7 @@ const crearMapaPaginas = ({
     inventario,
     primerPuesto,
     cambios,
-    total: cambios,
+    total: cambios + Math.max(1, paginasCambios) - 1,
   }
 }
 
@@ -1144,8 +1648,8 @@ function PaginaCaratula({ datos, total }) {
     <div className="pdf-pagina" style={{ display: 'flex', flexDirection: 'column' }}>
       <HeaderPagina datos={datos} numeroPagina={2} totalPaginas={total} />
       <div style={{ textAlign: 'center', marginBottom: 35 }}>
-        <div style={{ fontSize: '36pt', fontWeight: 'normal', letterSpacing: 2, lineHeight: 1.1 }}>MANUAL DE</div>
-        <div style={{ fontSize: '36pt', fontWeight: '900', letterSpacing: 2, lineHeight: 1.1 }}>ORGANIZACIÓN</div>
+        <div style={{ fontSize: '45pt', fontWeight: 'normal', letterSpacing: 2, lineHeight: 1.1 }}>MANUAL DE</div>
+        <div style={{ fontSize: '44pt', fontWeight: '900', letterSpacing: 2, lineHeight: 1.1 }}>ORGANIZACIÓN</div>
         <div style={{ fontSize: '24pt', marginTop: 108, letterSpacing: 3, textTransform: 'uppercase' }}>
           {datos.dependencia}
         </div>
@@ -1458,13 +1962,13 @@ function PaginaCapituloI2({ datos, total, paginaInicio }) {
 
       <div className="pdf-seccion" style={{ marginTop: 24 }}>
         <div className="pdf-seccion-titulo">LENGUAJE INCLUYENTE CON PERSPECTIVA DE GÉNERO.</div>
-        <div className="pdf-seccion-texto" style={{ lineHeight: 1.2 }}>En la <em>{datos.dependencia}</em> nos apegarnos a la igualdad social, reforzamos el respeto de género y la NO violencia contra las mujeres.</div>
-        <div className="pdf-seccion-texto" style={{ marginTop: 3, lineHeight: 1.2 }}>Por ello, exhortamos para que la información contenida en este manual, sea plasmada a través del LENGUAJE INCLUYENTE, por lo mismo evitamos usar expresiones sutiles sexistas para prescindir de patrones de comportamiento y estereotipos de género.</div>
+        <div className="pdf-seccion-texto" style={{ lineHeight: 1.08 }}>En la <em>{datos.dependencia}</em> nos apegarnos a la igualdad social, reforzamos el respeto de género y la NO violencia contra las mujeres.</div>
+        <div className="pdf-seccion-texto" style={{ marginTop: 3, lineHeight: 1.08 }}>Por ello, exhortamos para que la información contenida en este manual, sea plasmada a través del LENGUAJE INCLUYENTE, por lo mismo evitamos usar expresiones sutiles sexistas para prescindir de patrones de comportamiento y estereotipos de género.</div>
       </div>
 
       <div style={{
         marginTop: 14, fontFamily: 'Montserrat, Arial, sans-serif',
-        fontWeight: 800, fontSize: '9pt', textAlign: 'justify', lineHeight: 1.5
+        fontWeight: 800, fontSize: '9pt', textAlign: 'justify', lineHeight: 1.08
       }}>
         ESTE DOCUMENTO DEBERÁ SER CONOCIDO POR TODO EL PERSONAL QUE LABORA EN LA DEPENDENCIA, UNIDAD ADMINISTRATIVA O ENTIDAD MUNICIPAL QUE ELABORA ESTE MANUAL, CON LA FINALIDAD DE QUE SE IDENTIFIQUEN LOS PROCEDIMIENTOS QUE AQUÍ SE LLEVAN A CABO; PERO, SOBRE TODO, LAS FUNCIONES Y RESPONSABILIDADES QUE SE TIENEN CADA UNO DE LOS INVOLUCRADOS EN LOS PROCEDIMIENTOS QUE SE MENCIONAN.
       </div>
@@ -1495,7 +1999,11 @@ function PaginaIntroduccion({ datos, total, paginaInicio }) {
       {/* Firma del superior jerárquico */}
       {(datos.superior_nombre || datos.superior_cargo) && (
         <div style={{
-          marginTop: 60, textAlign: 'center',
+          position: 'absolute',
+          left: 56,
+          right: 56,
+          bottom: 72,
+          textAlign: 'center',
           fontFamily: 'Montserrat, Arial, sans-serif',
         }}>
           <div style={{ width: 260, borderBottom: '1.5px solid #000', margin: '0 auto 8px auto' }} />
@@ -1595,7 +2103,7 @@ function PaginaMarcoConceptual({ datos, total, paginaInicio }) {
               <div style={{
                 fontWeight: 500,
                 fontSize: '11pt',
-                lineHeight: 1.08,
+                lineHeight: 1.22,
               }}>
                 {concepto.definicion}
               </div>
@@ -1719,7 +2227,7 @@ function PaginaObjetivoMisionVision({ datos, total, paginaInicio }) {
             {mostrarLineasTitulo && (
               <div style={{
                 width: 'calc(50% + 56px)',
-                borderTop: '3px solid #000',
+                borderTop: '2.2px solid #000',
                 marginBottom: 6,
                 marginLeft: '-56px',
               }} />
@@ -1735,7 +2243,7 @@ function PaginaObjetivoMisionVision({ datos, total, paginaInicio }) {
             {mostrarLineasTitulo && (
               <div style={{
                 width: 'calc(50% + 56px)',
-                borderTop: '3px solid #000',
+                borderTop: '2.2px solid #000',
                 marginBottom: 6,
                 marginLeft: '-56px',
               }} />
@@ -1792,7 +2300,7 @@ function PaginaPrincipiosValores({ datos, total, paginaInicio, entradas = null }
             <div key={bloque.titulo} style={{ marginBottom: i === bloques.length - 1 ? 0 : 18 }}>
               <div style={{
                 width: 'calc(50% + 56px)',
-                borderTop: '3px solid #000',
+                borderTop: '2.2px solid #000',
                 marginBottom: 6,
                 marginLeft: '-56px',
               }} />
@@ -1810,7 +2318,7 @@ function PaginaPrincipiosValores({ datos, total, paginaInicio, entradas = null }
 
               <div style={{
                 width: 'calc(50% + 56px)',
-                borderTop: '3px solid #000',
+                borderTop: '2.2px solid #000',
                 marginBottom: 10,
                 marginLeft: '-56px',
               }} />
@@ -1868,7 +2376,7 @@ function PaginaPoliticasOperacion({ datos, total, paginaInicio, politicas = null
                     fontFamily: 'Montserrat, Arial, sans-serif',
                     fontWeight: 800,
                     fontSize: '11pt',
-                    lineHeight: 1.1,
+                    lineHeight: 1.08,
                     marginLeft: '0.8cm',
                     marginBottom: 2,
                     color: '#595959',
@@ -1957,6 +2465,53 @@ function PaginaPortadaCapituloII({ datos, total, paginaInicio }) {
   )
 }
 
+function OrganigramaArchivo({ src, alt }) {
+  const [imagenPdf, setImagenPdf] = useState('')
+  const [error, setError] = useState('')
+  const esPdf = esPdfOrganigrama(src)
+
+  useEffect(() => {
+    let cancelado = false
+    setImagenPdf('')
+    setError('')
+
+    if (!esPdf || !src) return undefined
+
+    renderizarPdfComoImagen(src)
+      .then((dataUrl) => {
+        if (!cancelado) setImagenPdf(dataUrl)
+      })
+      .catch((err) => {
+        console.error('Error al cargar PDF de organigrama:', err)
+        if (!cancelado) setError('No se pudo cargar el PDF del organigrama.')
+      })
+
+    return () => {
+      cancelado = true
+    }
+  }, [src, esPdf])
+
+  if (esPdf && !imagenPdf) {
+    return (
+      <div
+        data-pdf-organigrama={error ? 'error' : 'loading'}
+        style={{ color: '#262626', fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '12pt' }}
+      >
+        {error || 'Cargando PDF del organigrama...'}
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={esPdf ? imagenPdf : src}
+      alt={alt}
+      style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
+      crossOrigin="anonymous"
+    />
+  )
+}
+
 function PaginaOrganigramaGeneral({ datos, total, paginaInicio }) {
   const src = normalizarRutaOrganigrama(datos.organigrama_general?.ruta_archivo)
 
@@ -1975,12 +2530,7 @@ function PaginaOrganigramaGeneral({ datos, total, paginaInicio }) {
         overflow: 'hidden',
       }}>
         {src ? (
-          <img
-            src={src}
-            alt="Organigrama General"
-            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
-            crossOrigin="anonymous"
-          />
+          <OrganigramaArchivo src={src} alt="Organigrama General" />
         ) : (
           <div style={{ color: '#262626', fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '12pt' }}>
             No hay organigrama general registrado.
@@ -2009,12 +2559,7 @@ function PaginaOrganigramaEspecifico({ datos, total, paginaInicio, organigrama =
         overflow: 'hidden',
       }}>
         {src ? (
-          <img
-            src={src}
-            alt={`Organigrama Especifico ${index + 1}`}
-            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
-            crossOrigin="anonymous"
-          />
+          <OrganigramaArchivo src={src} alt={`Organigrama Especifico ${index + 1}`} />
         ) : (
           <div style={{ color: '#262626', fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '12pt' }}>
             No hay organigramas específicos registrados.
@@ -2095,9 +2640,163 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
   const prefijoPerfil = nombrePuestoTitulo.startsWith('DIRECCIÓN') ? 'DE LA' : 'DE'
   const jefeInmediatoTexto = puesto.jefe_inmediato || puesto.jefe_firma_cargo || puesto.jefe_firma_nombre || '—'
   const paginasSubordinados = paginarSubordinadosPuesto(puesto)
-  const paginasFunciones = paginarFuncionesPuesto(puesto)
+  const { funcionesEnObjetivo, paginasFunciones } = dividirFuncionesObjetivo(puesto)
+  const paginasCompetencias = paginarFilasCompetencias(puesto)
+  const paginasCompetenciasAdicionales = paginasCompetencias.slice(1)
+  const ultimaPaginaCompetencias = paginasCompetencias[paginasCompetencias.length - 1] || []
+  const basePerfilParaResponsabilidad = paginasCompetenciasAdicionales.length > 0 ? 0 : 10.5
+  const limiteCompartidoResponsabilidad = paginasCompetenciasAdicionales.length > 0 ? 24 : 15
+  const capacidadResponsabilidad = Math.max(
+    0,
+    limiteCompartidoResponsabilidad - basePerfilParaResponsabilidad - sumarAltoFilasCompetencias(ultimaPaginaCompetencias)
+  )
+  const integraResponsabilidad = capacidadResponsabilidad >= 2
+  const paginasResponsabilidad = paginarEntradasResponsabilidad(
+    puesto,
+    integraResponsabilidad ? capacidadResponsabilidad : 0
+  )
+  const responsabilidadEnPaginaActual = integraResponsabilidad ? paginasResponsabilidad[0] : []
+  const paginasResponsabilidadAdicionales = integraResponsabilidad
+    ? paginasResponsabilidad.slice(1)
+    : paginasResponsabilidad
+  const ultimaPaginaResponsabilidad = paginasResponsabilidad[paginasResponsabilidad.length - 1] || []
+  const firmaCompartePagina = sumarAltoResponsabilidad(ultimaPaginaResponsabilidad) <= 9
+  const mostrarUbicacionEnPrimeraPagina = debeMostrarUbicacionEnPrimeraPagina(puesto)
   const totalSubordinados = (puesto.subordinados_directos || []).reduce((s, x) => s + (parseInt(x.num_personas) || 0), 0) +
     (puesto.subordinados_indirectos || []).reduce((s, x) => s + (parseInt(x.num_personas) || 0), 0)
+  const renderNivelResponsabilidad = (nivel) => (
+    ['Alta', 'Media', 'Baja', 'Nulo'].map((opcion) => (
+      <Fragment key={opcion}>
+        <td className="nivel-label">{opcion}</td>
+        <td className="nivel-marca">
+          {String(nivel || '').toLowerCase() === opcion.toLowerCase() ? 'X' : ''}
+        </td>
+      </Fragment>
+    ))
+  )
+  const renderTablaResponsabilidad = (entradas = []) => (
+    <table className="pdf-responsabilidad-tabla">
+      <colgroup>
+        <col style={{ width: 52 }} />
+        <col />
+        <col style={{ width: 54 }} />
+        <col />
+        <col style={{ width: 54 }} />
+        <col />
+        <col style={{ width: 54 }} />
+        <col />
+        <col style={{ width: 54 }} />
+      </colgroup>
+      <tbody>
+        {entradas.map((entrada, i) => {
+          if (entrada.tipo === 'header') {
+            return (
+              <tr key={`resp-${i}`}>
+                <td colSpan={9} className="header-gris">{entrada.titulo}</td>
+              </tr>
+            )
+          }
+
+          if (entrada.tipo === 'mobiliario') {
+            return (
+              <tr key={`resp-${i}`}>
+                <td className="num-gris">1.</td>
+                <td colSpan={8} className="texto-principal">
+                  <strong>Mobiliario y Equipo:</strong><br />
+                  Es Responsable de dar el uso para el que están destinados, así como, procurar su conservación y oportuno mantenimiento.
+                </td>
+              </tr>
+            )
+          }
+
+          if (entrada.tipo === 'informacion') {
+            return (
+              <Fragment key={`resp-${i}`}>
+                <tr>
+                  <td className="num-gris" rowSpan={2}>2.</td>
+                  <td colSpan={8} className="texto-principal">
+                    Manejo de Información: {limpiarValorPerfil(entrada.valor)}
+                  </td>
+                </tr>
+                <tr>
+                  {renderNivelResponsabilidad(entrada.nivel)}
+                </tr>
+              </Fragment>
+            )
+          }
+
+          if (entrada.tipo === 'presupuesto') {
+            return (
+              <tr key={`resp-${i}`}>
+                <td className="num-gris">3.</td>
+                <td colSpan={8} className="texto-principal">
+                  Manejo de Presupuesto: {limpiarValorPerfil(entrada.valor)}
+                </td>
+              </tr>
+            )
+          }
+
+          if (entrada.tipo === 'nivelPresupuesto') {
+            return (
+              <tr key={`resp-${i}`}>
+                <td className="num-gris">4.</td>
+                {renderNivelResponsabilidad(entrada.nivel)}
+              </tr>
+            )
+          }
+
+          return (
+            <tr key={`resp-${i}`}>
+              <td className="num-gris">{entrada.numero}</td>
+              <td colSpan={8} className="item-texto">{entrada.valor}</td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+  const renderBloqueFirmas = () => (
+    <>
+      <div className="pdf-compromiso">
+        Me comprometo a desempeñar con ética, profesionalismo y responsabilidad las funciones del cargo público que represento, incorporando la perspectiva de género y un enfoque basado en los Derechos Humanos en beneficio de la ciudadanía benitojuarense. Con mis compañeras, compañeros y el personal a mi cargo, promuevo el trabajo en equipo a partir del respeto y el buen trato. Asimismo, me comprometo a cuidar y hacer un uso responsable de los bienes patrimoniales, conforme a lo establecido por las leyes y reglamentos vigentes. Buen trato; cuido y hago uso benéfico a los bienes patrimoniales apegándome a las disposiciones que establezcan las leyes y reglamentos aplicables.
+      </div>
+
+      <table className="pdf-firma-tabla">
+        <tbody>
+          <tr>
+            <td className="header-gris">SERVIDOR PÚBLICO OCUPANTE DEL PUESTO</td>
+            <td className="header-gris">JEFE INMEDIATO</td>
+          </tr>
+          <tr>
+            <td><div className="pdf-firma-espacio" /></td>
+            <td><div className="pdf-firma-espacio" /></td>
+          </tr>
+          <tr>
+            <td className="pdf-firma-titulo">FIRMA</td>
+            <td className="pdf-firma-titulo">FIRMA</td>
+          </tr>
+          <tr>
+            <td className="pdf-firma-datos">
+              <strong>Nombre y Cargo:</strong> {puesto.ocupante_nombre || ' '}<br />
+              {puesto.ocupante_cargo || ' '}
+            </td>
+            <td className="pdf-firma-datos">
+              <strong>Nombre y Cargo:</strong> {puesto.jefe_firma_nombre || ' '}<br />
+              {puesto.jefe_firma_cargo || ' '}
+            </td>
+          </tr>
+          <tr>
+            <td className="pdf-firma-fecha">
+              <strong>Fecha:</strong> {fmtFechaLarga(puesto.ocupante_fecha)}
+            </td>
+            <td className="pdf-firma-fecha">
+              <strong>Fecha:</strong> {fmtFechaLarga(puesto.jefe_firma_fecha)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </>
+  )
   const renderSubordinadosTabla = (filas, mostrarEncabezados = true, mostrarTotal = false) => {
     let seccionActual = ''
 
@@ -2182,6 +2881,96 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
       </table>
     )
   }
+  const renderFilasCompetencias = (filas = []) => {
+    const indicesHabilidades = filas
+      .map((fila, i) => fila.tipo === 'habilidad' ? i : -1)
+      .filter((i) => i >= 0)
+    const primerIndiceHabilidad = indicesHabilidades[0]
+    const totalHabilidadesPagina = indicesHabilidades.length
+
+    return filas.map((fila, i) => {
+      if (fila.tipo === 'header') {
+        return (
+          <tr key={`competencia-${i}`}>
+            <td colSpan={10} className="competencias-header">
+              Competencias Laborales
+            </td>
+          </tr>
+        )
+      }
+
+      if (fila.tipo === 'habilidad') {
+        return (
+          <tr key={`competencia-${i}`}>
+            {i === primerIndiceHabilidad && (
+              <>
+                <td className="num-gris" rowSpan={totalHabilidadesPagina}>11.</td>
+                <td colSpan={2} className="competencias-label" rowSpan={totalHabilidadesPagina}>Habilidades</td>
+              </>
+            )}
+            <td colSpan={7} className="competencias-contenido">
+              <div className="competencias-categoria">{fila.categoria}</div>
+              {renderListaPerfil(fila.items)}
+            </td>
+          </tr>
+        )
+      }
+
+      if (fila.tipo === 'lista') {
+        return (
+          <tr key={`competencia-${i}`}>
+            <td className="num-gris">{fila.numero}</td>
+            <td colSpan={2} className="competencias-label">{fila.etiqueta}</td>
+            <td colSpan={7} className="competencias-contenido">
+              {renderListaPerfil(fila.items)}
+            </td>
+          </tr>
+        )
+      }
+
+      return (
+        <tr key={`competencia-${i}`}>
+          <td className="num-gris">{fila.numero}</td>
+          <td colSpan={2} className="competencias-label">{fila.etiqueta}</td>
+          <td colSpan={7} className="competencias-contenido">{limpiarValorPerfil(fila.valor)}</td>
+        </tr>
+      )
+    })
+  }
+  const renderUbicacionOrganigrama = () => (
+    <table className="pdf-info-puesto-tabla" style={{ marginTop: 14, marginBottom: 14 }}>
+      <tbody>
+        <tr>
+          <td colSpan={4} className="header-gris">UBICACIÓN EN EL ORGANIGRAMA</td>
+        </tr>
+        <tr>
+          <td colSpan={4} style={{ padding: '12px 16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '9pt' }}>
+              <div style={{ border: '1px solid #000', padding: '6px 20px', minWidth: 180, textAlign: 'center', background: '#f0f0f0', fontWeight: 'bold' }}>
+                {jefeInmediatoTexto}
+              </div>
+              <div style={{ width: 1, height: 20, background: '#000' }} />
+              <div style={{ border: '2px solid #7F7F7F', padding: '6px 20px', minWidth: 180, textAlign: 'center', background: '#fff', fontWeight: 'bold', color: '#7F7F7F' }}>
+                {puesto.nombre_puesto || '—'}
+              </div>
+              {((puesto.subordinados_directos?.length > 0)) && (
+                <>
+                  <div style={{ width: 1, height: 20, background: '#000' }} />
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {puesto.subordinados_directos.map((s, i) => (
+                      <div key={i} style={{ border: '1px solid #000', padding: '4px 12px', textAlign: 'center', background: '#fafafa', fontSize: '8pt' }}>
+                        {s.nombre_puesto}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  )
 
   return (
     <>
@@ -2222,6 +3011,7 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
           </tr>
         </tbody>
       </table>
+      {mostrarUbicacionEnPrimeraPagina && renderUbicacionOrganigrama()}
     </div>
 
       {paginasSubordinados.slice(1).map((filas, pageIndex) => (
@@ -2279,44 +3069,8 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
         </div>
       </div>
 
-      {/* Ubicación en el organigrama */}
-      <table className="pdf-info-puesto-tabla" style={{ marginBottom: 14 }}>
-        <tbody>
-          <tr>
-            <td colSpan={4} className="header-gris">UBICACIÓN EN EL ORGANIGRAMA</td>
-          </tr>
-          <tr>
-            <td colSpan={4} style={{ padding: '12px 16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '9pt' }}>
-                {/* Jefe Inmediato */}
-                <div style={{ border: '1px solid #000', padding: '6px 20px', minWidth: 180, textAlign: 'center', background: '#f0f0f0', fontWeight: 'bold' }}>
-                  {jefeInmediatoTexto}
-                </div>
-                {/* Línea vertical */}
-                <div style={{ width: 1, height: 20, background: '#000' }} />
-                {/* Puesto actual */}
-                <div style={{ border: '2px solid #7F7F7F', padding: '6px 20px', minWidth: 180, textAlign: 'center', background: '#fff', fontWeight: 'bold', color: '#7F7F7F' }}>
-                  {puesto.nombre_puesto || '—'}
-                </div>
-                {/* Línea vertical si hay subordinados */}
-                {((puesto.subordinados_directos?.length > 0)) && (
-                  <>
-                    <div style={{ width: 1, height: 20, background: '#000' }} />
-                    {/* Subordinados directos */}
-                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      {puesto.subordinados_directos.map((s, i) => (
-                        <div key={i} style={{ border: '1px solid #000', padding: '4px 12px', textAlign: 'center', background: '#fafafa', fontSize: '8pt' }}>
-                          {s.nombre_puesto}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      {!mostrarUbicacionEnPrimeraPagina && renderUbicacionOrganigrama()}
+      {funcionesEnObjetivo.length > 0 && renderFuncionesTabla(funcionesEnObjetivo, true)}
 
     </div>
 
@@ -2328,8 +3082,10 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
         </div>
         {renderFuncionesTabla(
           entradas,
-          pageIndex === 0,
-          pageIndex > 0 ? paginasFunciones[pageIndex - 1]?.at(-1)?.tipo : ''
+          pageIndex === 0 && funcionesEnObjetivo.length === 0,
+          pageIndex > 0
+            ? paginasFunciones[pageIndex - 1]?.at(-1)?.tipo
+            : funcionesEnObjetivo.at(-1)?.tipo || ''
         )}
       </div>
     ))}
@@ -2391,211 +3147,122 @@ function PaginaPuesto({ datos, puesto, index, total, paginaInicio }) {
           <tr>
             <td className="num-gris">7.</td>
             <td colSpan={2} className="label-bold">Licenciatura o carreras afines.</td>
-            <td colSpan={7} className="perfil-descripcion">{puesto.carreras_afines || 'N/A'}</td>
+            <td colSpan={7} className="perfil-descripcion">{limpiarValorPerfil(puesto.carreras_afines)}</td>
           </tr>
           <tr>
             <td className="num-gris">8.</td>
             <td colSpan={2} className="label-bold">Área de especialidad requerida (Conocimiento Técnico).</td>
-            <td colSpan={7} className="perfil-descripcion">{puesto.especialidad || 'N/A'}</td>
+            <td colSpan={7} className="perfil-descripcion">{limpiarValorPerfil(puesto.especialidad)}</td>
           </tr>
           {/* Conocimiento específico */}
           <tr>
             <td className="num-gris" rowSpan={3}>9</td>
             <td colSpan={2} className="label-bold" rowSpan={3}>Conocimiento Específico.</td>
             <td colSpan={3} className="label-bold">Idioma o Lengua:</td>
-            <td colSpan={4} className="perfil-descripcion">{puesto.idiomas?.join(', ') || 'Español.'}</td>
+            <td colSpan={4} className="perfil-descripcion">{limpiarListaPerfil(puesto.idiomas, 'Español.')}</td>
           </tr>
           <tr>
             <td colSpan={3} className="label-bold">Manejo de Programas Informáticos:</td>
-            <td colSpan={4} className="perfil-descripcion">{puesto.programas_informaticos?.join(', ') || 'N/A'}</td>
+            <td colSpan={4} className="perfil-descripcion">{limpiarListaPerfil(puesto.programas_informaticos)}</td>
           </tr>
           <tr>
             <td colSpan={3} className="label-bold">Manejo de Equipo Especializado y/o Herramientas</td>
-            <td colSpan={4} className="perfil-descripcion">{puesto.equipo_herramientas?.join(', ') || 'N/A'}</td>
+            <td colSpan={4} className="perfil-descripcion">{limpiarListaPerfil(puesto.equipo_herramientas)}</td>
           </tr>
           <tr>
             <td className="num-gris">10.</td>
             <td colSpan={2} className="label-bold">Experiencia:</td>
-            <td colSpan={7} className="perfil-descripcion">{puesto.experiencia || 'N/A'}</td>
+            <td colSpan={7} className="perfil-descripcion">{limpiarValorPerfil(puesto.experiencia)}</td>
           </tr>
-          {/* Competencias Laborales — dentro de la misma tabla de Perfil */}
-          <tr>
-            <td colSpan={10} style={{ background: '#d0d0d0', fontWeight: 'bold', fontSize: '9pt', textTransform: 'uppercase', padding: '5px 10px', border: '1px solid #000', letterSpacing: '.5px' }}>
-              Competencias Laborales
-            </td>
-          </tr>
-          <tr>
-            <td colSpan={2} className="label-bold" rowSpan={3} style={{ verticalAlign: 'top' }}>11. Habilidades</td>
-            <td colSpan={2} style={{ fontSize: '9pt', fontWeight: 'bold' }}>Directivas:</td>
-            <td colSpan={6}>{puesto.habilidades_directivas?.join(', ') || 'N/A'}</td>
-          </tr>
-          <tr>
-            <td colSpan={2} style={{ fontSize: '9pt', fontWeight: 'bold' }}>Técnicas:</td>
-            <td colSpan={6}>{puesto.habilidades_tecnicas?.join(', ') || 'N/A'}</td>
-          </tr>
-          <tr>
-            <td colSpan={2} style={{ fontSize: '9pt', fontWeight: 'bold' }}>Generales:</td>
-            <td colSpan={6}>{puesto.habilidades_generales?.join(', ') || 'N/A'}</td>
-          </tr>
-          <tr>
-            <td colSpan={4} className="label-bold">12. Actitudes:</td>
-            <td colSpan={6}>{puesto.actitudes?.join(', ') || 'N/A'}</td>
-          </tr>
-          <tr>
-            <td colSpan={4} className="label-bold">13. Horario Laboral:</td>
-            <td colSpan={6}>{puesto.horario_laboral || 'N/A'}</td>
-          </tr>
+          {renderFilasCompetencias(paginasCompetencias[0])}
         </tbody>
       </table>
+      {paginasCompetenciasAdicionales.length === 0 && responsabilidadEnPaginaActual.length > 0 && (
+        <>
+          {renderTablaResponsabilidad(responsabilidadEnPaginaActual)}
+          {firmaCompartePagina && paginasResponsabilidadAdicionales.length === 0 && renderBloqueFirmas()}
+        </>
+      )}
     </div>
 
+    {paginasCompetenciasAdicionales.map((filasCompetencias, pageIndex) => (
+      <div className="pdf-pagina" key={`puesto-competencias-${index}-${pageIndex}`}>
+        <HeaderPagina
+          datos={datos}
+          numeroPagina={paginaInicio + paginasSubordinados.length + paginasFunciones.length + 2 + pageIndex}
+          totalPaginas={total}
+        />
+        <div className="pdf-puesto-header">
+          4.4.{index + 1} DESCRIPCIÓN Y PERFIL {prefijoPerfil} {nombrePuestoTitulo}
+        </div>
+
+        <table className="pdf-perfil-tabla">
+          <colgroup>
+            <col style={{ width: 52 }} />
+            <col style={{ width: 112 }} />
+            <col style={{ width: 34 }} />
+            <col style={{ width: 46 }} />
+            <col style={{ width: 126 }} />
+            <col style={{ width: 34 }} />
+            <col style={{ width: 46 }} />
+            <col style={{ width: 158 }} />
+            <col style={{ width: 34 }} />
+            <col />
+          </colgroup>
+          <tbody>
+            {renderFilasCompetencias(filasCompetencias)}
+          </tbody>
+        </table>
+        {pageIndex === paginasCompetenciasAdicionales.length - 1 && responsabilidadEnPaginaActual.length > 0 && (
+          <>
+            {renderTablaResponsabilidad(responsabilidadEnPaginaActual)}
+            {firmaCompartePagina && paginasResponsabilidadAdicionales.length === 0 && renderBloqueFirmas()}
+          </>
+        )}
+      </div>
+    ))}
+
+    {paginasResponsabilidadAdicionales.map((entradasResponsabilidad, pageIndex) => (
+      <div className="pdf-pagina" key={`puesto-responsabilidad-${index}-${pageIndex}`}>
+        <HeaderPagina
+          datos={datos}
+          numeroPagina={paginaInicio + paginasSubordinados.length + paginasFunciones.length + paginasCompetenciasAdicionales.length + 2 + pageIndex}
+          totalPaginas={total}
+        />
+        <div className="pdf-puesto-header">
+          4.4.{index + 1} DESCRIPCIÓN Y PERFIL {prefijoPerfil} {nombrePuestoTitulo}
+        </div>
+        {renderTablaResponsabilidad(entradasResponsabilidad)}
+        {firmaCompartePagina && pageIndex === paginasResponsabilidadAdicionales.length - 1 && renderBloqueFirmas()}
+      </div>
+    ))}
+
+    {!firmaCompartePagina && (
     <div className="pdf-pagina">
-      <HeaderPagina datos={datos} numeroPagina={paginaInicio + paginasSubordinados.length + paginasFunciones.length + 2} totalPaginas={total} />
+      <HeaderPagina datos={datos} numeroPagina={paginaInicio + paginasSubordinados.length + paginasFunciones.length + paginasCompetenciasAdicionales.length + paginasResponsabilidadAdicionales.length + 2} totalPaginas={total} />
       <div className="pdf-puesto-header">
         4.4.{index + 1} DESCRIPCIÓN Y PERFIL {prefijoPerfil} {nombrePuestoTitulo}
       </div>
-
-      {/* Responsabilidad */}
-      <table className="pdf-perfil-tabla" style={{ marginTop: 0 }}>
-        <tbody>
-          <tr>
-            <td colSpan={4} className="header-gris">RESPONSABILIDAD</td>
-          </tr>
-          <tr>
-            <td colSpan={4} style={{ padding: '6px 10px', fontSize: '9pt' }}>
-              <span className="label-bold" style={{ background: 'none' }}>1. Mobiliario y Equipo:</span>{' '}
-              Es Responsable de dar el uso para el que están destinados, así como, procurar su conservación y oportuno mantenimiento.
-            </td>
-          </tr>
-          <tr>
-            <td className="label-bold" style={{ width: '30%' }}>2. Manejo de Información</td>
-            <td style={{ width: '20%' }}>{puesto.manejo_informacion || 'N/A'}</td>
-            <td className="label-bold" style={{ width: '30%' }}>Nivel</td>
-            <td style={{ width: '20%' }}>
-              {puesto.nivel_informacion
-                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    {['Alta','Media','Baja','Nulo'].map(n => (
-                      <span key={n} style={{ fontSize: '8pt' }}>
-                        <span style={{ display: 'inline-block', width: 10, height: 10, border: '1px solid #000', textAlign: 'center', lineHeight: '10px', marginRight: 2, fontSize: '8pt' }}>
-                          {puesto.nivel_informacion?.toLowerCase() === n.toLowerCase() ? 'X' : ''}
-                        </span>{n}
-                      </span>
-                    ))}
-                  </span>
-                : 'N/A'
-              }
-            </td>
-          </tr>
-          <tr>
-            <td className="label-bold">3. Manejo de Presupuesto</td>
-            <td>{puesto.manejo_presupuesto || 'N/A'}</td>
-            <td className="label-bold">Nivel</td>
-            <td>
-              {puesto.nivel_presupuesto
-                ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    {['Alta','Media','Baja','Nulo'].map(n => (
-                      <span key={n} style={{ fontSize: '8pt' }}>
-                        <span style={{ display: 'inline-block', width: 10, height: 10, border: '1px solid #000', textAlign: 'center', lineHeight: '10px', marginRight: 2, fontSize: '8pt' }}>
-                          {puesto.nivel_presupuesto?.toLowerCase() === n.toLowerCase() ? 'X' : ''}
-                        </span>{n}
-                      </span>
-                    ))}
-                  </span>
-                : 'N/A'
-              }
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* Autoridad */}
-      {puesto.autoridad?.length > 0 && (
-        <table className="pdf-funciones-tabla" style={{ marginTop: 0 }}>
-          <tbody>
-            <tr>
-              <td colSpan={2} className="header-gris">AUTORIDAD</td>
-            </tr>
-            {puesto.autoridad.map((a, i) => (
-              <tr key={i}>
-                <td className="num-cell">{i + 1}.</td>
-                <td>{a}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* Indicadores de desempeño */}
-      {puesto.indicador_desempeno?.length > 0 && (
-        <table className="pdf-funciones-tabla" style={{ marginTop: 0 }}>
-          <tbody>
-            <tr>
-              <td colSpan={2} className="header-gris">INDICADORES DE DESEMPEÑO</td>
-            </tr>
-            {puesto.indicador_desempeno.map((ind, i) => (
-              <tr key={i}>
-                <td className="num-cell">{i + 1}.</td>
-                <td>{ind}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* Compromiso */}
-      <div className="pdf-compromiso">
-        Me comprometo a desempeñar con ética, profesionalismo y responsabilidad las funciones del cargo público que represento, incorporando la perspectiva de género y un enfoque basado en los Derechos Humanos en beneficio de la ciudadanía benitojuarense. Con mis compañeras, compañeros y el personal a mi cargo, promuevo el trabajo en equipo a partir del respeto y el buen trato. Asimismo, me comprometo a cuidar y hacer un uso responsable de los bienes patrimoniales, conforme a lo establecido por las leyes y reglamentos vigentes.
-      </div>
-
-      {/* Firma */}
-      <table className="pdf-firma-tabla">
-        <tbody>
-          <tr>
-            <td className="header-gris">SERVIDOR PÚBLICO OCUPANTE DEL PUESTO</td>
-            <td className="header-gris">JEFE INMEDIATO</td>
-          </tr>
-          <tr>
-            <td style={{ height: 70, verticalAlign: 'bottom', paddingBottom: 8, textAlign: 'center' }}>
-              <div className="pdf-firma-espacio" />
-              <div style={{ fontSize: '9pt' }}>
-                <strong>Nombre:</strong> {puesto.ocupante_nombre || ' '}
-              </div>
-              <div style={{ fontSize: '9pt' }}>
-                <strong>Cargo:</strong> {puesto.ocupante_cargo || ' '}
-              </div>
-            </td>
-            <td style={{ height: 70, verticalAlign: 'bottom', paddingBottom: 8, textAlign: 'center' }}>
-              <div className="pdf-firma-espacio" />
-              <div style={{ fontSize: '9pt' }}>
-                <strong>Nombre:</strong> {puesto.jefe_firma_nombre || ' '}
-              </div>
-              <div style={{ fontSize: '9pt' }}>
-                <strong>Cargo:</strong> {puesto.jefe_firma_cargo || ' '}
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td style={{ fontSize: '9pt' }}>
-              <strong>Fecha:</strong> {fmtFecha(puesto.ocupante_fecha)}
-            </td>
-            <td style={{ fontSize: '9pt' }}>
-              <strong>Fecha:</strong> {fmtFecha(puesto.jefe_firma_fecha)}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      {renderBloqueFirmas()}
     </div>
+    )}
     </>
   )
 }
 
 // ── Página Sección de Cambios ─────────────────────────────────────────────────
-function PaginaCambios({ datos, total, paginaInicio }) {
+function PaginaCambios({ datos, total, paginaInicio, cambiosPagina = [] }) {
   return (
     <div className="pdf-pagina">
       <HeaderPagina datos={datos} numeroPagina={paginaInicio} totalPaginas={total} />
-      <div className="pdf-seccion-titulo" style={{ marginBottom: 12, fontSize: '13pt' }}>4.5 SECCIÓN DE CAMBIOS</div>
+      <div className="pdf-cap-titulo" style={{ marginBottom: 0 }}>4.5 SECCIÓN DE CAMBIOS</div>
       <table className="pdf-cambios-tabla">
+        <colgroup>
+          <col style={{ width: '15%' }} />
+          <col style={{ width: '14%' }} />
+          <col style={{ width: '50%' }} />
+          <col style={{ width: '21%' }} />
+        </colgroup>
         <thead>
           <tr>
             <th>REVISIÓN ANTERIOR</th>
@@ -2605,18 +3272,20 @@ function PaginaCambios({ datos, total, paginaInicio }) {
           </tr>
         </thead>
         <tbody>
-          {(datos.cambios?.length > 0) ? datos.cambios.map((c, i) => (
-            <tr key={i}>
-              <td>{c.revision_anterior}</td>
-              <td>{c.revision_actual}</td>
-              <td style={{ textAlign: 'left', padding: '5px 10px' }}>{c.razon}</td>
-              <td>{fmtFecha(c.fecha)}</td>
-            </tr>
-          )) : (
-            <tr>
-              <td>—</td><td>—</td><td>NO APLICA</td><td>—</td>
-            </tr>
-          )}
+          {cambiosPagina.map((c, i) => (
+            c ? (
+              <tr key={i}>
+                <td>{c.revision_anterior}</td>
+                <td>{c.revision_actual}</td>
+                <td>{c.razon}</td>
+                <td>{fmtFecha(c.fecha)}</td>
+              </tr>
+            ) : (
+              <tr key={i}>
+                <td>—</td><td>—</td><td>NO APLICA</td><td>—</td>
+              </tr>
+            )
+          ))}
         </tbody>
       </table>
     </div>
@@ -2651,6 +3320,7 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
   const paginasPoliticas = paginarPoliticas(datos.politicas_operacion || [])
   const inventarioPDF = filtrarInventarioPDF(datos.inventario_puestos || [], datos.dependencia)
   const paginasInventario = paginarInventario(inventarioPDF)
+  const paginasCambios = paginarCambios(datos.cambios || [])
   const paginasPorPuesto = puestos.map((puesto) => contarPaginasPuesto(puesto))
   const organigramasEspecificos = datos.organigramas_especificos?.length > 0
     ? datos.organigramas_especificos
@@ -2667,6 +3337,7 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
     paginasPoliticas: totalPaginasPoliticas,
     paginasOrganigramasEspecificos: organigramasEspecificos.length,
     paginasInventario: totalPaginasInventario,
+    paginasCambios: paginasCambios.length,
     paginasPuestos: paginasPorPuesto.reduce((total, paginas) => total + paginas, 0),
   })
   const totalPaginas = mapaPaginas.total
@@ -2676,12 +3347,14 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
     setProgreso('Preparando documento...')
     try {
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' })
+      await esperarOrganigramasPdf(docRef.current)
       const paginas = docRef.current.querySelectorAll('.pdf-pagina, .pdf-pagina-horizontal')
       let paginasPdfAgregadas = 0
 
       for (let i = 0; i < paginas.length; i++) {
         setProgreso(`Procesando página ${i + 1} de ${paginas.length}...`)
         const pagina = paginas[i]
+        await esperarImagenes(pagina)
         const orientation = pagina.dataset.pageOrientation === 'landscape' ? 'landscape' : 'portrait'
         const altoCartaCss = pagina.clientHeight
         const altoContenidoCss = Math.max(pagina.scrollHeight, altoCartaCss)
@@ -2871,7 +3544,15 @@ export default function GeneradorPDFManual({ datos, onCerrar }) {
             paginaInicio={mapaPaginas.primerPuesto + paginasPorPuesto.slice(0, i).reduce((total, paginas) => total + paginas, 0)}
           />
         ))}
-        <PaginaCambios datos={datos} total={totalPaginas} paginaInicio={mapaPaginas.cambios} />
+        {paginasCambios.map((cambiosPagina, i) => (
+          <PaginaCambios
+            key={`cambios-${i}`}
+            datos={datos}
+            total={totalPaginas}
+            paginaInicio={mapaPaginas.cambios + i}
+            cambiosPagina={cambiosPagina}
+          />
+        ))}
       </div>
       )}
     </div>

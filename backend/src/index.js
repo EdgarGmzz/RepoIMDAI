@@ -14,6 +14,9 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+app.use('/uploads', (req, res) => {
+  res.status(404).json({ error: 'Archivo no encontrado' })
+})
 
 app.use('/auth', authRoutes)
 
