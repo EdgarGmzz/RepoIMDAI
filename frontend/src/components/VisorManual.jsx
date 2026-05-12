@@ -494,6 +494,7 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
   const [textoObs, setTextoObs]         = useState('')
   const [seccionObs, setSeccionObs]     = useState('General')
   const [enviandoObs, setEnviandoObs]   = useState(false)
+  const [obsEnviada, setObsEnviada]     = useState(false)
 
   useEffect(() => {
     const fetchDetalle = async () => {
@@ -545,9 +546,11 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
         { estado: 'observaciones', comentario: textoObs.trim(), seccion: seccionObs },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      setModalObsOpen(false)
+      setTextoObs('')
+      setSeccionObs('General')
+      setObsEnviada(true)
+      setTimeout(() => setObsEnviada(false), 2500)
       if (onActualizado) onActualizado()
-      onCerrar()
     } catch {
       alert('Error al enviar las observaciones')
     } finally {
@@ -876,16 +879,21 @@ export default function VisorManual({ manual, onCerrar, onActualizado }) {
             </button>
             <button
               onClick={enviarObs}
-              disabled={!textoObs.trim() || enviandoObs}
+              disabled={!textoObs.trim() || enviandoObs || obsEnviada}
               style={{
                 padding: '9px 20px', borderRadius: '8px', border: 'none',
-                background: textoObs.trim() ? 'linear-gradient(135deg, #d97706, #b45309)' : '#e5e7eb',
-                color: textoObs.trim() ? 'white' : '#9ca3af',
+                background: obsEnviada
+                  ? '#059669'
+                  : textoObs.trim()
+                    ? 'linear-gradient(135deg, #d97706, #b45309)'
+                    : '#e5e7eb',
+                color: (obsEnviada || textoObs.trim()) ? 'white' : '#9ca3af',
                 fontFamily: 'Poppins, sans-serif', fontSize: '.83rem', fontWeight: '600',
-                cursor: textoObs.trim() ? 'pointer' : 'not-allowed'
+                cursor: (textoObs.trim() && !enviandoObs && !obsEnviada) ? 'pointer' : 'not-allowed',
+                transition: 'background .3s'
               }}
             >
-              {enviandoObs ? 'Enviando...' : 'Enviar observaciones'}
+              {obsEnviada ? '✓ Observación enviada' : enviandoObs ? 'Enviando...' : 'Enviar observación'}
             </button>
           </div>
         </div>

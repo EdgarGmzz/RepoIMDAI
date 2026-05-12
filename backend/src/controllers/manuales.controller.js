@@ -920,13 +920,14 @@ const cambiarEstado = async (req, res) => {
     if (rol === 'administrador') {
       const permitidas = {
         en_revision:   ['observaciones', 'validado'],
-        observaciones: ['validado'],
+        observaciones: ['observaciones', 'validado'],
       }
       if (!permitidas[manual.estado]?.includes(estado))
         return res.status(400).json({ error: `Transición no permitida de "${manual.estado}" a "${estado}"` })
     }
 
     const { comentario, seccion } = req.body
+    const estadoCambia = manual.estado !== estado
 
     // Al re-enviar desde observaciones, marcar obs pendientes como atendidas y construir razon descriptiva
     let razonCambio = `Cambio de estado: ${manual.estado} → ${estado}`
@@ -947,12 +948,14 @@ const cambiarEstado = async (req, res) => {
       }
     }
 
-    await pool.query('UPDATE manuales SET estado=$1 WHERE id_manual=$2', [estado, id])
-    await pool.query(
-      `INSERT INTO historial_versiones (id_manual, usuario, version, razon_cambio, en_suplencia_de)
-       VALUES ($1,$2,(SELECT version FROM manuales WHERE id_manual=$1),$3,$4)`,
-      [id, id_usuario, razonCambio, suplenciaDeId]
-    )
+    if (estadoCambia) {
+      await pool.query('UPDATE manuales SET estado=$1 WHERE id_manual=$2', [estado, id])
+      await pool.query(
+        `INSERT INTO historial_versiones (id_manual, usuario, version, razon_cambio, en_suplencia_de)
+         VALUES ($1,$2,(SELECT version FROM manuales WHERE id_manual=$1),$3,$4)`,
+        [id, id_usuario, razonCambio, suplenciaDeId]
+      )
+    }
 
     // Guardar observación si se envió comentario
     if (estado === 'observaciones' && comentario) {

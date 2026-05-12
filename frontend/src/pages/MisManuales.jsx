@@ -233,26 +233,7 @@ const eliminarSeleccionados = async () => {
       <nav className="topnav">
         <div className="nav-brand">
           <div className="nav-escudo-sm">
-            <svg width="26" height="26" viewBox="0 0 200 200">
-              <defs>
-                <clipPath id="c2"><circle cx="100" cy="100" r="96"/></clipPath>
-                <clipPath id="t2"><rect x="0" y="0" width="200" height="105"/></clipPath>
-              </defs>
-              <circle cx="100" cy="100" r="96" fill="#d42b2b"/>
-              <g clipPath="url(#t2)">
-                <path d="M100 100 L72 4 A96 96 0 0 1 128 4 Z" fill="#1a1a1a"/>
-                <path d="M100 100 L178 40 A96 96 0 0 1 196 90 Z" fill="#1a1a1a"/>
-                <path d="M100 100 L4 90 A96 96 0 0 1 22 40 Z" fill="#1a1a1a"/>
-              </g>
-              <rect x="4" y="96" width="192" height="16" fill="#f0c030" clipPath="url(#c2)"/>
-              <rect x="4" y="112" width="192" height="84" fill="#1976d2" clipPath="url(#c2)"/>
-              <g clipPath="url(#c2)">
-                <path d="M4 128 Q34 118 64 128 Q94 138 124 128 Q154 118 196 128 L196 144 Q154 134 124 144 Q94 154 64 144 Q34 134 4 144 Z" fill="#1565c0"/>
-                <path d="M4 148 Q34 138 64 148 Q94 158 124 148 Q154 138 196 148 L196 164 Q154 154 124 164 Q94 174 64 164 Q34 154 4 164 Z" fill="#0d47a1"/>
-              </g>
-              <circle cx="100" cy="100" r="18" fill="#111111"/>
-              <circle cx="100" cy="100" r="96" fill="none" stroke="white" strokeWidth="5"/>
-            </svg>
+            <img src="/Logoprueba.png" alt="Logo IMDAI" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
           </div>
           IMDAI — Manuales Digitales
         </div>
