@@ -15,7 +15,6 @@ build/
 npm-debug.log*
 
 # Herramientas de desarrollo local
-.claude/
 .mcp.json
 ngrok.exe
 
